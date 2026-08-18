@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Focus Test Log Analyzer</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: #f4f6f8;
+            color: #222;
+        }
+
+        header {
+            background: #123b6d;
+            color: white;
+            padding: 20px 30px;
+        }
+
+        header h1 {
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        button {
+            background: #123b6d;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        button:hover {
+            background: #1c579d;
+        }
+
+        input[type="file"] {
+            margin: 15px 0;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .summary-box {
+            background: #f4f6f8;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .summary-box strong {
+            display: block;
+            font-size: 22px;
+            margin-top: 5px;
+        }
+
+        .pass {
+            color: green;
+            font-weight: bold;
+        }
+
+        .fail {
+            color: red;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background: #e9eef5;
+        }
+
+        @media (max-width: 800px) {
+            .summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Focus Test Log Analyzer</h1>
+    <p>Manual log analysis and visualization</p>
+</header>
+
+<div class="container">
+
+    <div class="card">
+        <h2>1. Select Focus Test Logs</h2>
+
+        <input
+            type="file"
+            id="logFiles"
+            accept=".log"
+            multiple
+        >
+
+        <br>
+
+        <button onclick="analyzeLogs()">
+            Analyze Logs
+        </button>
+
+        <p id="fileStatus">No files selected.</p>
+    </div>
+
+    <div class="card">
+        <h2>2. Test Summary</h2>
+
+        <div class="summary">
+
+            <div class="summary-box">
+                Logs
+                <strong id="totalLogs">0</strong>
+            </div>
+
+            <div class="summary-box">
+                PASS
+                <strong id="passCount">0</strong>
+            </div>
+
+            <div class="summary-box">
+                NG
+                <strong id="ngCount">0</strong>
+            </div>
+
+            <div class="summary-box">
+                Yield
+                <strong id="yield">0%</strong>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>3. Parsed Test Data</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>PCBA</th>
+                    <th>Station</th>
+                    <th>Work Order</th>
+                    <th>Result</th>
+                    <th>Error Code</th>
+                    <th>Failure</th>
+                </tr>
+            </thead>
+
+            <tbody id="resultsTable">
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>4. Measurement Data</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>PCBA</th>
+                    <th>Measurement</th>
+                    <th>Value</th>
+                    <th>Lower Spec</th>
+                    <th>Result</th>
+                </tr>
+            </thead>
+
+            <tbody id="measurementTable">
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+
+async function analyzeLogs() {
+
+    const files = document.getElementById("logFiles").files;
+
+    if (files.length === 0) {
+        alert("Please select at least one .log file.");
+        return;
+    }
+
+    document.getElementById("fileStatus").textContent =
+        files.length + " log file(s) selected.";
+
+    let pass = 0;
+    let ng = 0;
+
+    const resultsTable =
+        document.getElementById("resultsTable");
+
+    const measurementTable =
+        document.getElementById("measurementTable");
+
+    resultsTable.innerHTML = "";
+    measurementTable.innerHTML = "";
+
+    for (const file of files) {
+
+        const text = await file.text();
+
+        const data = parseFocusLog(text);
+
+        if (data.result === "PASS") {
+            pass++;
+        }
+
+        if (data.result === "NG") {
+            ng++;
+        }
+
+        resultsTable.innerHTML += `
+            <tr>
+                <td>${data.pcba}</td>
+                <td>${data.station}</td>
+                <td>${data.workOrder}</td>
+                <td class="${data.result === "NG" ? "fail" : "pass"}">
+                    ${data.result}
+                </td>
+                <td>${data.errorCode}</td>
+                <td>${data.failure}</td>
+            </tr>
+        `;
+
+        for (const measurement of data.measurements) {
+
+            measurementTable.innerHTML += `
+                <tr>
+                    <td>${data.pcba}</td>
+                    <td>${measurement.item}</td>
+                    <td>${measurement.value}</td>
+                    <td>${measurement.lowerSpec}</td>
+                    <td class="${measurement.result === "FAIL" ? "fail" : "pass"}">
+                        ${measurement.result}
+                    </td>
+                </tr>
+            `;
+        }
+    }
+
+    const total = files.length;
+
+    document.getElementById("totalLogs").textContent = total;
+    document.getElementById("passCount").textContent = pass;
+    document.getElementById("ngCount").textContent = ng;
+
+    const yieldRate =
+        total > 0 ? ((pass / total) * 100).toFixed(2) : 0;
+
+    document.getElementById("yield").textContent =
+        yieldRate + "%";
+}
+
+
+function parseFocusLog(text) {
+
+    const data = {
+        pcba: "",
+        station: "",
+        workOrder: "",
+        result: "",
+        errorCode: "",
+        failure: "",
+        measurements: []
+    };
+
+    /*
+     * PCBA
+     */
+
+    let match = text.match(/GetPCBA:\s*([^\s]+)/);
+
+    if (match) {
+        data.pcba = match[1];
+    }
+
+    /*
+     * Station
+     */
+
+    match = text.match(/"MESStationName":\s*"([^"]+)"/);
+
+    if (match) {
+        data.station = match[1];
+    }
+
+    /*
+     * Work Order
+     */
+
+    match = text.match(/WO:([^;]+)/);
+
+    if (match) {
+        data.workOrder = match[1];
+    }
+
+    /*
+     * Overall result
+     */
+
+    if (
+        text.includes("MES]_Send Cmd 103") &&
+        text.includes(";NG;")
+    ) {
+        data.result = "NG";
+    }
+    else if (text.includes("Item_MTF_IR: NG")) {
+        data.result = "NG";
+    }
+    else {
+        data.result = "PASS";
+    }
+
+    /*
+     * Error Code
+     */
+
+    match = text.match(
+        /PostErrorCode\]ErrorCode:([^ ,]+)/
+    );
+
+    if (match) {
+        data.errorCode = match[1];
+    }
+
+    /*
+     * Failure description
+     */
+
+    match = text.match(
+        /description:\s*(.+)/
+    );
+
+    if (match) {
+        data.failure = match[1].trim();
+    }
+
+    /*
+     * Measurements
+     *
+     * Example:
+     *
+     * Item: MTF_1B_IR_2_V;
+     * Value: 29.6
+     * [ SPEC: LOWER=32.0 ]
+     */
+
+    const measurementRegex =
+        /Item:\s*([^;]+);\s*Value:\s*([-\d.]+)\s*\[\s*SPEC:\s*LOWER=([-\d.]+)\s*\]/g;
+
+    let measurementMatch;
+
+    while (
+        (measurementMatch =
+            measurementRegex.exec(text)) !== null
+    ) {
+
+        const item = measurementMatch[1].trim();
+
+        const value =
+            parseFloat(measurementMatch[2]);
+
+        const lowerSpec =
+            parseFloat(measurementMatch[3]);
+
+        const result =
+            value >= lowerSpec
+                ? "PASS"
+                : "FAIL";
+
+        data.measurements.push({
+            item,
+            value,
+            lowerSpec,
+            result
+        });
+    }
+
+    return data;
+}
+
+</script>
+
+</body>
+</html>
