@@ -139,7 +139,7 @@ button,
 
 /* ============================================================
    SEARCH + FILTER
-   ============================================================ */
+============================================================ */
 
 .toolbar {
     display: flex;
@@ -181,7 +181,7 @@ button,
 
 /* ============================================================
    RESULT LIST
-   ============================================================ */
+============================================================ */
 
 .result-list {
     display: flex;
@@ -277,7 +277,7 @@ button,
 
 /* ============================================================
    TEST LOG
-   ============================================================ */
+============================================================ */
 
 .test-log {
     border: 1px solid #e5e7eb;
@@ -339,7 +339,7 @@ button,
 
 /* ============================================================
    TABLE
-   ============================================================ */
+============================================================ */
 
 .mtf-table-wrapper {
     overflow-x: auto;
@@ -386,7 +386,7 @@ tr.ng-row td {
 
 /* ============================================================
    GRAPH
-   ============================================================ */
+============================================================ */
 
 .graph-container {
     width: 100%;
@@ -401,8 +401,30 @@ canvas {
 
 
 /* ============================================================
+   NEW SUMMARY GRAPH
+============================================================ */
+
+.summary-graph-container {
+    width: 100%;
+    height: 430px;
+    margin-top: 10px;
+}
+
+.summary-graph-card {
+    margin-bottom: 18px;
+}
+
+.graph-subtitle {
+    color: #6b7280;
+    font-size: 12px;
+    margin-top: -5px;
+    margin-bottom: 10px;
+}
+
+
+/* ============================================================
    OTHER
-   ============================================================ */
+============================================================ */
 
 .empty {
     padding: 35px;
@@ -435,7 +457,7 @@ canvas {
 
 /* ============================================================
    RESPONSIVE
-   ============================================================ */
+============================================================ */
 
 @media (max-width: 900px) {
 
@@ -640,6 +662,56 @@ canvas {
 
 
 <!-- ============================================================
+     NEW STATION IP GRAPH
+============================================================ -->
+
+<div
+    id="stationGraphCard"
+    class="card summary-graph-card"
+    style="display:none;"
+>
+
+    <div class="input-title">
+        Station IP — MTF NG Quantity
+    </div>
+
+    <div class="graph-subtitle">
+        Accumulated quantity of NG MTF measurements per Station IP
+    </div>
+
+    <div class="summary-graph-container">
+        <canvas id="stationNGChart"></canvas>
+    </div>
+
+</div>
+
+
+<!-- ============================================================
+     NEW COLLIMATOR GRAPH
+============================================================ -->
+
+<div
+    id="collimatorGraphCard"
+    class="card summary-graph-card"
+    style="display:none;"
+>
+
+    <div class="input-title">
+        Collimator — MTF NG Quantity
+    </div>
+
+    <div class="graph-subtitle">
+        Accumulated quantity of NG results per MTF / Collimator
+    </div>
+
+    <div class="summary-graph-container">
+        <canvas id="collimatorNGChart"></canvas>
+    </div>
+
+</div>
+
+
+<!-- ============================================================
      RESULTS
 ============================================================ -->
 
@@ -726,6 +798,19 @@ let currentFilter = "ALL";
 let originalRecords = [];
 
 
+/*
+ * NEW SUMMARY GRAPH DATA
+ */
+
+let stationNGData = {};
+
+let collimatorNGData = {};
+
+let stationChartInstance = null;
+
+let collimatorChartInstance = null;
+
+
 /* ============================================================
    FILE BROWSER
 ============================================================ */
@@ -807,6 +892,10 @@ function analyzeLog() {
 
     originalRecords = [];
 
+    stationNGData = {};
+
+    collimatorNGData = {};
+
 
     const format =
         detectFormat(raw);
@@ -881,7 +970,20 @@ function analyzeLog() {
     );
 
 
+    /*
+     * NEW:
+     *
+     * Build accumulated NG statistics.
+     */
+
+    buildNGSummaryData(
+        originalRecords
+    );
+
+
     renderSummary();
+
+    renderSummaryGraphs();
 
     renderResults();
 
@@ -1131,7 +1233,7 @@ function parseCSVData(text) {
         ) {
 
             /*
-             * Remove these four items.
+             * Remove excluded items.
              */
 
             if (
@@ -1157,6 +1259,16 @@ function parseCSVData(text) {
 
         return records;
     }
+
+
+    /*
+     * Find Station IP header.
+     */
+
+    const stationIPIndex =
+        findStationIPHeader(
+            headers
+        );
 
 
     /*
@@ -1286,6 +1398,20 @@ function parseCSVData(text) {
             );
 
 
+        /*
+         * NEW:
+         *
+         * Get Station IP from this exact CSV row.
+         */
+
+        const stationIP =
+            stationIPIndex >= 0
+                ? String(
+                    row[stationIPIndex] || ""
+                  ).trim()
+                : "";
+
+
         const measurements = [];
 
 
@@ -1378,6 +1504,9 @@ function parseCSVData(text) {
                 time:
                     stampTime || "",
 
+                stationIP:
+                    stationIP,
+
                 source:
                     "CSV",
 
@@ -1461,6 +1590,9 @@ function parseOriginalLog(text) {
                 time:
                     "",
 
+                stationIP:
+                    "",
+
                 source:
                     "LOG",
 
@@ -1491,6 +1623,28 @@ function parseOriginalLog(text) {
 
             currentRecord.time =
                 dateMatch[1].trim();
+
+            continue;
+        }
+
+
+        /*
+         * Optional Station IP in normal LOG files.
+         */
+
+        const stationMatch =
+            line.match(
+                /(?:Station\s*IP|StationIP|STATION_IP|IP)\s*[:=]\s*([0-9a-fA-F:.]+)/i
+            );
+
+
+        if (
+            stationMatch &&
+            currentRecord
+        ) {
+
+            currentRecord.stationIP =
+                stationMatch[1].trim();
 
             continue;
         }
@@ -1761,6 +1915,9 @@ function parseOriginalLog(text) {
                 time:
                     "",
 
+                stationIP:
+                    "",
+
                 source:
                     "LOG",
 
@@ -1864,13 +2021,13 @@ function groupRecords(records) {
 
                             groupedData[sn]
                                 .nightNG =
-                                    true;
+                                true;
 
                         } else {
 
                             groupedData[sn]
                                 .dayNG =
-                                    true;
+                                true;
 
                         }
 
@@ -1883,9 +2040,6 @@ function groupRecords(records) {
 
     /*
      * Sort every SN's test logs.
-     *
-     * Time is used when available.
-     * Otherwise original log order is retained.
      */
 
     Object.values(
@@ -1933,6 +2087,126 @@ function groupRecords(records) {
 
                 }
             );
+
+        }
+    );
+
+}
+
+
+/* ============================================================
+   NEW:
+   BUILD STATION + COLLIMATOR NG SUMMARY
+============================================================ */
+
+function buildNGSummaryData(records) {
+
+    stationNGData = {};
+
+    collimatorNGData = {};
+
+
+    records.forEach(
+        function(record) {
+
+            /*
+             * Station IP belongs to the whole test record.
+             */
+
+            let station =
+                record.stationIP;
+
+
+            if (
+                station === undefined ||
+                station === null ||
+                String(station).trim() === ""
+            ) {
+
+                station =
+                    "UNKNOWN";
+            }
+
+
+            station =
+                String(station)
+                    .trim();
+
+
+            record.measurements
+                .forEach(
+                    function(m) {
+
+                        /*
+                         * ONLY COUNT NG.
+                         */
+
+                        if (
+                            String(
+                                m.result
+                            ).toUpperCase() !== "NG"
+                        ) {
+
+                            return;
+                        }
+
+
+                        /*
+                         * Count NG per Station IP.
+                         */
+
+                        if (
+                            !stationNGData[station]
+                        ) {
+
+                            stationNGData[station] =
+                                0;
+
+                        }
+
+
+                        stationNGData[station]++;
+
+
+                        /*
+                         * Count NG per literal MTF /
+                         * Collimator item.
+                         */
+
+                        const collimator =
+                            String(
+                                m.name || ""
+                            ).trim();
+
+
+                        if (
+                            !collimator
+                        ) {
+
+                            return;
+                        }
+
+
+                        if (
+                            !collimatorNGData[
+                                collimator
+                            ]
+                        ) {
+
+                            collimatorNGData[
+                                collimator
+                            ] =
+                                0;
+
+                        }
+
+
+                        collimatorNGData[
+                            collimator
+                        ]++;
+
+                    }
+                );
 
         }
     );
@@ -2010,6 +2284,471 @@ function renderSummary() {
         .getElementById("summaryCard")
         .style.display =
             "block";
+
+}
+
+
+/* ============================================================
+   NEW:
+   RENDER SUMMARY GRAPHS
+============================================================ */
+
+function renderSummaryGraphs() {
+
+    renderStationNGGraph();
+
+    renderCollimatorNGGraph();
+
+}
+
+
+/* ============================================================
+   STATION IP NG GRAPH
+============================================================ */
+
+function renderStationNGGraph() {
+
+    const card =
+        document.getElementById(
+            "stationGraphCard"
+        );
+
+
+    const canvas =
+        document.getElementById(
+            "stationNGChart"
+        );
+
+
+    /*
+     * Destroy previous chart.
+     */
+
+    if (
+        stationChartInstance
+    ) {
+
+        try {
+
+            stationChartInstance.destroy();
+
+        } catch(e) {}
+
+        stationChartInstance =
+            null;
+
+    }
+
+
+    const entries =
+        Object.entries(
+            stationNGData
+        )
+        .sort(
+            function(a, b) {
+
+                return (
+                    b[1] - a[1]
+                );
+
+            }
+        );
+
+
+    if (
+        entries.length === 0
+    ) {
+
+        card.style.display =
+            "none";
+
+        return;
+    }
+
+
+    card.style.display =
+        "block";
+
+
+    const labels =
+        entries.map(
+            function(entry) {
+
+                return entry[0];
+
+            }
+        );
+
+
+    const values =
+        entries.map(
+            function(entry) {
+
+                return entry[1];
+
+            }
+        );
+
+
+    stationChartInstance =
+        new Chart(
+            canvas.getContext("2d"),
+            {
+
+                type:
+                    "bar",
+
+                data: {
+
+                    labels:
+                        labels,
+
+                    datasets: [
+
+                        {
+
+                            label:
+                                "NG Quantity",
+
+                            data:
+                                values,
+
+                            borderWidth:
+                                1
+
+                        }
+
+                    ]
+
+                },
+
+
+                options: {
+
+                    responsive:
+                        true,
+
+                    maintainAspectRatio:
+                        false,
+
+
+                    plugins: {
+
+                        legend: {
+
+                            display:
+                                true
+
+                        },
+
+
+                        tooltip: {
+
+                            callbacks: {
+
+                                label:
+                                    function(context) {
+
+                                        return (
+                                            "NG Quantity: " +
+                                            context.raw
+                                        );
+
+                                    }
+
+                            }
+
+                        }
+
+                    },
+
+
+                    scales: {
+
+                        x: {
+
+                            title: {
+
+                                display:
+                                    true,
+
+                                text:
+                                    "Station IP"
+
+                            }
+
+                        },
+
+
+                        y: {
+
+                            beginAtZero:
+                                true,
+
+                            ticks: {
+
+                                precision:
+                                    0
+
+                            },
+
+                            title: {
+
+                                display:
+                                    true,
+
+                                text:
+                                    "NG Quantity"
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+        );
+
+}
+
+
+/* ============================================================
+   COLLIMATOR NG GRAPH
+============================================================ */
+
+function renderCollimatorNGGraph() {
+
+    const card =
+        document.getElementById(
+            "collimatorGraphCard"
+        );
+
+
+    const canvas =
+        document.getElementById(
+            "collimatorNGChart"
+        );
+
+
+    /*
+     * Destroy previous chart.
+     */
+
+    if (
+        collimatorChartInstance
+    ) {
+
+        try {
+
+            collimatorChartInstance.destroy();
+
+        } catch(e) {}
+
+        collimatorChartInstance =
+            null;
+
+    }
+
+
+    const entries =
+        Object.entries(
+            collimatorNGData
+        )
+        .sort(
+            function(a, b) {
+
+                /*
+                 * Highest NG first.
+                 */
+
+                if (
+                    b[1] !== a[1]
+                ) {
+
+                    return b[1] - a[1];
+
+                }
+
+
+                return naturalCompare(
+                    a[0],
+                    b[0]
+                );
+
+            }
+        );
+
+
+    if (
+        entries.length === 0
+    ) {
+
+        card.style.display =
+            "none";
+
+        return;
+    }
+
+
+    card.style.display =
+        "block";
+
+
+    const labels =
+        entries.map(
+            function(entry) {
+
+                return entry[0];
+
+            }
+        );
+
+
+    const values =
+        entries.map(
+            function(entry) {
+
+                return entry[1];
+
+            }
+        );
+
+
+    collimatorChartInstance =
+        new Chart(
+            canvas.getContext("2d"),
+            {
+
+                type:
+                    "bar",
+
+                data: {
+
+                    labels:
+                        labels,
+
+                    datasets: [
+
+                        {
+
+                            label:
+                                "NG Quantity",
+
+                            data:
+                                values,
+
+                            borderWidth:
+                                1
+
+                        }
+
+                    ]
+
+                },
+
+
+                options: {
+
+                    responsive:
+                        true,
+
+                    maintainAspectRatio:
+                        false,
+
+
+                    plugins: {
+
+                        legend: {
+
+                            display:
+                                true
+
+                        },
+
+
+                        tooltip: {
+
+                            callbacks: {
+
+                                label:
+                                    function(context) {
+
+                                        return (
+                                            "NG Quantity: " +
+                                            context.raw
+                                        );
+
+                                    }
+
+                            }
+
+                        }
+
+                    },
+
+
+                    scales: {
+
+                        x: {
+
+                            title: {
+
+                                display:
+                                    true,
+
+                                text:
+                                    "Collimator / MTF Item"
+
+                            },
+
+                            ticks: {
+
+                                autoSkip:
+                                    false,
+
+                                maxRotation:
+                                    75,
+
+                                minRotation:
+                                    45
+
+                            }
+
+                        },
+
+
+                        y: {
+
+                            beginAtZero:
+                                true,
+
+                            ticks: {
+
+                                precision:
+                                    0
+
+                            },
+
+                            title: {
+
+                                display:
+                                    true,
+
+                                text:
+                                    "NG Quantity"
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+        );
 
 }
 
@@ -2199,18 +2938,6 @@ function renderResults() {
 
     /*
      * Sequential SN order.
-     *
-     * Natural sorting makes:
-     *
-     * SN1
-     * SN2
-     * SN10
-     *
-     * instead of:
-     *
-     * SN1
-     * SN10
-     * SN2
      */
 
     snList.sort(
@@ -2576,18 +3303,8 @@ function createTestLog(
 
 
     /*
-     * Sort measurements first.
-     *
-     * DAY MODE:
-     * 1A_1
-     * 1A_2
-     * 1A_3
-     * ...
-     *
-     * NIGHT MODE:
-     * 1B_IR_1
-     * 1B_IR_2
-     * ...
+     * Sort measurements:
+     * DAY MODE -> NIGHT MODE.
      */
 
     const measurements =
@@ -2597,24 +3314,12 @@ function createTestLog(
             );
 
 
-    /*
-     * DAY MODE
-     *
-     * Everything that isn't IR.
-     */
-
     const day =
         measurements.filter(
             m =>
                 m.type === "DAY"
         );
 
-
-    /*
-     * NIGHT MODE
-     *
-     * IR measurements.
-     */
 
     const night =
         measurements.filter(
@@ -3019,11 +3724,6 @@ function drawChart(canvas) {
         );
 
 
-    /*
-     * DAY MODE values are first,
-     * NIGHT MODE values second.
-     */
-
     const datasets = [
 
         {
@@ -3246,24 +3946,6 @@ function naturalMeasurementCompare(a, b) {
     }
 
 
-    /*
-     * Natural text comparison.
-     *
-     * This makes:
-     *
-     * 1
-     * 2
-     * 3
-     * ...
-     * 9
-     *
-     * instead of:
-     *
-     * 1
-     * 10
-     * 2
-     */
-
     return naturalCompare(
         a.name,
         b.name
@@ -3369,17 +4051,6 @@ function isExcludedMTFItem(name) {
             .replace(/\s+/g, "");
 
 
-    /*
-     * Remove:
-     *
-     * UMA_MTF_1A_VIS_LP-mm
-     * UMA_MTF_1A_VIS_Distance
-     * UMA_MTF_1B_IR_LP-mm
-     * UMA_MTF_1B_IR_Distance
-     *
-     * Also catches minor naming variations.
-     */
-
     if (
         upper.includes("VIS_LP-MM") ||
         upper.includes("VIS_DISTANCE") ||
@@ -3418,18 +4089,93 @@ function getMTFType(name) {
     }
 
 
+    return "DAY";
+}
+
+
+/* ============================================================
+   STATION IP HEADER DETECTION
+============================================================ */
+
+function findStationIPHeader(headers) {
+
     /*
-     * Everything else MTF = DAY MODE.
-     *
-     * This includes:
-     *
-     * UMA_MTF_1A_1_H
-     * UMA_MTF_1A_1_V
-     * UMA_MTF_1A_2_H
-     * etc.
+     * First look for exact / normalized names.
      */
 
-    return "DAY";
+    const possibleNames = [
+
+        "STATIONIP",
+        "STATION IP",
+        "STATION_IP",
+        "STATION-IP",
+        "STATIONADDRESS",
+        "STATION ADDRESS",
+        "TESTERIP",
+        "TESTER IP",
+        "TESTER_IP",
+        "MACHINEIP",
+        "MACHINE IP",
+        "MACHINE_IP",
+        "IP"
+
+    ];
+
+
+    for (
+        const wanted of possibleNames
+    ) {
+
+        const index =
+            findHeader(
+                headers,
+                wanted
+            );
+
+
+        if (
+            index >= 0
+        ) {
+
+            return index;
+        }
+
+    }
+
+
+    /*
+     * More flexible fallback.
+     */
+
+    for (
+        let i = 0;
+        i < headers.length;
+        i++
+    ) {
+
+        const header =
+            String(
+                headers[i] || ""
+            )
+            .trim()
+            .toUpperCase()
+            .replace(
+                /[\s_.-]/g,
+                ""
+            );
+
+
+        if (
+            header.includes("STATIONIP")
+        ) {
+
+            return i;
+        }
+
+    }
+
+
+    return -1;
 }
 
 
@@ -3803,6 +4549,22 @@ function clearAll() {
 
     document
         .getElementById(
+            "stationGraphCard"
+        )
+        .style.display =
+            "none";
+
+
+    document
+        .getElementById(
+            "collimatorGraphCard"
+        )
+        .style.display =
+            "none";
+
+
+    document
+        .getElementById(
             "resultsCard"
         )
         .style.display =
@@ -3829,6 +4591,10 @@ function clearAll() {
 
     originalRecords = [];
 
+    stationNGData = {};
+
+    collimatorNGData = {};
+
 
     chartInstances.forEach(
         function(chart) {
@@ -3846,13 +4612,55 @@ function clearAll() {
     chartInstances.clear();
 
 
+    if (
+        stationChartInstance
+    ) {
+
+        try {
+
+            stationChartInstance.destroy();
+
+        } catch(e) {}
+
+        stationChartInstance =
+            null;
+
+    }
+
+
+    if (
+        collimatorChartInstance
+    ) {
+
+        try {
+
+            collimatorChartInstance.destroy();
+
+        } catch(e) {}
+
+        collimatorChartInstance =
+            null;
+
+    }
+
+
     currentFilter =
         "ALL";
 
 
-    setFilter(
-        "ALL"
-    );
+    document
+        .getElementById("filterAll")
+        .classList.add("active");
+
+
+    document
+        .getElementById("filterNG")
+        .classList.remove("active");
+
+
+    document
+        .getElementById("filterGOOD")
+        .classList.remove("active");
 
 
     hideError();
