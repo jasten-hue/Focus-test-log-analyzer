@@ -611,86 +611,278 @@ function analyzeLog() {
 ========================================================= */
 
 function parseLog(log) {
-
-    const lines = log.split(/\r?\n/);
-
     const results = [];
 
-    let sequence = 0;
+    if (!log || !log.trim()) {
+        return results;
+    }
 
-    for (const line of lines) {
+    // Normalize the log
+    const text = log
+        .replace(/\r\n/g, "\n")
+        .replace(/\r/g, "\n")
+        .trim();
 
-        /*
-         Example:
+    /*
+     * CSV parser that supports quoted fields and commas inside quotes.
+     */
+    function parseCSVLine(line) {
+        const values = [];
+        let value = "";
+        let insideQuotes = false;
 
-         1-Item: MTF_1A_VIS_Distance;
-         Value: 5000
-         [ SPEC: LOWER=5000 ]
-        */
+        for (let i = 0; i < line.length; i++) {
+            const ch = line[i];
 
-        const itemMatch =
-            line.match(/(?:\d+-)?Item:\s*([^;]+);/i);
+            if (ch === '"') {
+                if (insideQuotes && line[i + 1] === '"') {
+                    value += '"';
+                    i++;
+                } else {
+                    insideQuotes = !insideQuotes;
+                }
+            } else if (ch === "," && !insideQuotes) {
+                values.push(value.trim());
+                value = "";
+            } else {
+                value += ch;
+            }
+        }
 
-        const valueMatch =
-            line.match(/Value:\s*(-?\d+(?:\.\d+)?)/i);
+        values.push(value.trim());
 
-        const lowerMatch =
-            line.match(/LOWER\s*=\s*(-?\d+(?:\.\d+)?)/i);
+        return values;
+    }
 
-        const upperMatch =
-            line.match(/UPPER\s*=\s*(-?\d+(?:\.\d+)?)/i);
+    const lines = text
+        .split("\n")
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
 
-        if (!itemMatch || !valueMatch) {
+    if (lines.length < 2) {
+        return results;
+    }
+
+    // Find the CSV header
+    let headerIndex = -1;
+
+    for (let i = 0; i < lines.length; i++) {
+        const lower = lines[i].toLowerCase();
+
+        if (
+            lower.includes("pcba") &&
+            lower.includes("workno") &&
+            lower.includes("stamptime")
+        ) {
+            headerIndex = i;
+            break;
+        }
+    }
+
+    if (headerIndex === -1) {
+        console.warn("CSV header not found.");
+        return results;
+    }
+
+    const headers = parseCSVLine(lines[headerIndex]);
+
+    /*
+     * Find important rows:
+     *
+     * Lower
+     * Upper
+     * MIN
+     * MAX
+     * Mean
+     * Sigma
+     * Cpl
+     */
+    const dataRows = {};
+
+    for (let i = headerIndex + 1; i < lines.length; i++) {
+        const row = parseCSVLine(lines[i]);
+
+        if (!row.length) continue;
+
+        const rowName = String(row[0] || "")
+            .trim()
+            .toLowerCase();
+
+        if (
+            rowName === "lower" ||
+            rowName === "upper" ||
+            rowName === "min" ||
+            rowName === "max" ||
+            rowName === "mean" ||
+            rowName === "sigma" ||
+            rowName === "cpl" ||
+            rowName === "cpu" ||
+            rowName === "cplu"
+        ) {
+            dataRows[rowName] = row;
+        }
+    }
+
+    console.log("Headers found:", headers.length);
+    console.log("Rows found:", Object.keys(dataRows));
+
+    /*
+     * The first columns are normally:
+     *
+     * PCBA
+     * WorkNo
+     * StampTime
+     * StationIP
+     *
+     * Everything after that is a test item.
+     */
+    const firstMeasurementColumn = 4;
+
+    /*
+     * Get SN / PCBA number.
+     */
+    let sn = "";
+
+    if (lines[headerIndex + 1]) {
+        const firstDataRow = parseCSVLine(lines[headerIndex + 1]);
+
+        sn =
+            firstDataRow[0] ||
+            firstDataRow[1] ||
+            "";
+    }
+
+    /*
+     * Convert a value safely to a number.
+     */
+    function numberValue(value) {
+        if (value === undefined || value === null) {
+            return null;
+        }
+
+        const cleaned = String(value)
+            .replace(/[^\d.+\-eE]/g, "");
+
+        if (cleaned === "") {
+            return null;
+        }
+
+        const n = Number(cleaned);
+
+        return Number.isFinite(n) ? n : null;
+    }
+
+    /*
+     * Create one result for every measurement column.
+     */
+    for (let i = firstMeasurementColumn; i < headers.length; i++) {
+
+        let name = String(headers[i] || "").trim();
+
+        if (!name) {
             continue;
         }
 
-        const item = itemMatch[1].trim();
+        /*
+         * We only want MTF-related measurements.
+         */
+        const upperName = name.toUpperCase();
 
-        const value = parseFloat(valueMatch[1]);
-
-        const lower =
-            lowerMatch
-            ? parseFloat(lowerMatch[1])
-            : null;
-
-        const upper =
-            upperMatch
-            ? parseFloat(upperMatch[1])
-            : null;
-
-        let result = "PASS";
-
-        if (lower !== null && value < lower) {
-            result = "NG";
+        if (
+            !upperName.includes("MTF") &&
+            !upperName.includes("VIS") &&
+            !upperName.includes("IR")
+        ) {
+            continue;
         }
 
-        if (upper !== null && value > upper) {
-            result = "NG";
+        const lower = numberValue(
+            dataRows.lower ? dataRows.lower[i] : null
+        );
+
+        const upper = numberValue(
+            dataRows.upper ? dataRows.upper[i] : null
+        );
+
+        const min = numberValue(
+            dataRows.min ? dataRows.min[i] : null
+        );
+
+        const max = numberValue(
+            dataRows.max ? dataRows.max[i] : null
+        );
+
+        const mean = numberValue(
+            dataRows.mean ? dataRows.mean[i] : null
+        );
+
+        const sigma = numberValue(
+            dataRows.sigma ? dataRows.sigma[i] : null
+        );
+
+        /*
+         * If Mean exists, use it as the main plotted value.
+         * Otherwise use MIN/MAX information.
+         */
+        let value = mean;
+
+        if (value === null && min !== null && max !== null) {
+            value = (min + max) / 2;
         }
 
-        sequence++;
+        /*
+         * Don't discard the measurement just because one
+         * specification value is missing.
+         */
+        if (
+            value === null &&
+            lower === null &&
+            upper === null &&
+            min === null &&
+            max === null
+        ) {
+            continue;
+        }
+
+        let status = "GOOD";
+
+        /*
+         * Determine NG/GOOD using specification limits.
+         */
+        if (value !== null) {
+
+            if (lower !== null && value < lower) {
+                status = "NG";
+            }
+
+            if (upper !== null && value > upper) {
+                status = "NG";
+            }
+        }
 
         results.push({
-
-            number: sequence,
-
-            item: item,
+            sn: sn,
+            name: name,
 
             value: value,
 
             lower: lower,
-
             upper: upper,
 
-            result: result
+            min: min,
+            max: max,
 
+            mean: mean,
+            sigma: sigma,
+
+            status: status
         });
-
     }
+
+    console.log("Parsed MTF measurements:", results);
 
     return results;
 }
-
 
 /* =========================================================
    FIND SN
