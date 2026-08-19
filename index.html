@@ -103,6 +103,68 @@
         display: none;
     }
 
+    /* SEARCH / FILTER */
+
+    .filter-panel {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .search-box {
+        flex: 1;
+        min-width: 250px;
+        position: relative;
+    }
+
+    .search-box input {
+        width: 100%;
+        padding: 11px 14px;
+        border: 1px solid #cfd4da;
+        border-radius: 7px;
+        font-family: Consolas, monospace;
+        font-size: 13px;
+        outline: none;
+    }
+
+    .search-box input:focus {
+        border-color: #2563eb;
+    }
+
+    .filter-buttons {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .filter-btn {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    .filter-btn.active {
+        background: #2563eb;
+        color: white;
+    }
+
+    .filter-btn.ng-filter.active {
+        background: #dc2626;
+        color: white;
+    }
+
+    .filter-btn.good-filter.active {
+        background: #059669;
+        color: white;
+    }
+
+    .filter-count {
+        color: #6b7280;
+        font-size: 12px;
+        margin-left: auto;
+    }
+
     .summary-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -251,6 +313,18 @@
         font-weight: bold;
     }
 
+    .day-mode-title {
+        color: #b45309;
+    }
+
+    .night-mode-title {
+        color: #4338ca;
+    }
+
+    .other-mode-title {
+        color: #6b7280;
+    }
+
     .mtf-table-wrapper {
         overflow-x: auto;
     }
@@ -327,6 +401,7 @@
     }
 
     @media (max-width: 900px) {
+
         .summary-grid {
             grid-template-columns: repeat(2, 1fr);
         }
@@ -343,6 +418,7 @@
     }
 
     @media (max-width: 600px) {
+
         .summary-grid {
             grid-template-columns: 1fr 1fr;
         }
@@ -362,6 +438,8 @@
 </div>
 
 <div class="container">
+
+    <!-- INPUT -->
 
     <div class="card">
 
@@ -413,6 +491,9 @@
         class="error"
     ></div>
 
+
+    <!-- SUMMARY -->
+
     <div
         id="summaryCard"
         class="card"
@@ -427,39 +508,30 @@
 
             <div class="summary-box">
                 <div class="label">Total SN</div>
-                <div
-                    id="totalSN"
-                    class="number"
-                >0</div>
+                <div id="totalSN" class="number">0</div>
             </div>
 
             <div class="summary-box">
                 <div class="label">GOOD</div>
-                <div
-                    id="goodSN"
-                    class="number good-number"
-                >0</div>
+                <div id="goodSN" class="number good-number">0</div>
             </div>
 
             <div class="summary-box">
                 <div class="label">NG</div>
-                <div
-                    id="ngSN"
-                    class="number ng-number"
-                >0</div>
+                <div id="ngSN" class="number ng-number">0</div>
             </div>
 
             <div class="summary-box">
                 <div class="label">Test Logs</div>
-                <div
-                    id="totalTests"
-                    class="number"
-                >0</div>
+                <div id="totalTests" class="number">0</div>
             </div>
 
         </div>
 
     </div>
+
+
+    <!-- RESULTS -->
 
     <div
         id="resultsCard"
@@ -469,6 +541,56 @@
 
         <div class="input-title">
             SN Results
+        </div>
+
+        <!-- SEARCH AND FILTER -->
+
+        <div class="filter-panel">
+
+            <div class="search-box">
+
+                <input
+                    type="text"
+                    id="snSearch"
+                    placeholder="Search SN..."
+                    oninput="applyFilters()"
+                >
+
+            </div>
+
+            <div class="filter-buttons">
+
+                <button
+                    id="filterAll"
+                    class="filter-btn active"
+                    onclick="setFilter('ALL')"
+                >
+                    ALL
+                </button>
+
+                <button
+                    id="filterNG"
+                    class="filter-btn ng-filter"
+                    onclick="setFilter('NG')"
+                >
+                    NG ONLY
+                </button>
+
+                <button
+                    id="filterGood"
+                    class="filter-btn good-filter"
+                    onclick="setFilter('GOOD')"
+                >
+                    GOOD ONLY
+                </button>
+
+            </div>
+
+            <div
+                id="filterCount"
+                class="filter-count"
+            ></div>
+
         </div>
 
         <div
@@ -490,6 +612,7 @@
 
 let groupedData = {};
 let chartInstances = {};
+let currentFilter = "ALL";
 
 
 /* ============================================================
@@ -577,10 +700,6 @@ function analyzeLog() {
             parseOriginalLog(raw);
     }
 
-    /*
-     * If the first parser didn't find anything,
-     * try the other parser automatically.
-     */
     if (records.length === 0) {
 
         if (format === "CSV") {
@@ -604,12 +723,157 @@ function analyzeLog() {
         return;
     }
 
+    /*
+     * IMPORTANT:
+     * Sort ALL test records chronologically BEFORE
+     * grouping and assigning test numbers.
+     */
+    records = sortRecordsChronologically(records);
+
     groupRecords(records);
 
     renderSummary();
 
-    renderResults();
+    /*
+     * Reset filter when a new file is analyzed.
+     */
+    currentFilter = "ALL";
 
+    document
+        .getElementById("snSearch")
+        .value = "";
+
+    updateFilterButtons();
+
+    renderResults();
+}
+
+
+/* ============================================================
+   CHRONOLOGICAL SORT
+   ============================================================ */
+
+function sortRecordsChronologically(records) {
+
+    return records
+        .map(function(record, index) {
+
+            record.originalIndex = index;
+
+            record.sortTime =
+                parseLogDate(record.time);
+
+            return record;
+
+        })
+        .sort(function(a, b) {
+
+            /*
+             * If both have valid dates, use date/time.
+             */
+            if (
+                a.sortTime !== null &&
+                b.sortTime !== null
+            ) {
+
+                const difference =
+                    a.sortTime - b.sortTime;
+
+                if (difference !== 0) {
+                    return difference;
+                }
+            }
+
+            /*
+             * If only A has a valid time,
+             * place A first.
+             */
+            if (
+                a.sortTime !== null &&
+                b.sortTime === null
+            ) {
+
+                return -1;
+            }
+
+            /*
+             * If only B has a valid time,
+             * place B first.
+             */
+            if (
+                a.sortTime === null &&
+                b.sortTime !== null
+            ) {
+
+                return 1;
+            }
+
+            /*
+             * Preserve original order when
+             * there is no usable timestamp.
+             */
+            return (
+                a.originalIndex -
+                b.originalIndex
+            );
+        });
+}
+
+
+function parseLogDate(value) {
+
+    if (
+        !value
+    ) {
+
+        return null;
+    }
+
+    let text =
+        String(value).trim();
+
+    /*
+     * Format:
+     * 2026-08-18-11:54:08
+     */
+    let match =
+        text.match(
+            /^(\d{4})-(\d{2})-(\d{2})[-T ](\d{2}):(\d{2}):(\d{2})/
+        );
+
+    if (match) {
+
+        const date =
+            new Date(
+                Number(match[1]),
+                Number(match[2]) - 1,
+                Number(match[3]),
+                Number(match[4]),
+                Number(match[5]),
+                Number(match[6])
+            );
+
+        if (!isNaN(date.getTime())) {
+            return date.getTime();
+        }
+    }
+
+    /*
+     * Normal JavaScript date fallback.
+     */
+    const fallback =
+        new Date(text);
+
+    if (
+        !isNaN(
+            fallback.getTime()
+        )
+    ) {
+
+        return fallback.getTime();
+    }
+
+    return null;
 }
 
 
@@ -625,7 +889,7 @@ function detectFormat(text) {
     if (
         lower.includes("pcba,") &&
         (
-            lower.includes("stampTime".toLowerCase()) ||
+            lower.includes("stamptime") ||
             lower.includes("workno")
         )
     ) {
@@ -641,9 +905,6 @@ function detectFormat(text) {
         return "LOG";
     }
 
-    /*
-     * CSV fallback
-     */
     if (
         lower.includes(",") &&
         lower.includes("lower")
@@ -731,9 +992,6 @@ function parseCSVData(text) {
 
     let headerIndex = -1;
 
-    /*
-     * Locate actual header.
-     */
     for (
         let i = 0;
         i < lines.length;
@@ -756,7 +1014,6 @@ function parseCSVData(text) {
     }
 
     if (headerIndex === -1) {
-
         return records;
     }
 
@@ -765,15 +1022,8 @@ function parseCSVData(text) {
             lines[headerIndex]
         );
 
-    /*
-     * Find special specification rows.
-     */
     const specRows = {};
 
-    /*
-     * We allow the CSV to contain several
-     * data rows before specification rows.
-     */
     for (
         let i = headerIndex + 1;
         i < lines.length;
@@ -811,9 +1061,6 @@ function parseCSVData(text) {
         }
     }
 
-    /*
-     * Determine columns that are actual MTF columns.
-     */
     const measurementColumns = [];
 
     for (
@@ -826,20 +1073,15 @@ function parseCSVData(text) {
             String(headers[i] || "")
                 .trim();
 
-        const upper =
-            header.toUpperCase();
-
         if (
-            upper.includes("MTF")
+            header.toUpperCase()
+                .includes("MTF")
         ) {
 
             measurementColumns.push(i);
         }
     }
 
-    /*
-     * If no MTF header was found, stop.
-     */
     if (
         measurementColumns.length === 0
     ) {
@@ -847,10 +1089,6 @@ function parseCSVData(text) {
         return records;
     }
 
-    /*
-     * Every normal CSV row is treated as a
-     * separate test record.
-     */
     for (
         let rowIndex = headerIndex + 1;
         rowIndex < lines.length;
@@ -873,9 +1111,6 @@ function parseCSVData(text) {
                 .trim()
                 .toLowerCase();
 
-        /*
-         * Skip specification rows.
-         */
         if (
             [
                 "lower",
@@ -893,26 +1128,15 @@ function parseCSVData(text) {
             continue;
         }
 
-        /*
-         * Ignore completely empty rows.
-         */
         if (
             row.every(
-                x => String(x).trim() === ""
+                x =>
+                    String(x).trim() === ""
             )
         ) {
 
             continue;
         }
-
-        /*
-         * The CSV normally has:
-         *
-         * PCBA
-         * WorkNo
-         * StampTime
-         * ...
-         */
 
         const sn =
             getFirstExistingValue(
@@ -945,10 +1169,6 @@ function parseCSVData(text) {
                 ]
             );
 
-        /*
-         * A row without any MTF value isn't
-         * considered a test log.
-         */
         let hasMeasurement = false;
 
         const measurements = [];
@@ -968,9 +1188,6 @@ function parseCSVData(text) {
             const value =
                 toNumber(rawValue);
 
-            /*
-             * Ignore specification-only cells.
-             */
             if (
                 value === null
             ) {
@@ -1016,13 +1233,6 @@ function parseCSVData(text) {
                     columnIndex
                 );
 
-            const result =
-                evaluateResult(
-                    value,
-                    lower,
-                    upper
-                );
-
             measurements.push({
 
                 name: itemName,
@@ -1041,9 +1251,15 @@ function parseCSVData(text) {
 
                 sigma: sigma,
 
-                result: result,
+                result:
+                    evaluateResult(
+                        value,
+                        lower,
+                        upper
+                    ),
 
-                type: getMTFType(itemName)
+                type:
+                    getMTFType(itemName)
 
             });
         }
@@ -1062,119 +1278,6 @@ function parseCSVData(text) {
 
                 time:
                     stampTime || "",
-
-                source:
-                    "CSV",
-
-                measurements:
-                    measurements
-            });
-        }
-    }
-
-    /*
-     * If this CSV actually represents one test
-     * with specification rows and there were no
-     * normal measurement rows, build one record
-     * from the Mean row.
-     */
-    if (
-        records.length === 0 &&
-        specRows.mean
-    ) {
-
-        const measurements = [];
-
-        for (
-            const columnIndex of measurementColumns
-        ) {
-
-            const itemName =
-                String(
-                    headers[columnIndex] || ""
-                ).trim();
-
-            const value =
-                getSpecValue(
-                    specRows.mean,
-                    columnIndex
-                );
-
-            if (
-                value === null
-            ) {
-                continue;
-            }
-
-            const lower =
-                getSpecValue(
-                    specRows.lower,
-                    columnIndex
-                );
-
-            const upper =
-                getSpecValue(
-                    specRows.upper,
-                    columnIndex
-                );
-
-            measurements.push({
-
-                name: itemName,
-
-                value: value,
-
-                lower: lower,
-
-                upper: upper,
-
-                min:
-                    getSpecValue(
-                        specRows.min,
-                        columnIndex
-                    ),
-
-                max:
-                    getSpecValue(
-                        specRows.max,
-                        columnIndex
-                    ),
-
-                mean: value,
-
-                sigma:
-                    getSpecValue(
-                        specRows.sigma,
-                        columnIndex
-                    ),
-
-                result:
-                    evaluateResult(
-                        value,
-                        lower,
-                        upper
-                    ),
-
-                type:
-                    getMTFType(itemName)
-
-            });
-        }
-
-        if (
-            measurements.length > 0
-        ) {
-
-            records.push({
-
-                sn:
-                    "",
-
-                workNo:
-                    "",
-
-                time:
-                    "",
 
                 source:
                     "CSV",
@@ -1205,11 +1308,6 @@ function parseOriginalLog(text) {
 
     let currentRecord = null;
 
-    /*
-     * Each test file begins with:
-     *
-     * Load SNFile: SN_xxxxx.csv
-     */
     for (
         let i = 0;
         i < lines.length;
@@ -1219,9 +1317,6 @@ function parseOriginalLog(text) {
         const line =
             lines[i];
 
-        /*
-         * Detect new SN.
-         */
         const snMatch =
             line.match(
                 /(?:Load SNFile:\s*|SN:\s*)([A-Za-z0-9._-]+)/
@@ -1231,9 +1326,6 @@ function parseOriginalLog(text) {
             snMatch
         ) {
 
-            /*
-             * Save previous record.
-             */
             if (
                 currentRecord &&
                 currentRecord.measurements.length > 0
@@ -1267,9 +1359,6 @@ function parseOriginalLog(text) {
             continue;
         }
 
-        /*
-         * Get Date_Time.
-         */
         const dateMatch =
             line.match(
                 /Date_Time:\s*(.+)/
@@ -1286,15 +1375,9 @@ function parseOriginalLog(text) {
             continue;
         }
 
-        /*
-         * Get Item:
-         *
-         * 1-Item: MTF_1A_1_H; Value: 55.50
-         * [ SPEC: LOWER=25.0 ]
-         */
         const itemMatch =
             line.match(
-                /Item:\s*([^;]+);\s*Value:\s*([+-]?\d+(?:\.\d+)?)/
+                /Item:\s*([^;]+);\s*Value:\s*([+-]?\d+(?:\.\d+)?)/ 
             );
 
         if (
@@ -1313,9 +1396,6 @@ function parseOriginalLog(text) {
             let lower = null;
             let upper = null;
 
-            /*
-             * Look ahead for specification.
-             */
             for (
                 let j = i;
                 j < Math.min(i + 3, lines.length);
@@ -1339,13 +1419,6 @@ function parseOriginalLog(text) {
                     break;
                 }
             }
-
-            const result =
-                evaluateResult(
-                    value,
-                    lower,
-                    upper
-                );
 
             currentRecord.measurements.push({
 
@@ -1374,7 +1447,11 @@ function parseOriginalLog(text) {
                     null,
 
                 result:
-                    result,
+                    evaluateResult(
+                        value,
+                        lower,
+                        upper
+                    ),
 
                 type:
                     getMTFType(name)
@@ -1382,9 +1459,6 @@ function parseOriginalLog(text) {
         }
     }
 
-    /*
-     * Save final record.
-     */
     if (
         currentRecord &&
         currentRecord.measurements.length > 0
@@ -1393,116 +1467,6 @@ function parseOriginalLog(text) {
         records.push(
             currentRecord
         );
-    }
-
-    /*
-     * Some logs don't contain Load SNFile
-     * in the exact expected location.
-     *
-     * Try extracting SN from:
-     *
-     * SN: XXXXX
-     */
-    if (
-        records.length === 0
-    ) {
-
-        const snMatches =
-            [
-                ...text.matchAll(
-                    /(?:^|\n)\s*SN:\s*([A-Za-z0-9._-]+)/gi
-                )
-            ];
-
-        /*
-         * If measurements exist but SN is missing,
-         * preserve them instead of discarding.
-         */
-        const measurements =
-            [];
-
-        for (
-            const line of lines
-        ) {
-
-            const match =
-                line.match(
-                    /Item:\s*([^;]+);\s*Value:\s*([+-]?\d+(?:\.\d+)?)/
-                );
-
-            if (
-                match
-            ) {
-
-                const name =
-                    match[1].trim();
-
-                const value =
-                    Number(
-                        match[2]
-                    );
-
-                measurements.push({
-
-                    name:
-                        name,
-
-                    value:
-                        value,
-
-                    lower:
-                        null,
-
-                    upper:
-                        null,
-
-                    min:
-                        null,
-
-                    max:
-                        null,
-
-                    mean:
-                        null,
-
-                    sigma:
-                        null,
-
-                    result:
-                        "GOOD",
-
-                    type:
-                        getMTFType(name)
-                });
-            }
-        }
-
-        if (
-            measurements.length > 0
-        ) {
-
-            records.push({
-
-                sn:
-                    snMatches.length > 0
-                        ? cleanSN(
-                            snMatches[0][1]
-                          )
-                        : "",
-
-                workNo:
-                    "",
-
-                time:
-                    "",
-
-                source:
-                    "LOG",
-
-                measurements:
-                    measurements
-            });
-        }
     }
 
     return records;
@@ -1518,11 +1482,8 @@ function groupRecords(records) {
     groupedData = {};
 
     records.forEach(
-        function(record, index) {
+        function(record) {
 
-            /*
-             * Do NOT invent an SN.
-             */
             const sn =
                 record.sn &&
                 record.sn.trim()
@@ -1548,12 +1509,16 @@ function groupRecords(records) {
                         new Set(),
 
                     ngItems:
-                        []
+                        [],
+
+                    firstTime:
+                        record.sortTime
                 };
             }
 
             /*
-             * Preserve test order.
+             * Since records were already sorted,
+             * this is the correct sequential order.
              */
             record.testNumber =
                 groupedData[sn]
@@ -1563,9 +1528,19 @@ function groupRecords(records) {
                 .tests
                 .push(record);
 
-            /*
-             * Check all MTF values.
-             */
+            if (
+                record.sortTime !== null &&
+                (
+                    groupedData[sn].firstTime === null ||
+                    record.sortTime <
+                    groupedData[sn].firstTime
+                )
+            ) {
+
+                groupedData[sn].firstTime =
+                    record.sortTime;
+            }
+
             record.measurements.forEach(
                 function(m) {
 
@@ -1577,10 +1552,6 @@ function groupRecords(records) {
                             .overall =
                                 "NG";
 
-                        /*
-                         * VIS has priority when
-                         * an item is classified as VIS.
-                         */
                         if (
                             m.type === "VIS"
                         ) {
@@ -1606,6 +1577,53 @@ function groupRecords(records) {
             );
         }
     );
+
+    /*
+     * Sort SN groups according to the first
+     * test time they appeared.
+     */
+    const sortedEntries =
+        Object.entries(
+            groupedData
+        ).sort(
+            function(a, b) {
+
+                const ta =
+                    a[1].firstTime;
+
+                const tb =
+                    b[1].firstTime;
+
+                if (
+                    ta !== null &&
+                    tb !== null
+                ) {
+
+                    return ta - tb;
+                }
+
+                if (
+                    ta !== null
+                ) {
+
+                    return -1;
+                }
+
+                if (
+                    tb !== null
+                ) {
+
+                    return 1;
+                }
+
+                return 0;
+            }
+        );
+
+    groupedData =
+        Object.fromEntries(
+            sortedEntries
+        );
 }
 
 
@@ -1671,6 +1689,104 @@ function renderSummary() {
 
 
 /* ============================================================
+   FILTER CONTROL
+   ============================================================ */
+
+function setFilter(filter) {
+
+    currentFilter =
+        filter;
+
+    updateFilterButtons();
+
+    renderResults();
+}
+
+
+function updateFilterButtons() {
+
+    document
+        .getElementById("filterAll")
+        .classList.toggle(
+            "active",
+            currentFilter === "ALL"
+        );
+
+    document
+        .getElementById("filterNG")
+        .classList.toggle(
+            "active",
+            currentFilter === "NG"
+        );
+
+    document
+        .getElementById("filterGood")
+        .classList.toggle(
+            "active",
+            currentFilter === "GOOD"
+        );
+}
+
+
+function applyFilters() {
+
+    renderResults();
+}
+
+
+function getFilteredSNList() {
+
+    const search =
+        document
+            .getElementById("snSearch")
+            .value
+            .trim()
+            .toLowerCase();
+
+    return Object.values(
+        groupedData
+    ).filter(
+        function(snData) {
+
+            /*
+             * SN search.
+             */
+            if (
+                search &&
+                !snData.sn
+                    .toLowerCase()
+                    .includes(search)
+            ) {
+
+                return false;
+            }
+
+            /*
+             * Status filter.
+             */
+            if (
+                currentFilter === "NG" &&
+                snData.overall !== "NG"
+            ) {
+
+                return false;
+            }
+
+            if (
+                currentFilter === "GOOD" &&
+                snData.overall !== "GOOD"
+            ) {
+
+                return false;
+            }
+
+            return true;
+        }
+    );
+}
+
+
+/* ============================================================
    RESULTS
    ============================================================ */
 
@@ -1683,16 +1799,24 @@ function renderResults() {
     container.innerHTML = "";
 
     const snList =
-        Object.values(
-            groupedData
-        );
+        getFilteredSNList();
+
+    document
+        .getElementById("filterCount")
+        .textContent =
+            snList.length +
+            (
+                snList.length === 1
+                    ? " SN shown"
+                    : " SNs shown"
+            );
 
     if (
         snList.length === 0
     ) {
 
         container.innerHTML =
-            '<div class="empty">No results found.</div>';
+            '<div class="empty">No results match the current search/filter.</div>';
 
         return;
     }
@@ -1772,7 +1896,8 @@ function renderResults() {
                     );
 
                 /*
-                 * VIS NG takes priority.
+                 * VIS has priority when both
+                 * VIS and IR fail.
                  */
                 if (
                     types.includes(
@@ -1781,18 +1906,23 @@ function renderResults() {
                 ) {
 
                     description.textContent =
-                        "VIS NG";
+                        "DAY MODE NG";
 
                 } else {
 
                     description.textContent =
-                        "IR NG";
+                        "NIGHT MODE NG";
                 }
 
             } else {
 
+                /*
+                 * GOOD:
+                 * Do not show initial MTF
+                 * information.
+                 */
                 description.textContent =
-                    "—";
+                    "";
             }
 
             const count =
@@ -1825,9 +1955,6 @@ function renderResults() {
             content.className =
                 "sn-content";
 
-            /*
-             * Build every test separately.
-             */
             snData.tests.forEach(
                 function(test) {
 
@@ -1848,10 +1975,6 @@ function renderResults() {
                         "expanded"
                     );
 
-                    /*
-                     * Render charts only when
-                     * expanded.
-                     */
                     if (
                         card.classList.contains(
                             "expanded"
@@ -1955,9 +2078,6 @@ function createTestLog(
     body.className =
         "test-body";
 
-    /*
-     * Group VIS and IR for readability.
-     */
     const vis =
         test.measurements.filter(
             m => m.type === "VIS"
@@ -1975,45 +2095,54 @@ function createTestLog(
                 m.type !== "IR"
         );
 
-    if (
-        vis.length > 0
-    ) {
-
-        body.appendChild(
-            createMeasurementSection(
-                "MTF VIS",
-                vis
-            )
-        );
-    }
-
-    if (
-        ir.length > 0
-    ) {
-
-        body.appendChild(
-            createMeasurementSection(
-                "MTF IR",
-                ir
-            )
-        );
-    }
-
+    /*
+     * OTHER MTF = DAY MODE
+     */
     if (
         other.length > 0
     ) {
 
         body.appendChild(
             createMeasurementSection(
-                "Other MTF",
-                other
+                "DAY MODE",
+                other,
+                "day-mode-title"
             )
         );
     }
 
     /*
-     * Chart.
+     * MTF VIS = DAY MODE
      */
+    if (
+        vis.length > 0
+    ) {
+
+        body.appendChild(
+            createMeasurementSection(
+                "DAY MODE",
+                vis,
+                "day-mode-title"
+            )
+        );
+    }
+
+    /*
+     * MTF IR = NIGHT MODE
+     */
+    if (
+        ir.length > 0
+    ) {
+
+        body.appendChild(
+            createMeasurementSection(
+                "NIGHT MODE",
+                ir,
+                "night-mode-title"
+            )
+        );
+    }
+
     if (
         test.measurements.length > 0
     ) {
@@ -2046,9 +2175,6 @@ function createTestLog(
                 "canvas"
             );
 
-        /*
-         * Store chart data on canvas.
-         */
         canvas.chartData =
             test.measurements;
 
@@ -2074,7 +2200,8 @@ function createTestLog(
 
 function createMeasurementSection(
     title,
-    measurements
+    measurements,
+    titleClass
 ) {
 
     const section =
@@ -2088,7 +2215,10 @@ function createMeasurementSection(
         );
 
     titleElement.className =
-        "section-title";
+        "section-title " +
+        (
+            titleClass || ""
+        );
 
     titleElement.textContent =
         title;
@@ -2272,9 +2402,6 @@ function drawChart(canvas) {
         return;
     }
 
-    /*
-     * Destroy old chart.
-     */
     if (
         chartInstances[canvas]
     ) {
@@ -2302,8 +2429,7 @@ function drawChart(canvas) {
         );
 
     /*
-     * Use a line for values and LL.
-     *
+     * LL only.
      * UL intentionally removed.
      */
     const datasets = [
@@ -2401,8 +2527,12 @@ function drawChart(canvas) {
                                             "Result: " +
                                             item.result,
 
-                                            "Type: " +
-                                            item.type
+                                            "Mode: " +
+                                            (
+                                                item.type === "IR"
+                                                    ? "NIGHT MODE"
+                                                    : "DAY MODE"
+                                            )
                                         ];
                                     }
                             }
@@ -2554,10 +2684,6 @@ function toNumber(value) {
         return null;
     }
 
-    /*
-     * Keep normal scientific notation,
-     * decimals and signs.
-     */
     const cleaned =
         text.replace(
             /[^0-9eE+.\-]/g,
@@ -2624,10 +2750,6 @@ function getMTFType(
         String(name || "")
             .toUpperCase();
 
-    /*
-     * VIS takes priority if an item somehow
-     * contains both terms.
-     */
     if (
         upper.includes("VIS")
     ) {
@@ -2659,19 +2781,12 @@ function cleanSN(sn) {
     let value =
         String(sn).trim();
 
-    /*
-     * Remove CSV quotes.
-     */
     value =
         value.replace(
             /^["']|["']$/g,
             ""
         );
 
-    /*
-     * Don't turn empty strings into
-     * fake serial numbers.
-     */
     if (
         value === ""
     ) {
@@ -2768,7 +2883,15 @@ function clearAll() {
         .getElementById("resultList")
         .innerHTML = "";
 
+    document
+        .getElementById("snSearch")
+        .value = "";
+
     groupedData = {};
+
+    currentFilter = "ALL";
+
+    updateFilterButtons();
 
     Object.values(
         chartInstances
