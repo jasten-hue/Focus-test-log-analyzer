@@ -7,426 +7,461 @@
 <title>FOCUS TEST LOG ANALYZER</title>
 
 <style>
-    * {
-        box-sizing: border-box;
-    }
+* {
+    box-sizing: border-box;
+}
 
-    body {
-        margin: 0;
-        font-family: Arial, Helvetica, sans-serif;
-        background: #f4f6f8;
-        color: #202124;
-    }
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f4f6f8;
+    color: #202124;
+}
 
-    .header {
-        background: #1f2937;
-        color: white;
-        padding: 20px 28px;
-    }
+.header {
+    background: #1f2937;
+    color: white;
+    padding: 20px 28px;
+}
 
-    .header h1 {
-        margin: 0 0 5px;
-        font-size: 24px;
-    }
+.header h1 {
+    margin: 0 0 5px;
+    font-size: 24px;
+}
 
-    .header p {
-        margin: 0;
-        opacity: 0.8;
-        font-size: 13px;
-    }
+.header p {
+    margin: 0;
+    opacity: 0.8;
+    font-size: 13px;
+}
 
-    .container {
-        max-width: 1500px;
-        margin: 20px auto;
-        padding: 0 18px;
-    }
+.container {
+    max-width: 1500px;
+    margin: 20px auto;
+    padding: 0 18px;
+}
 
-    .card {
-        background: white;
-        border-radius: 10px;
-        padding: 18px;
-        margin-bottom: 18px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
+.card {
+    background: white;
+    border-radius: 10px;
+    padding: 18px;
+    margin-bottom: 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
 
-    .input-title {
-        font-weight: bold;
-        margin-bottom: 10px;
-    }
+.input-title {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
 
-    textarea {
-        width: 100%;
-        min-height: 220px;
-        resize: vertical;
-        padding: 12px;
-        border: 1px solid #cfd4da;
-        border-radius: 7px;
-        font-family: Consolas, monospace;
-        font-size: 12px;
-    }
+textarea {
+    width: 100%;
+    min-height: 220px;
+    resize: vertical;
+    padding: 12px;
+    border: 1px solid #cfd4da;
+    border-radius: 7px;
+    font-family: Consolas, monospace;
+    font-size: 12px;
+}
 
-    .buttons {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin-top: 12px;
-    }
+.buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
 
-    button,
-    .file-label {
-        border: 0;
-        border-radius: 6px;
-        padding: 10px 16px;
-        cursor: pointer;
-        font-weight: bold;
-        font-size: 14px;
-    }
+button,
+.file-label {
+    border: 0;
+    border-radius: 6px;
+    padding: 10px 16px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+}
 
-    .analyze-btn {
-        background: #2563eb;
-        color: white;
-    }
+.analyze-btn {
+    background: #2563eb;
+    color: white;
+}
 
-    .clear-btn {
-        background: #e5e7eb;
-        color: #111827;
-    }
+.clear-btn {
+    background: #e5e7eb;
+    color: #111827;
+}
 
-    .file-label {
-        background: #059669;
-        color: white;
-        display: inline-flex;
-        align-items: center;
-    }
+.file-label {
+    background: #059669;
+    color: white;
+    display: inline-flex;
+    align-items: center;
+}
 
-    #fileInput {
-        display: none;
-    }
+#fileInput {
+    display: none;
+}
 
-    /* SEARCH / FILTER */
+/* ============================================================
+   SUMMARY
+   ============================================================ */
 
-    .filter-panel {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        align-items: center;
-        margin-bottom: 15px;
-    }
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
 
-    .search-box {
-        flex: 1;
-        min-width: 250px;
-        position: relative;
-    }
+.summary-box {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 15px;
+    background: #fafafa;
+}
 
-    .search-box input {
-        width: 100%;
-        padding: 11px 14px;
-        border: 1px solid #cfd4da;
-        border-radius: 7px;
-        font-family: Consolas, monospace;
-        font-size: 13px;
-        outline: none;
-    }
+.summary-box .label {
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 6px;
+}
 
-    .search-box input:focus {
-        border-color: #2563eb;
-    }
+.summary-box .number {
+    font-size: 25px;
+    font-weight: bold;
+}
 
-    .filter-buttons {
-        display: flex;
-        gap: 6px;
-        flex-wrap: wrap;
-    }
+.good-number {
+    color: #059669;
+}
 
-    .filter-btn {
-        background: #e5e7eb;
-        color: #374151;
-    }
+.ng-number {
+    color: #dc2626;
+}
 
-    .filter-btn.active {
-        background: #2563eb;
-        color: white;
-    }
+/* ============================================================
+   SEARCH / FILTER
+   ============================================================ */
 
-    .filter-btn.ng-filter.active {
-        background: #dc2626;
-        color: white;
-    }
+.controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
 
-    .filter-btn.good-filter.active {
-        background: #059669;
-        color: white;
-    }
+.search-box {
+    flex: 1;
+    min-width: 250px;
+    position: relative;
+}
 
-    .filter-count {
-        color: #6b7280;
-        font-size: 12px;
-        margin-left: auto;
-    }
+.search-box input {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid #cfd4da;
+    border-radius: 7px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    outline: none;
+}
+
+.search-box input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37,99,235,0.12);
+}
+
+.filter-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.filter-btn {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.filter-btn.active {
+    background: #2563eb;
+    color: white;
+}
+
+.filter-btn.ng-active {
+    background: #dc2626;
+    color: white;
+}
+
+.filter-btn.good-active {
+    background: #059669;
+    color: white;
+}
+
+/* ============================================================
+   SN RESULTS
+   ============================================================ */
+
+.result-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sn-card {
+    border: 1px solid #d1d5db;
+    border-radius: 9px;
+    overflow: hidden;
+    background: white;
+}
+
+.sn-card.hidden {
+    display: none;
+}
+
+.sn-header {
+    display: grid;
+    grid-template-columns: 50px minmax(180px, 1fr) 110px 180px 110px;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 15px;
+    cursor: pointer;
+    background: #fafafa;
+}
+
+.sn-header:hover {
+    background: #f3f4f6;
+}
+
+.sn-number {
+    color: #6b7280;
+    font-weight: bold;
+}
+
+.sn-name {
+    font-family: Consolas, monospace;
+    font-weight: bold;
+    word-break: break-all;
+}
+
+.status {
+    display: inline-block;
+    text-align: center;
+    padding: 5px 9px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.status.good {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status.ng {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.ng-description {
+    color: #dc2626;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.test-count {
+    color: #6b7280;
+    font-size: 12px;
+    text-align: right;
+}
+
+.sn-content {
+    display: none;
+    border-top: 1px solid #e5e7eb;
+    padding: 15px;
+}
+
+.sn-card.expanded .sn-content {
+    display: block;
+}
+
+/* ============================================================
+   TEST LOG
+   ============================================================ */
+
+.test-log {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    overflow: hidden;
+}
+
+.test-log:last-child {
+    margin-bottom: 0;
+}
+
+.test-header {
+    background: #f3f4f6;
+    padding: 11px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.test-title {
+    font-weight: bold;
+}
+
+.test-time {
+    font-family: Consolas, monospace;
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.test-body {
+    padding: 12px;
+}
+
+.section-title {
+    margin: 14px 0 8px;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.mode-title {
+    padding: 8px 10px;
+    margin-top: 15px;
+    background: #374151;
+    color: white;
+    border-radius: 5px 5px 0 0;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.day-mode-title {
+    background: #f3f4f6;
+    color: #92400e;
+    border: 1px solid #e5e7eb;
+}
+
+.night-mode-title {
+    background: #1f2937;
+    color: #60a5fa;
+}
+
+.mtf-table-wrapper {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+th {
+    background: #374151;
+    color: white;
+    text-align: left;
+    padding: 9px;
+    white-space: nowrap;
+}
+
+td {
+    padding: 8px 9px;
+    border-bottom: 1px solid #e5e7eb;
+    white-space: nowrap;
+}
+
+tr.pass-row td {
+    background: #f9fffb;
+}
+
+tr.ng-row td {
+    background: #fff1f2;
+}
+
+.result-pass {
+    color: #15803d;
+    font-weight: bold;
+}
+
+.result-ng {
+    color: #dc2626;
+    font-weight: bold;
+}
+
+/* ============================================================
+   GRAPH
+   ============================================================ */
+
+.graph-container {
+    width: 100%;
+    height: 420px;
+    margin-top: 15px;
+}
+
+canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.empty {
+    padding: 35px;
+    text-align: center;
+    color: #6b7280;
+}
+
+.no-results {
+    padding: 25px;
+    text-align: center;
+    color: #6b7280;
+    display: none;
+}
+
+.error {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+    padding: 12px;
+    border-radius: 7px;
+    margin-bottom: 15px;
+    display: none;
+}
+
+.format-info {
+    margin-top: 8px;
+    color: #6b7280;
+    font-size: 12px;
+}
+
+@media (max-width: 900px) {
 
     .summary-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 12px;
-    }
-
-    .summary-box {
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        padding: 15px;
-        background: #fafafa;
-    }
-
-    .summary-box .label {
-        font-size: 12px;
-        color: #6b7280;
-        margin-bottom: 6px;
-    }
-
-    .summary-box .number {
-        font-size: 25px;
-        font-weight: bold;
-    }
-
-    .good-number {
-        color: #059669;
-    }
-
-    .ng-number {
-        color: #dc2626;
-    }
-
-    .result-list {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .sn-card {
-        border: 1px solid #d1d5db;
-        border-radius: 9px;
-        overflow: hidden;
-        background: white;
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .sn-header {
-        display: grid;
-        grid-template-columns: 50px minmax(180px, 1fr) 110px 1fr 110px;
-        align-items: center;
-        gap: 12px;
-        padding: 13px 15px;
-        cursor: pointer;
-        background: #fafafa;
+        grid-template-columns: 35px 1fr 80px;
     }
 
-    .sn-header:hover {
-        background: #f3f4f6;
-    }
-
-    .sn-number {
-        color: #6b7280;
-        font-weight: bold;
-    }
-
-    .sn-name {
-        font-family: Consolas, monospace;
-        font-weight: bold;
-        word-break: break-all;
-    }
-
-    .status {
-        display: inline-block;
-        text-align: center;
-        padding: 5px 9px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: bold;
-    }
-
-    .status.good {
-        background: #dcfce7;
-        color: #166534;
-    }
-
-    .status.ng {
-        background: #fee2e2;
-        color: #991b1b;
-    }
-
-    .ng-description {
-        color: #dc2626;
-        font-weight: bold;
-        font-size: 13px;
-    }
-
+    .ng-description,
     .test-count {
-        color: #6b7280;
-        font-size: 12px;
-        text-align: right;
-    }
-
-    .sn-content {
-        display: none;
-        border-top: 1px solid #e5e7eb;
-        padding: 15px;
-    }
-
-    .sn-card.expanded .sn-content {
-        display: block;
-    }
-
-    .test-log {
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        margin-bottom: 15px;
-        overflow: hidden;
-    }
-
-    .test-header {
-        background: #f3f4f6;
-        padding: 11px 14px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-
-    .test-title {
-        font-weight: bold;
-    }
-
-    .test-time {
-        font-family: Consolas, monospace;
-        color: #6b7280;
-        font-size: 12px;
-    }
-
-    .test-body {
-        padding: 12px;
-    }
-
-    .section-title {
-        margin: 12px 0 8px;
-        font-size: 14px;
-        font-weight: bold;
-    }
-
-    .day-mode-title {
-        color: #b45309;
-    }
-
-    .night-mode-title {
-        color: #4338ca;
-    }
-
-    .other-mode-title {
-        color: #6b7280;
-    }
-
-    .mtf-table-wrapper {
-        overflow-x: auto;
-    }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 12px;
-    }
-
-    th {
-        background: #374151;
-        color: white;
+        grid-column: 2 / 4;
         text-align: left;
-        padding: 9px;
-        white-space: nowrap;
+    }
+}
+
+@media (max-width: 600px) {
+
+    .summary-grid {
+        grid-template-columns: 1fr 1fr;
     }
 
-    td {
-        padding: 8px 9px;
-        border-bottom: 1px solid #e5e7eb;
-        white-space: nowrap;
+    .sn-header {
+        grid-template-columns: 30px 1fr 70px;
     }
-
-    tr.pass-row td {
-        background: #f9fffb;
-    }
-
-    tr.ng-row td {
-        background: #fff1f2;
-    }
-
-    .result-pass {
-        color: #15803d;
-        font-weight: bold;
-    }
-
-    .result-ng {
-        color: #dc2626;
-        font-weight: bold;
-    }
-
-    .graph-container {
-        width: 100%;
-        height: 420px;
-        margin-top: 15px;
-    }
-
-    canvas {
-        width: 100% !important;
-        height: 100% !important;
-    }
-
-    .empty {
-        padding: 35px;
-        text-align: center;
-        color: #6b7280;
-    }
-
-    .error {
-        background: #fee2e2;
-        color: #991b1b;
-        border: 1px solid #fecaca;
-        padding: 12px;
-        border-radius: 7px;
-        margin-bottom: 15px;
-        display: none;
-    }
-
-    .format-info {
-        margin-top: 8px;
-        color: #6b7280;
-        font-size: 12px;
-    }
-
-    @media (max-width: 900px) {
-
-        .summary-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-
-        .sn-header {
-            grid-template-columns: 35px 1fr 80px;
-        }
-
-        .ng-description,
-        .test-count {
-            grid-column: 2 / 4;
-            text-align: left;
-        }
-    }
-
-    @media (max-width: 600px) {
-
-        .summary-grid {
-            grid-template-columns: 1fr 1fr;
-        }
-
-        .sn-header {
-            grid-template-columns: 30px 1fr 70px;
-        }
-    }
+}
 </style>
 </head>
 
@@ -440,7 +475,6 @@
 <div class="container">
 
     <!-- INPUT -->
-
     <div class="card">
 
         <div class="input-title">
@@ -491,9 +525,7 @@
         class="error"
     ></div>
 
-
     <!-- SUMMARY -->
-
     <div
         id="summaryCard"
         class="card"
@@ -508,31 +540,41 @@
 
             <div class="summary-box">
                 <div class="label">Total SN</div>
-                <div id="totalSN" class="number">0</div>
+                <div
+                    id="totalSN"
+                    class="number"
+                >0</div>
             </div>
 
             <div class="summary-box">
                 <div class="label">GOOD</div>
-                <div id="goodSN" class="number good-number">0</div>
+                <div
+                    id="goodSN"
+                    class="number good-number"
+                >0</div>
             </div>
 
             <div class="summary-box">
                 <div class="label">NG</div>
-                <div id="ngSN" class="number ng-number">0</div>
+                <div
+                    id="ngSN"
+                    class="number ng-number"
+                >0</div>
             </div>
 
             <div class="summary-box">
                 <div class="label">Test Logs</div>
-                <div id="totalTests" class="number">0</div>
+                <div
+                    id="totalTests"
+                    class="number"
+                >0</div>
             </div>
 
         </div>
 
     </div>
 
-
     <!-- RESULTS -->
-
     <div
         id="resultsCard"
         class="card"
@@ -543,9 +585,8 @@
             SN Results
         </div>
 
-        <!-- SEARCH AND FILTER -->
-
-        <div class="filter-panel">
+        <!-- SEARCH + FILTER -->
+        <div class="controls">
 
             <div class="search-box">
 
@@ -570,26 +611,21 @@
 
                 <button
                     id="filterNG"
-                    class="filter-btn ng-filter"
+                    class="filter-btn"
                     onclick="setFilter('NG')"
                 >
-                    NG ONLY
+                    🔴 NG ONLY
                 </button>
 
                 <button
                     id="filterGood"
-                    class="filter-btn good-filter"
+                    class="filter-btn"
                     onclick="setFilter('GOOD')"
                 >
-                    GOOD ONLY
+                    🟢 GOOD ONLY
                 </button>
 
             </div>
-
-            <div
-                id="filterCount"
-                class="filter-count"
-            ></div>
 
         </div>
 
@@ -597,6 +633,13 @@
             id="resultList"
             class="result-list"
         ></div>
+
+        <div
+            id="noResults"
+            class="no-results"
+        >
+            No SN matches the current search/filter.
+        </div>
 
     </div>
 
@@ -700,6 +743,9 @@ function analyzeLog() {
             parseOriginalLog(raw);
     }
 
+    /*
+     * Try the other parser if necessary.
+     */
     if (records.length === 0) {
 
         if (format === "CSV") {
@@ -723,157 +769,12 @@ function analyzeLog() {
         return;
     }
 
-    /*
-     * IMPORTANT:
-     * Sort ALL test records chronologically BEFORE
-     * grouping and assigning test numbers.
-     */
-    records = sortRecordsChronologically(records);
-
     groupRecords(records);
 
     renderSummary();
 
-    /*
-     * Reset filter when a new file is analyzed.
-     */
-    currentFilter = "ALL";
-
-    document
-        .getElementById("snSearch")
-        .value = "";
-
-    updateFilterButtons();
-
     renderResults();
-}
 
-
-/* ============================================================
-   CHRONOLOGICAL SORT
-   ============================================================ */
-
-function sortRecordsChronologically(records) {
-
-    return records
-        .map(function(record, index) {
-
-            record.originalIndex = index;
-
-            record.sortTime =
-                parseLogDate(record.time);
-
-            return record;
-
-        })
-        .sort(function(a, b) {
-
-            /*
-             * If both have valid dates, use date/time.
-             */
-            if (
-                a.sortTime !== null &&
-                b.sortTime !== null
-            ) {
-
-                const difference =
-                    a.sortTime - b.sortTime;
-
-                if (difference !== 0) {
-                    return difference;
-                }
-            }
-
-            /*
-             * If only A has a valid time,
-             * place A first.
-             */
-            if (
-                a.sortTime !== null &&
-                b.sortTime === null
-            ) {
-
-                return -1;
-            }
-
-            /*
-             * If only B has a valid time,
-             * place B first.
-             */
-            if (
-                a.sortTime === null &&
-                b.sortTime !== null
-            ) {
-
-                return 1;
-            }
-
-            /*
-             * Preserve original order when
-             * there is no usable timestamp.
-             */
-            return (
-                a.originalIndex -
-                b.originalIndex
-            );
-        });
-}
-
-
-function parseLogDate(value) {
-
-    if (
-        !value
-    ) {
-
-        return null;
-    }
-
-    let text =
-        String(value).trim();
-
-    /*
-     * Format:
-     * 2026-08-18-11:54:08
-     */
-    let match =
-        text.match(
-            /^(\d{4})-(\d{2})-(\d{2})[-T ](\d{2}):(\d{2}):(\d{2})/
-        );
-
-    if (match) {
-
-        const date =
-            new Date(
-                Number(match[1]),
-                Number(match[2]) - 1,
-                Number(match[3]),
-                Number(match[4]),
-                Number(match[5]),
-                Number(match[6])
-            );
-
-        if (!isNaN(date.getTime())) {
-            return date.getTime();
-        }
-    }
-
-    /*
-     * Normal JavaScript date fallback.
-     */
-    const fallback =
-        new Date(text);
-
-    if (
-        !isNaN(
-            fallback.getTime()
-        )
-    ) {
-
-        return fallback.getTime();
-    }
-
-    return null;
 }
 
 
@@ -918,7 +819,7 @@ function detectFormat(text) {
 
 
 /* ============================================================
-   CSV PARSER
+   CSV LINE PARSER
    ============================================================ */
 
 function parseCSVLine(line) {
@@ -935,8 +836,7 @@ function parseCSVLine(line) {
         i++
     ) {
 
-        const char =
-            line[i];
+        const char = line[i];
 
         if (char === '"') {
 
@@ -946,13 +846,11 @@ function parseCSVLine(line) {
             ) {
 
                 current += '"';
-
                 i++;
 
             } else {
 
-                inQuotes =
-                    !inQuotes;
+                inQuotes = !inQuotes;
             }
 
         } else if (
@@ -979,6 +877,10 @@ function parseCSVLine(line) {
     return values;
 }
 
+
+/* ============================================================
+   CSV PARSER
+   ============================================================ */
 
 function parseCSVData(text) {
 
@@ -1008,7 +910,6 @@ function parseCSVData(text) {
         ) {
 
             headerIndex = i;
-
             break;
         }
     }
@@ -1056,8 +957,7 @@ function parseCSVData(text) {
             ].includes(first)
         ) {
 
-            specRows[first] =
-                row;
+            specRows[first] = row;
         }
     }
 
@@ -1100,9 +1000,7 @@ function parseCSVData(text) {
                 lines[rowIndex]
             );
 
-        if (
-            row.length === 0
-        ) {
+        if (!row.length) {
             continue;
         }
 
@@ -1169,8 +1067,6 @@ function parseCSVData(text) {
                 ]
             );
 
-        let hasMeasurement = false;
-
         const measurements = [];
 
         for (
@@ -1182,11 +1078,20 @@ function parseCSVData(text) {
                     headers[columnIndex] || ""
                 ).trim();
 
-            const rawValue =
-                row[columnIndex];
+            /*
+             * REMOVE VIS LP-mm and VIS Distance.
+             */
+            if (
+                shouldExcludeItem(itemName)
+            ) {
+
+                continue;
+            }
 
             const value =
-                toNumber(rawValue);
+                toNumber(
+                    row[columnIndex]
+                );
 
             if (
                 value === null
@@ -1194,8 +1099,6 @@ function parseCSVData(text) {
 
                 continue;
             }
-
-            hasMeasurement = true;
 
             const lower =
                 getSpecValue(
@@ -1259,13 +1162,16 @@ function parseCSVData(text) {
                     ),
 
                 type:
-                    getMTFType(itemName)
+                    getMTFType(itemName),
+
+                mode:
+                    getMode(itemName)
 
             });
         }
 
         if (
-            hasMeasurement
+            measurements.length > 0
         ) {
 
             records.push({
@@ -1322,9 +1228,7 @@ function parseOriginalLog(text) {
                 /(?:Load SNFile:\s*|SN:\s*)([A-Za-z0-9._-]+)/
             );
 
-        if (
-            snMatch
-        ) {
+        if (snMatch) {
 
             if (
                 currentRecord &&
@@ -1377,7 +1281,7 @@ function parseOriginalLog(text) {
 
         const itemMatch =
             line.match(
-                /Item:\s*([^;]+);\s*Value:\s*([+-]?\d+(?:\.\d+)?)/ 
+                /Item:\s*([^;]+);\s*Value:\s*([+-]?\d+(?:\.\d+)?)/
             );
 
         if (
@@ -1387,6 +1291,16 @@ function parseOriginalLog(text) {
 
             const name =
                 itemMatch[1].trim();
+
+            /*
+             * REMOVE VIS LP-mm and VIS Distance.
+             */
+            if (
+                shouldExcludeItem(name)
+            ) {
+
+                continue;
+            }
 
             const value =
                 Number(
@@ -1407,9 +1321,7 @@ function parseOriginalLog(text) {
                         /SPEC:\s*LOWER=([+-]?\d+(?:\.\d+)?)/i
                     );
 
-                if (
-                    specMatch
-                ) {
+                if (specMatch) {
 
                     lower =
                         Number(
@@ -1454,7 +1366,10 @@ function parseOriginalLog(text) {
                     ),
 
                 type:
-                    getMTFType(name)
+                    getMTFType(name),
+
+                mode:
+                    getMode(name)
             });
         }
     }
@@ -1469,12 +1384,120 @@ function parseOriginalLog(text) {
         );
     }
 
+    /*
+     * Fallback.
+     */
+    if (
+        records.length === 0
+    ) {
+
+        const snMatches =
+            [
+                ...text.matchAll(
+                    /(?:^|\n)\s*SN:\s*([A-Za-z0-9._-]+)/gi
+                )
+            ];
+
+        const measurements = [];
+
+        for (
+            const line of lines
+        ) {
+
+            const match =
+                line.match(
+                    /Item:\s*([^;]+);\s*Value:\s*([+-]?\d+(?:\.\d+)?)/
+                );
+
+            if (!match) {
+                continue;
+            }
+
+            const name =
+                match[1].trim();
+
+            if (
+                shouldExcludeItem(name)
+            ) {
+                continue;
+            }
+
+            const value =
+                Number(
+                    match[2]
+                );
+
+            measurements.push({
+
+                name:
+                    name,
+
+                value:
+                    value,
+
+                lower:
+                    null,
+
+                upper:
+                    null,
+
+                min:
+                    null,
+
+                max:
+                    null,
+
+                mean:
+                    null,
+
+                sigma:
+                    null,
+
+                result:
+                    "GOOD",
+
+                type:
+                    getMTFType(name),
+
+                mode:
+                    getMode(name)
+            });
+        }
+
+        if (
+            measurements.length > 0
+        ) {
+
+            records.push({
+
+                sn:
+                    snMatches.length > 0
+                        ? cleanSN(
+                            snMatches[0][1]
+                          )
+                        : "",
+
+                workNo:
+                    "",
+
+                time:
+                    "",
+
+                source:
+                    "LOG",
+
+                measurements:
+                    measurements
+            });
+        }
+    }
+
     return records;
 }
 
 
 /* ============================================================
-   GROUP BY SN
+   GROUP RECORDS
    ============================================================ */
 
 function groupRecords(records) {
@@ -1505,73 +1528,64 @@ function groupRecords(records) {
                     overall:
                         "GOOD",
 
-                    ngTypes:
-                        new Set(),
+                    dayNG:
+                        false,
+
+                    nightNG:
+                        false,
 
                     ngItems:
-                        [],
-
-                    firstTime:
-                        record.sortTime
+                        []
                 };
             }
 
-            /*
-             * Since records were already sorted,
-             * this is the correct sequential order.
-             */
             record.testNumber =
                 groupedData[sn]
                     .tests.length + 1;
+
+            /*
+             * Sort the measurements inside
+             * every test immediately.
+             */
+            record.measurements.sort(
+                sequentialMTFSort
+            );
 
             groupedData[sn]
                 .tests
                 .push(record);
 
-            if (
-                record.sortTime !== null &&
-                (
-                    groupedData[sn].firstTime === null ||
-                    record.sortTime <
-                    groupedData[sn].firstTime
-                )
-            ) {
-
-                groupedData[sn].firstTime =
-                    record.sortTime;
-            }
-
             record.measurements.forEach(
                 function(m) {
 
                     if (
-                        m.result === "NG"
+                        m.result !== "NG"
+                    ) {
+
+                        return;
+                    }
+
+                    groupedData[sn]
+                        .overall =
+                            "NG";
+
+                    groupedData[sn]
+                        .ngItems
+                        .push(m);
+
+                    if (
+                        m.mode === "DAY"
                     ) {
 
                         groupedData[sn]
-                            .overall =
-                                "NG";
+                            .dayNG = true;
 
-                        if (
-                            m.type === "VIS"
-                        ) {
-
-                            groupedData[sn]
-                                .ngTypes
-                                .add("VIS NG");
-
-                        } else if (
-                            m.type === "IR"
-                        ) {
-
-                            groupedData[sn]
-                                .ngTypes
-                                .add("IR NG");
-                        }
+                    } else if (
+                        m.mode === "NIGHT"
+                    ) {
 
                         groupedData[sn]
-                            .ngItems
-                            .push(m);
+                            .nightNG = true;
                     }
                 }
             );
@@ -1579,51 +1593,9 @@ function groupRecords(records) {
     );
 
     /*
-     * Sort SN groups according to the first
-     * test time they appeared.
+     * Keep SN order based on first appearance.
+     * Test order remains the original log order.
      */
-    const sortedEntries =
-        Object.entries(
-            groupedData
-        ).sort(
-            function(a, b) {
-
-                const ta =
-                    a[1].firstTime;
-
-                const tb =
-                    b[1].firstTime;
-
-                if (
-                    ta !== null &&
-                    tb !== null
-                ) {
-
-                    return ta - tb;
-                }
-
-                if (
-                    ta !== null
-                ) {
-
-                    return -1;
-                }
-
-                if (
-                    tb !== null
-                ) {
-
-                    return 1;
-                }
-
-                return 0;
-            }
-        );
-
-    groupedData =
-        Object.fromEntries(
-            sortedEntries
-        );
 }
 
 
@@ -1689,104 +1661,6 @@ function renderSummary() {
 
 
 /* ============================================================
-   FILTER CONTROL
-   ============================================================ */
-
-function setFilter(filter) {
-
-    currentFilter =
-        filter;
-
-    updateFilterButtons();
-
-    renderResults();
-}
-
-
-function updateFilterButtons() {
-
-    document
-        .getElementById("filterAll")
-        .classList.toggle(
-            "active",
-            currentFilter === "ALL"
-        );
-
-    document
-        .getElementById("filterNG")
-        .classList.toggle(
-            "active",
-            currentFilter === "NG"
-        );
-
-    document
-        .getElementById("filterGood")
-        .classList.toggle(
-            "active",
-            currentFilter === "GOOD"
-        );
-}
-
-
-function applyFilters() {
-
-    renderResults();
-}
-
-
-function getFilteredSNList() {
-
-    const search =
-        document
-            .getElementById("snSearch")
-            .value
-            .trim()
-            .toLowerCase();
-
-    return Object.values(
-        groupedData
-    ).filter(
-        function(snData) {
-
-            /*
-             * SN search.
-             */
-            if (
-                search &&
-                !snData.sn
-                    .toLowerCase()
-                    .includes(search)
-            ) {
-
-                return false;
-            }
-
-            /*
-             * Status filter.
-             */
-            if (
-                currentFilter === "NG" &&
-                snData.overall !== "NG"
-            ) {
-
-                return false;
-            }
-
-            if (
-                currentFilter === "GOOD" &&
-                snData.overall !== "GOOD"
-            ) {
-
-                return false;
-            }
-
-            return true;
-        }
-    );
-}
-
-
-/* ============================================================
    RESULTS
    ============================================================ */
 
@@ -1799,24 +1673,16 @@ function renderResults() {
     container.innerHTML = "";
 
     const snList =
-        getFilteredSNList();
-
-    document
-        .getElementById("filterCount")
-        .textContent =
-            snList.length +
-            (
-                snList.length === 1
-                    ? " SN shown"
-                    : " SNs shown"
-            );
+        Object.values(
+            groupedData
+        );
 
     if (
         snList.length === 0
     ) {
 
         container.innerHTML =
-            '<div class="empty">No results match the current search/filter.</div>';
+            '<div class="empty">No results found.</div>';
 
         return;
     }
@@ -1831,6 +1697,15 @@ function renderResults() {
 
             card.className =
                 "sn-card";
+
+            /*
+             * Used by search/filter.
+             */
+            card.dataset.sn =
+                snData.sn.toLowerCase();
+
+            card.dataset.result =
+                snData.overall;
 
             const header =
                 document.createElement(
@@ -1886,43 +1761,33 @@ function renderResults() {
             description.className =
                 "ng-description";
 
+            /*
+             * IMPORTANT:
+             *
+             * DAY NG ALWAYS HAS PRIORITY.
+             *
+             * Only if there is no DAY NG and
+             * there is NIGHT NG do we display
+             * NIGHT MODE NG.
+             */
             if (
-                snData.overall === "NG"
+                snData.dayNG
             ) {
 
-                const types =
-                    Array.from(
-                        snData.ngTypes
-                    );
+                description.textContent =
+                    "DAY MODE NG";
 
-                /*
-                 * VIS has priority when both
-                 * VIS and IR fail.
-                 */
-                if (
-                    types.includes(
-                        "VIS NG"
-                    )
-                ) {
+            } else if (
+                snData.nightNG
+            ) {
 
-                    description.textContent =
-                        "DAY MODE NG";
-
-                } else {
-
-                    description.textContent =
-                        "NIGHT MODE NG";
-                }
+                description.textContent =
+                    "NIGHT MODE NG";
 
             } else {
 
-                /*
-                 * GOOD:
-                 * Do not show initial MTF
-                 * information.
-                 */
                 description.textContent =
-                    "";
+                    "—";
             }
 
             const count =
@@ -1955,6 +1820,9 @@ function renderResults() {
             content.className =
                 "sn-content";
 
+            /*
+             * EVERY TEST LOG for the SN.
+             */
             snData.tests.forEach(
                 function(test) {
 
@@ -2015,6 +1883,8 @@ function renderResults() {
         .getElementById("resultsCard")
         .style.display =
             "block";
+
+    applyFilters();
 }
 
 
@@ -2078,25 +1948,82 @@ function createTestLog(
     body.className =
         "test-body";
 
-    const vis =
-        test.measurements.filter(
-            m => m.type === "VIS"
-        );
-
-    const ir =
-        test.measurements.filter(
-            m => m.type === "IR"
-        );
-
-    const other =
-        test.measurements.filter(
-            m =>
-                m.type !== "VIS" &&
-                m.type !== "IR"
-        );
+    /*
+     * DAY MODE
+     */
+    const day =
+        test.measurements
+            .filter(
+                m =>
+                    m.mode === "DAY"
+            );
 
     /*
-     * OTHER MTF = DAY MODE
+     * NIGHT MODE
+     */
+    const night =
+        test.measurements
+            .filter(
+                m =>
+                    m.mode === "NIGHT"
+            );
+
+    /*
+     * Any unknown MTF item.
+     */
+    const other =
+        test.measurements
+            .filter(
+                m =>
+                    m.mode !== "DAY" &&
+                    m.mode !== "NIGHT"
+            );
+
+    /*
+     * Already sorted, but sort again
+     * for safety.
+     */
+    day.sort(
+        sequentialMTFSort
+    );
+
+    night.sort(
+        sequentialMTFSort
+    );
+
+    other.sort(
+        sequentialMTFSort
+    );
+
+    if (
+        day.length > 0
+    ) {
+
+        body.appendChild(
+            createMeasurementSection(
+                "DAY MODE",
+                day,
+                "day"
+            )
+        );
+    }
+
+    if (
+        night.length > 0
+    ) {
+
+        body.appendChild(
+            createMeasurementSection(
+                "NIGHT MODE",
+                night,
+                "night"
+            )
+        );
+    }
+
+    /*
+     * Only show Other MTF when an item cannot
+     * be identified as Day or Night.
      */
     if (
         other.length > 0
@@ -2104,45 +2031,16 @@ function createTestLog(
 
         body.appendChild(
             createMeasurementSection(
-                "DAY MODE",
+                "OTHER MTF",
                 other,
-                "day-mode-title"
+                "other"
             )
         );
     }
 
     /*
-     * MTF VIS = DAY MODE
+     * Graph.
      */
-    if (
-        vis.length > 0
-    ) {
-
-        body.appendChild(
-            createMeasurementSection(
-                "DAY MODE",
-                vis,
-                "day-mode-title"
-            )
-        );
-    }
-
-    /*
-     * MTF IR = NIGHT MODE
-     */
-    if (
-        ir.length > 0
-    ) {
-
-        body.appendChild(
-            createMeasurementSection(
-                "NIGHT MODE",
-                ir,
-                "night-mode-title"
-            )
-        );
-    }
-
     if (
         test.measurements.length > 0
     ) {
@@ -2176,7 +2074,11 @@ function createTestLog(
             );
 
         canvas.chartData =
-            test.measurements;
+            test.measurements
+                .slice()
+                .sort(
+                    sequentialMTFSort
+                );
 
         graph.appendChild(
             canvas
@@ -2201,7 +2103,7 @@ function createTestLog(
 function createMeasurementSection(
     title,
     measurements,
-    titleClass
+    mode
 ) {
 
     const section =
@@ -2215,9 +2117,13 @@ function createMeasurementSection(
         );
 
     titleElement.className =
-        "section-title " +
+        "mode-title " +
         (
-            titleClass || ""
+            mode === "day"
+                ? "day-mode-title"
+                : mode === "night"
+                    ? "night-mode-title"
+                    : ""
         );
 
     titleElement.textContent =
@@ -2325,7 +2231,6 @@ function createMeasurementSection(
                 formatNumber(
                     m.sigma
                 )
-
             ];
 
             values.forEach(
@@ -2429,40 +2334,49 @@ function drawChart(canvas) {
         );
 
     /*
-     * LL only.
-     * UL intentionally removed.
+     * UL REMOVED.
      */
     const datasets = [
 
         {
-            label: "MTF Value",
+            label:
+                "MTF Value",
 
-            data: values,
+            data:
+                values,
 
-            borderWidth: 2,
+            borderWidth:
+                2,
 
-            pointRadius: 4,
+            pointRadius:
+                4,
 
-            tension: 0.2
+            tension:
+                0.2
         },
 
         {
-            label: "LL",
+            label:
+                "LL",
 
-            data: lower,
+            data:
+                lower,
 
-            borderWidth: 2,
+            borderWidth:
+                2,
 
-            borderDash: [
-                6,
-                4
-            ],
+            borderDash:
+                [
+                    6,
+                    4
+                ],
 
-            pointRadius: 0,
+            pointRadius:
+                0,
 
-            spanGaps: true
+            spanGaps:
+                true
         }
-
     ];
 
     chartInstances[canvas] =
@@ -2470,7 +2384,8 @@ function drawChart(canvas) {
             canvas.getContext("2d"),
             {
 
-                type: "line",
+                type:
+                    "line",
 
                 data: {
 
@@ -2524,15 +2439,13 @@ function drawChart(canvas) {
                                             ];
 
                                         return [
+
                                             "Result: " +
                                             item.result,
 
                                             "Mode: " +
-                                            (
-                                                item.type === "IR"
-                                                    ? "NIGHT MODE"
-                                                    : "DAY MODE"
-                                            )
+                                            item.mode
+
                                         ];
                                     }
                             }
@@ -2565,6 +2478,396 @@ function drawChart(canvas) {
                 }
             }
         );
+}
+
+
+/* ============================================================
+   FILTER
+   ============================================================ */
+
+function setFilter(filter) {
+
+    currentFilter =
+        filter;
+
+    const all =
+        document
+            .getElementById("filterAll");
+
+    const ng =
+        document
+            .getElementById("filterNG");
+
+    const good =
+        document
+            .getElementById("filterGood");
+
+    all.className =
+        "filter-btn";
+
+    ng.className =
+        "filter-btn";
+
+    good.className =
+        "filter-btn";
+
+    if (
+        filter === "ALL"
+    ) {
+
+        all.classList.add(
+            "active"
+        );
+
+    } else if (
+        filter === "NG"
+    ) {
+
+        ng.classList.add(
+            "ng-active"
+        );
+
+    } else if (
+        filter === "GOOD"
+    ) {
+
+        good.classList.add(
+            "good-active"
+        );
+    }
+
+    applyFilters();
+}
+
+
+function applyFilters() {
+
+    const search =
+        document
+            .getElementById("snSearch")
+            .value
+            .trim()
+            .toLowerCase();
+
+    const cards =
+        document.querySelectorAll(
+            ".sn-card"
+        );
+
+    let visible =
+        0;
+
+    cards.forEach(
+        function(card) {
+
+            const sn =
+                card.dataset.sn || "";
+
+            const result =
+                card.dataset.result || "";
+
+            const searchMatch =
+                !search ||
+                sn.includes(search);
+
+            let filterMatch = true;
+
+            if (
+                currentFilter === "NG"
+            ) {
+
+                filterMatch =
+                    result === "NG";
+
+            } else if (
+                currentFilter === "GOOD"
+            ) {
+
+                filterMatch =
+                    result === "GOOD";
+            }
+
+            if (
+                searchMatch &&
+                filterMatch
+            ) {
+
+                card.classList.remove(
+                    "hidden"
+                );
+
+                visible++;
+
+            } else {
+
+                card.classList.add(
+                    "hidden"
+                );
+            }
+        }
+    );
+
+    document
+        .getElementById("noResults")
+        .style.display =
+            visible === 0
+                ? "block"
+                : "none";
+}
+
+
+/* ============================================================
+   MODE DETECTION
+   ============================================================ */
+
+function getMode(name) {
+
+    const upper =
+        String(name || "")
+            .toUpperCase();
+
+    /*
+     * MTF_1A = DAY MODE
+     */
+    if (
+        upper.includes("MTF_1A")
+    ) {
+
+        return "DAY";
+    }
+
+    /*
+     * MTF_1B = NIGHT MODE
+     */
+    if (
+        upper.includes("MTF_1B")
+    ) {
+
+        return "NIGHT";
+    }
+
+    /*
+     * Also support names containing
+     * explicit DAY/NIGHT.
+     */
+    if (
+        upper.includes("DAY")
+    ) {
+
+        return "DAY";
+    }
+
+    if (
+        upper.includes("NIGHT")
+    ) {
+
+        return "NIGHT";
+    }
+
+    return "OTHER";
+}
+
+
+/* ============================================================
+   EXCLUDE VIS LP / DISTANCE
+   ============================================================ */
+
+function shouldExcludeItem(name) {
+
+    const upper =
+        String(name || "")
+            .toUpperCase()
+            .replace(/\s+/g, "");
+
+    /*
+     * Remove:
+     *
+     * UMA_MTF_1A_VIS_LP-mm
+     * UMA_MTF_1A_VIS_Distance
+     *
+     * Also catches slight naming variations.
+     */
+    if (
+        upper.includes("VIS_LP") ||
+        upper.includes("VISLP") ||
+        upper.includes("VIS_DISTANCE") ||
+        upper.includes("VISDISTANCE")
+    ) {
+
+        return true;
+    }
+
+    return false;
+}
+
+
+/* ============================================================
+   MTF TYPE
+   ============================================================ */
+
+function getMTFType(name) {
+
+    const upper =
+        String(name || "")
+            .toUpperCase();
+
+    if (
+        upper.includes("VIS")
+    ) {
+
+        return "VIS";
+    }
+
+    if (
+        upper.includes("IR")
+    ) {
+
+        return "IR";
+    }
+
+    return "OTHER";
+}
+
+
+/* ============================================================
+   SEQUENTIAL MTF SORT
+   ============================================================
+
+   Examples:
+
+   UMA_MTF_1A_1_H
+   UMA_MTF_1A_1_V
+   UMA_MTF_1A_2_H
+   UMA_MTF_1A_2_V
+   UMA_MTF_1A_3_H
+   UMA_MTF_1A_3_V
+   ...
+   UMA_MTF_1A_9_H
+   UMA_MTF_1A_9_V
+*/
+
+function sequentialMTFSort(a, b) {
+
+    const aInfo =
+        getMTFSequenceInfo(
+            a.name
+        );
+
+    const bInfo =
+        getMTFSequenceInfo(
+            b.name
+        );
+
+    /*
+     * First sort by numeric position.
+     */
+    if (
+        aInfo.number !== bInfo.number
+    ) {
+
+        return (
+            aInfo.number -
+            bInfo.number
+        );
+    }
+
+    /*
+     * H before V.
+     */
+    if (
+        aInfo.orientation !==
+        bInfo.orientation
+    ) {
+
+        const order = {
+            "H": 0,
+            "V": 1,
+            "OTHER": 2
+        };
+
+        return (
+            order[aInfo.orientation] -
+            order[bInfo.orientation]
+        );
+    }
+
+    /*
+     * Finally alphabetically.
+     */
+    return String(a.name)
+        .localeCompare(
+            String(b.name)
+        );
+}
+
+
+function getMTFSequenceInfo(name) {
+
+    const text =
+        String(name || "")
+            .toUpperCase();
+
+    /*
+     * Look for the last numeric
+     * MTF position before H/V.
+     *
+     * Examples:
+     *
+     * _1_H
+     * _1_V
+     * _9_H
+     * _9_V
+     */
+    const match =
+        text.match(
+            /_(\d+)_([HV])(?:$|[_-])/i
+        );
+
+    if (match) {
+
+        return {
+
+            number:
+                Number(
+                    match[1]
+                ),
+
+            orientation:
+                match[2]
+        };
+    }
+
+    /*
+     * Alternative:
+     * find any number after 1A/1B.
+     */
+    const alt =
+        text.match(
+            /MTF_1[AB].*?(\d+).*?([HV])/i
+        );
+
+    if (alt) {
+
+        return {
+
+            number:
+                Number(
+                    alt[1]
+                ),
+
+            orientation:
+                alt[2]
+        };
+    }
+
+    return {
+
+        number:
+            999999,
+
+        orientation:
+            "OTHER"
+    };
 }
 
 
@@ -2742,32 +3045,6 @@ function evaluateResult(
 }
 
 
-function getMTFType(
-    name
-) {
-
-    const upper =
-        String(name || "")
-            .toUpperCase();
-
-    if (
-        upper.includes("VIS")
-    ) {
-
-        return "VIS";
-    }
-
-    if (
-        upper.includes("IR")
-    ) {
-
-        return "IR";
-    }
-
-    return "OTHER";
-}
-
-
 function cleanSN(sn) {
 
     if (
@@ -2798,9 +3075,7 @@ function cleanSN(sn) {
 }
 
 
-function formatNumber(
-    value
-) {
+function formatNumber(value) {
 
     if (
         value === null ||
@@ -2813,7 +3088,10 @@ function formatNumber(
 
     return Number(value)
         .toFixed(3)
-        .replace(/\.?0+$/, "");
+        .replace(
+            /\.?0+$/,
+            ""
+        );
 }
 
 
@@ -2821,9 +3099,7 @@ function formatNumber(
    ERROR
    ============================================================ */
 
-function showError(
-    message
-) {
+function showError(message) {
 
     const box =
         document
@@ -2891,8 +3167,6 @@ function clearAll() {
 
     currentFilter = "ALL";
 
-    updateFilterButtons();
-
     Object.values(
         chartInstances
     ).forEach(
@@ -2906,6 +3180,8 @@ function clearAll() {
     );
 
     chartInstances = {};
+
+    setFilter("ALL");
 
     hideError();
 }
