@@ -1,417 +1,1775 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Focus Test Log Analyzer</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Focus Test Log Analyzer</title>
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            background: #f4f6f8;
-            color: #222;
-        }
+<style>
+* {
+    box-sizing: border-box;
+}
 
-        header {
-            background: #123b6d;
-            color: white;
-            padding: 20px 30px;
-        }
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f3f5f7;
+    color: #1f2937;
+}
 
-        header h1 {
-            margin: 0;
-        }
+header {
+    background: #123b6d;
+    color: white;
+    padding: 18px 28px;
+}
 
-        .container {
-            max-width: 1200px;
-            margin: 30px auto;
-            padding: 0 20px;
-        }
+header h1 {
+    margin: 0;
+    font-size: 25px;
+}
 
-        .card {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
+header p {
+    margin: 5px 0 0;
+    opacity: .85;
+}
 
-        button {
-            background: #123b6d;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 15px;
-        }
+.container {
+    max-width: 1450px;
+    margin: auto;
+    padding: 20px;
+}
 
-        button:hover {
-            background: #1c579d;
-        }
+.card {
+    background: white;
+    border-radius: 10px;
+    padding: 18px;
+    margin-bottom: 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
 
-        input[type="file"] {
-            margin: 15px 0;
-        }
+textarea {
+    width: 100%;
+    min-height: 230px;
+    resize: vertical;
+    padding: 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-family: Consolas, monospace;
+    font-size: 13px;
+}
 
-        .summary {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-        }
+button, select {
+    padding: 10px 15px;
+    border-radius: 7px;
+    border: 1px solid #cbd5e1;
+    background: white;
+    cursor: pointer;
+    font-size: 14px;
+}
 
-        .summary-box {
-            background: #f4f6f8;
-            padding: 15px;
-            border-radius: 8px;
-        }
+button:hover {
+    background: #eef3f8;
+}
 
-        .summary-box strong {
-            display: block;
-            font-size: 22px;
-            margin-top: 5px;
-        }
+.primary {
+    background: #123b6d;
+    color: white;
+    border-color: #123b6d;
+}
 
-        .pass {
-            color: green;
-            font-weight: bold;
-        }
+.primary:hover {
+    background: #0d2d54;
+}
 
-        .fail {
-            color: red;
-            font-weight: bold;
-        }
+.danger {
+    background: #dc2626;
+    color: white;
+    border-color: #dc2626;
+}
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
+.good {
+    color: #15803d;
+    font-weight: bold;
+}
 
-        th, td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
-        }
+.ng {
+    color: #dc2626;
+    font-weight: bold;
+}
 
-        th {
-            background: #e9eef5;
-        }
+.warning {
+    color: #b45309;
+    font-weight: bold;
+}
 
-        @media (max-width: 800px) {
-            .summary {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-    </style>
+.stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.stat {
+    padding: 16px;
+    border-radius: 9px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.stat-title {
+    font-size: 12px;
+    color: #64748b;
+    text-transform: uppercase;
+}
+
+.stat-value {
+    font-size: 26px;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+.filters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.table-wrap {
+    overflow-x: auto;
+    max-height: 520px;
+    overflow-y: auto;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 13px;
+}
+
+th {
+    position: sticky;
+    top: 0;
+    background: #123b6d;
+    color: white;
+    padding: 9px;
+    text-align: left;
+    z-index: 2;
+}
+
+td {
+    padding: 8px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+tr:hover {
+    background: #f8fafc;
+}
+
+tr.clickable {
+    cursor: pointer;
+}
+
+tr.selected {
+    background: #dbeafe;
+}
+
+.badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.badge-good {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.badge-ng {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.badge-unknown {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+}
+
+.fail-box {
+    border-left: 5px solid #dc2626;
+    background: #fff1f2;
+    padding: 14px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+}
+
+.pass-box {
+    border-left: 5px solid #16a34a;
+    background: #f0fdf4;
+    padding: 14px;
+    border-radius: 6px;
+}
+
+.chart-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+canvas {
+    display: block;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+}
+
+.hidden {
+    display: none;
+}
+
+.small {
+    font-size: 12px;
+    color: #64748b;
+}
+
+h2, h3 {
+    margin-top: 0;
+}
+
+@media(max-width: 800px) {
+    .stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 </head>
 
 <body>
 
 <header>
     <h1>Focus Test Log Analyzer</h1>
-    <p>Manual log analysis and visualization</p>
+    <p>SPC / Focus Test MTF data analyzer</p>
 </header>
 
 <div class="container">
 
+    <!-- INPUT -->
     <div class="card">
-        <h2>1. Select Focus Test Logs</h2>
+        <h2>1. Paste Focus Test Data</h2>
 
-        <input
-            type="file"
-            id="logFiles"
-            accept=".log"
-            multiple
-        >
+        <p class="small">
+            Paste your SPC CSV export or Focus Test log below.
+            The application will automatically detect the format.
+        </p>
 
-        <br>
+        <textarea id="inputData"
+        placeholder="Paste your Focus Test CSV or log data here..."></textarea>
 
-        <button onclick="analyzeLogs()">
-            Analyze Logs
+        <br><br>
+
+        <button class="primary" onclick="analyzeData()">
+            ANALYZE DATA
         </button>
 
-        <p id="fileStatus">No files selected.</p>
+        <button onclick="clearData()">
+            CLEAR
+        </button>
+
+        <span id="dataStatus" class="small"></span>
     </div>
 
-    <div class="card">
-        <h2>2. Test Summary</h2>
+    <!-- SUMMARY -->
+    <div id="results" class="hidden">
 
-        <div class="summary">
+        <div class="card">
+            <h2>2. Summary</h2>
 
-            <div class="summary-box">
-                Logs
-                <strong id="totalLogs">0</strong>
+            <div class="stats">
+
+                <div class="stat">
+                    <div class="stat-title">Total SN</div>
+                    <div class="stat-value" id="totalSN">0</div>
+                </div>
+
+                <div class="stat">
+                    <div class="stat-title">GOOD</div>
+                    <div class="stat-value good" id="goodSN">0</div>
+                </div>
+
+                <div class="stat">
+                    <div class="stat-title">NG</div>
+                    <div class="stat-value ng" id="ngSN">0</div>
+                </div>
+
+                <div class="stat">
+                    <div class="stat-title">Parameters</div>
+                    <div class="stat-value" id="totalParams">0</div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- SN LIST -->
+        <div class="card">
+
+            <h2>3. SN / PCBA List</h2>
+
+            <div class="filters">
+
+                <button onclick="setSNFilter('ALL')">ALL</button>
+                <button onclick="setSNFilter('GOOD')">GOOD ONLY</button>
+                <button class="danger" onclick="setSNFilter('NG')">
+                    NG ONLY
+                </button>
+
+                <input
+                    id="snSearch"
+                    type="text"
+                    placeholder="Search SN / PCBA..."
+                    oninput="renderSNTable()"
+                    style="padding:10px;border:1px solid #cbd5e1;border-radius:7px;"
+                >
+
             </div>
 
-            <div class="summary-box">
-                PASS
-                <strong id="passCount">0</strong>
-            </div>
+            <br>
 
-            <div class="summary-box">
-                NG
-                <strong id="ngCount">0</strong>
-            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>SN / PCBA</th>
+                            <th>Work Order</th>
+                            <th>Date / Time</th>
+                            <th>Station</th>
+                            <th>Result</th>
+                            <th>NG Count</th>
+                            <th>Failed MTF</th>
+                        </tr>
+                    </thead>
 
-            <div class="summary-box">
-                Yield
-                <strong id="yield">0%</strong>
+                    <tbody id="snTable"></tbody>
+                </table>
             </div>
 
         </div>
-    </div>
 
-    <div class="card">
-        <h2>3. Parsed Test Data</h2>
+        <!-- SELECTED SN -->
+        <div class="card">
 
-        <table>
-            <thead>
-                <tr>
-                    <th>PCBA</th>
-                    <th>Station</th>
-                    <th>Work Order</th>
-                    <th>Result</th>
-                    <th>Error Code</th>
-                    <th>Failure</th>
-                </tr>
-            </thead>
+            <h2>
+                4. Selected SN:
+                <span id="selectedSN">None</span>
+            </h2>
 
-            <tbody id="resultsTable">
-            </tbody>
-        </table>
-    </div>
+            <div class="filters">
 
-    <div class="card">
-        <h2>4. Measurement Data</h2>
+                <button onclick="showParamMode('ALL')">
+                    ALL PARAMETERS
+                </button>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>PCBA</th>
-                    <th>Measurement</th>
-                    <th>Value</th>
-                    <th>Lower Spec</th>
-                    <th>Result</th>
-                </tr>
-            </thead>
+                <button class="danger" onclick="showParamMode('NG')">
+                    NG ONLY
+                </button>
 
-            <tbody id="measurementTable">
-            </tbody>
-        </table>
+                <button onclick="showParamMode('GOOD')">
+                    GOOD ONLY
+                </button>
+
+                <button onclick="previousNG()">
+                    ◀ PREVIOUS NG
+                </button>
+
+                <button class="primary" onclick="nextNG()">
+                    NEXT NG ▶
+                </button>
+
+            </div>
+
+            <br>
+
+            <div id="selectedInfo"></div>
+
+            <br>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>MTF Parameter</th>
+                            <th>Actual</th>
+                            <th>LL</th>
+                            <th>UL</th>
+                            <th>Difference</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="paramTable"></tbody>
+                </table>
+            </div>
+
+        </div>
+
+        <!-- GRAPH -->
+        <div class="card">
+
+            <h2>5. MTF Visualization</h2>
+
+            <div class="filters">
+
+                <label>
+                    Parameter:
+                    <select id="parameterSelect"
+                            onchange="drawChart()">
+                    </select>
+                </label>
+
+                <label>
+                    Graph:
+                    <select id="graphMode"
+                            onchange="drawChart()">
+                        <option value="single">Selected SN</option>
+                        <option value="all">All SN</option>
+                    </select>
+                </label>
+
+            </div>
+
+            <br>
+
+            <div class="chart-container">
+                <canvas id="chart" width="1300" height="500"></canvas>
+            </div>
+
+            <p id="chartInfo" class="small"></p>
+
+        </div>
+
+        <!-- PARAMETER SEARCH -->
+        <div class="card">
+
+            <h2>6. Find Which SN Failed a Specific MTF</h2>
+
+            <div class="filters">
+
+                <select id="globalParameter"
+                        onchange="renderParameterSummary()">
+                </select>
+
+                <button onclick="renderParameterSummary()">
+                    CHECK PARAMETER
+                </button>
+
+            </div>
+
+            <br>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>SN / PCBA</th>
+                            <th>Actual</th>
+                            <th>LL</th>
+                            <th>UL</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="parameterSummary"></tbody>
+                </table>
+            </div>
+
+        </div>
+
     </div>
 
 </div>
 
 <script>
 
-async function analyzeLogs() {
+let appData = {
+    units: [],
+    parameters: [],
+    specs: {}
+};
 
-    const files = document.getElementById("logFiles").files;
+let selectedIndex = -1;
+let snFilter = "ALL";
+let paramMode = "ALL";
 
-    if (files.length === 0) {
-        alert("Please select at least one .log file.");
-        return;
+
+// ============================================================
+// CSV PARSER
+// ============================================================
+
+function parseCSV(text) {
+
+    const rows = [];
+    let row = [];
+    let cell = "";
+    let insideQuotes = false;
+
+    for(let i = 0; i < text.length; i++) {
+
+        const char = text[i];
+        const next = text[i + 1];
+
+        if(char === '"' && insideQuotes && next === '"') {
+            cell += '"';
+            i++;
+            continue;
+        }
+
+        if(char === '"') {
+            insideQuotes = !insideQuotes;
+            continue;
+        }
+
+        if(char === "," && !insideQuotes) {
+            row.push(cell.trim());
+            cell = "";
+            continue;
+        }
+
+        if((char === "\n" || char === "\r") && !insideQuotes) {
+
+            if(char === "\r" && next === "\n") {
+                i++;
+            }
+
+            row.push(cell.trim());
+            cell = "";
+
+            if(row.some(x => x !== "")) {
+                rows.push(row);
+            }
+
+            row = [];
+            continue;
+        }
+
+        cell += char;
     }
 
-    document.getElementById("fileStatus").textContent =
-        files.length + " log file(s) selected.";
-
-    let pass = 0;
-    let ng = 0;
-
-    const resultsTable =
-        document.getElementById("resultsTable");
-
-    const measurementTable =
-        document.getElementById("measurementTable");
-
-    resultsTable.innerHTML = "";
-    measurementTable.innerHTML = "";
-
-    for (const file of files) {
-
-        const text = await file.text();
-
-        const data = parseFocusLog(text);
-
-        if (data.result === "PASS") {
-            pass++;
-        }
-
-        if (data.result === "NG") {
-            ng++;
-        }
-
-        resultsTable.innerHTML += `
-            <tr>
-                <td>${data.pcba}</td>
-                <td>${data.station}</td>
-                <td>${data.workOrder}</td>
-                <td class="${data.result === "NG" ? "fail" : "pass"}">
-                    ${data.result}
-                </td>
-                <td>${data.errorCode}</td>
-                <td>${data.failure}</td>
-            </tr>
-        `;
-
-        for (const measurement of data.measurements) {
-
-            measurementTable.innerHTML += `
-                <tr>
-                    <td>${data.pcba}</td>
-                    <td>${measurement.item}</td>
-                    <td>${measurement.value}</td>
-                    <td>${measurement.lowerSpec}</td>
-                    <td class="${measurement.result === "FAIL" ? "fail" : "pass"}">
-                        ${measurement.result}
-                    </td>
-                </tr>
-            `;
-        }
+    if(cell !== "" || row.length) {
+        row.push(cell.trim());
+        rows.push(row);
     }
 
-    const total = files.length;
-
-    document.getElementById("totalLogs").textContent = total;
-    document.getElementById("passCount").textContent = pass;
-    document.getElementById("ngCount").textContent = ng;
-
-    const yieldRate =
-        total > 0 ? ((pass / total) * 100).toFixed(2) : 0;
-
-    document.getElementById("yield").textContent =
-        yieldRate + "%";
+    return rows;
 }
 
 
-function parseFocusLog(text) {
+// ============================================================
+// MAIN ANALYZER
+// ============================================================
 
-    const data = {
-        pcba: "",
-        station: "",
-        workOrder: "",
-        result: "",
-        errorCode: "",
-        failure: "",
-        measurements: []
-    };
+function analyzeData() {
 
-    /*
-     * PCBA
-     */
+    const text = document.getElementById("inputData").value.trim();
 
-    let match = text.match(/GetPCBA:\s*([^\s]+)/);
-
-    if (match) {
-        data.pcba = match[1];
+    if(!text) {
+        alert("Please paste your Focus Test data first.");
+        return;
     }
 
-    /*
-     * Station
-     */
+    resetApp();
 
-    match = text.match(/"MESStationName":\s*"([^"]+)"/);
+    let detected = "UNKNOWN";
 
-    if (match) {
-        data.station = match[1];
-    }
-
-    /*
-     * Work Order
-     */
-
-    match = text.match(/WO:([^;]+)/);
-
-    if (match) {
-        data.workOrder = match[1];
-    }
-
-    /*
-     * Overall result
-     */
-
-    if (
-        text.includes("MES]_Send Cmd 103") &&
-        text.includes(";NG;")
+    if(
+        text.includes("WorkNo") &&
+        (
+            text.includes("StampTime") ||
+            text.includes("StationIP")
+        )
     ) {
-        data.result = "NG";
+        detected = "SPC CSV";
+        parseSPCCSV(text);
     }
-    else if (text.includes("Item_MTF_IR: NG")) {
-        data.result = "NG";
+    else if(
+        text.includes("Item:") &&
+        text.includes("SPEC:")
+    ) {
+        detected = "FOCUS LOG";
+        parseRawLog(text);
     }
     else {
-        data.result = "PASS";
+        detected = "CSV";
+        parseSPCCSV(text);
     }
 
-    /*
-     * Error Code
-     */
+    if(appData.units.length === 0) {
 
-    match = text.match(
-        /PostErrorCode\]ErrorCode:([^ ,]+)/
-    );
+        document.getElementById("dataStatus").textContent =
+            " No recognizable measurement records found.";
 
-    if (match) {
-        data.errorCode = match[1];
+        return;
     }
 
-    /*
-     * Failure description
-     */
+    document.getElementById("dataStatus").textContent =
+        " Detected: " + detected +
+        " | Records: " + appData.units.length;
 
-    match = text.match(
-        /description:\s*(.+)/
-    );
+    finishAnalysis();
+}
 
-    if (match) {
-        data.failure = match[1].trim();
+
+// ============================================================
+// SPC CSV PARSER
+// ============================================================
+
+function parseSPCCSV(text) {
+
+    const rows = parseCSV(text);
+
+    if(!rows.length) return;
+
+    // Find actual header row
+    let headerIndex = -1;
+
+    for(let i = 0; i < rows.length; i++) {
+
+        const r = rows[i].map(x => x.toLowerCase());
+
+        if(
+            r.includes("pcba") &&
+            (
+                r.includes("workno") ||
+                r.includes("stamptime")
+            )
+        ) {
+            headerIndex = i;
+            break;
+        }
     }
 
-    /*
-     * Measurements
-     *
-     * Example:
-     *
-     * Item: MTF_1B_IR_2_V;
-     * Value: 29.6
-     * [ SPEC: LOWER=32.0 ]
-     */
+    if(headerIndex === -1) return;
 
-    const measurementRegex =
-        /Item:\s*([^;]+);\s*Value:\s*([-\d.]+)\s*\[\s*SPEC:\s*LOWER=([-\d.]+)\s*\]/g;
+    const header = rows[headerIndex];
 
-    let measurementMatch;
+    const pcbaIndex = findColumn(header, ["PCBA"]);
+    const workIndex = findColumn(header, ["WorkNo", "Work No"]);
+    const timeIndex = findColumn(header, ["StampTime", "Date_Time"]);
+    const stationIndex = findColumn(header, ["StationIP", "Station"]);
 
-    while (
-        (measurementMatch =
-            measurementRegex.exec(text)) !== null
+    // Find specification rows before actual data
+    for(let i = 0; i < headerIndex; i++) {
+
+        const first = String(rows[i][0] || "").trim().toLowerCase();
+
+        if(
+            first === "lower" ||
+            first === "upper"
+        ) {
+
+            const type = first === "lower" ? "lower" : "upper";
+
+            for(let c = 0; c < header.length; c++) {
+
+                const value = parseNumber(rows[i][c]);
+
+                if(value !== null) {
+
+                    const name = cleanParameterName(header[c]);
+
+                    if(!name) continue;
+
+                    if(!appData.specs[name]) {
+                        appData.specs[name] = {};
+                    }
+
+                    appData.specs[name][type] = value;
+                }
+            }
+        }
+    }
+
+    // Find parameter columns
+    for(let c = 0; c < header.length; c++) {
+
+        const name = cleanParameterName(header[c]);
+
+        if(!name) continue;
+
+        if(
+            c !== pcbaIndex &&
+            c !== workIndex &&
+            c !== timeIndex &&
+            c !== stationIndex
+        ) {
+
+            if(
+                !appData.parameters.includes(name)
+            ) {
+                appData.parameters.push(name);
+            }
+        }
+    }
+
+    // Actual unit rows
+    for(let i = headerIndex + 1; i < rows.length; i++) {
+
+        const row = rows[i];
+
+        const pcba = row[pcbaIndex] || "";
+
+        // Skip statistics rows
+        if(
+            !pcba ||
+            ["Lower","Upper","MIN","MAX","Mean","Sigma","CpL","CpU","Cpk"]
+            .includes(pcba.trim())
+        ) {
+            continue;
+        }
+
+        // Need something that looks like a real SN
+        if(!pcba.trim()) continue;
+
+        const unit = {
+            sn: pcba.trim(),
+            work: workIndex >= 0 ? (row[workIndex] || "") : "",
+            time: timeIndex >= 0 ? (row[timeIndex] || "") : "",
+            station: stationIndex >= 0 ? (row[stationIndex] || "") : "",
+            values: {},
+            failures: []
+        };
+
+        for(let c = 0; c < header.length; c++) {
+
+            const name = cleanParameterName(header[c]);
+
+            if(!name) continue;
+
+            if(!appData.parameters.includes(name)) continue;
+
+            const value = parseNumber(row[c]);
+
+            if(value !== null) {
+                unit.values[name] = value;
+            }
+        }
+
+        calculateUnitResult(unit);
+
+        appData.units.push(unit);
+    }
+}
+
+
+// ============================================================
+// RAW FOCUS LOG PARSER
+// ============================================================
+
+function parseRawLog(text) {
+
+    // Extract SN / PCBA
+    let snMatch =
+        text.match(/GetPCBA:\s*([^\s]+)/i) ||
+        text.match(/SN:\s*([^\s]+)/i);
+
+    let sn = snMatch ? snMatch[1] : "UNKNOWN";
+
+    let workMatch =
+        text.match(/WO:([A-Za-z0-9_-]+)/i);
+
+    let work = workMatch ? workMatch[1] : "";
+
+    let stationMatch =
+        text.match(/MESStationName"?\s*:\s*"([^"]+)/i);
+
+    let station =
+        stationMatch ? stationMatch[1] : "";
+
+    let unit = {
+        sn: sn,
+        work: work,
+        time: "",
+        station: station,
+        values: {},
+        failures: []
+    };
+
+    const regex =
+        /Item:\s*([^;]+);\s*Value:\s*([-\d.]+)\s*\[\s*SPEC:\s*([^\]]+)\]/gi;
+
+    let match;
+
+    while((match = regex.exec(text)) !== null) {
+
+        let name = cleanParameterName(match[1]);
+        let value = parseNumber(match[2]);
+
+        if(!name || value === null) continue;
+
+        let specText = match[3];
+
+        let lowerMatch =
+            specText.match(/LOWER\s*=\s*([-\d.]+)/i);
+
+        let upperMatch =
+            specText.match(/UPPER\s*=\s*([-\d.]+)/i);
+
+        if(!appData.specs[name]) {
+            appData.specs[name] = {};
+        }
+
+        if(lowerMatch) {
+            appData.specs[name].lower =
+                parseNumber(lowerMatch[1]);
+        }
+
+        if(upperMatch) {
+            appData.specs[name].upper =
+                parseNumber(upperMatch[1]);
+        }
+
+        if(!appData.parameters.includes(name)) {
+            appData.parameters.push(name);
+        }
+
+        unit.values[name] = value;
+    }
+
+    calculateUnitResult(unit);
+
+    appData.units.push(unit);
+}
+
+
+// ============================================================
+// RESULT CALCULATION
+// ============================================================
+
+function calculateUnitResult(unit) {
+
+    unit.failures = [];
+
+    for(const parameter of appData.parameters) {
+
+        if(!(parameter in unit.values)) continue;
+
+        const value = unit.values[parameter];
+
+        const spec = appData.specs[parameter] || {};
+
+        let failed = false;
+
+        if(
+            spec.lower !== undefined &&
+            value < spec.lower
+        ) {
+            failed = true;
+        }
+
+        if(
+            spec.upper !== undefined &&
+            value > spec.upper
+        ) {
+            failed = true;
+        }
+
+        if(failed) {
+            unit.failures.push({
+                parameter: parameter,
+                value: value,
+                lower: spec.lower,
+                upper: spec.upper
+            });
+        }
+    }
+
+    unit.result =
+        unit.failures.length > 0 ? "NG" : "GOOD";
+}
+
+
+// ============================================================
+// HELPERS
+// ============================================================
+
+function findColumn(header, names) {
+
+    for(const name of names) {
+
+        const index = header.findIndex(
+            x => String(x).trim().toLowerCase() ===
+                 name.toLowerCase()
+        );
+
+        if(index >= 0) return index;
+    }
+
+    return -1;
+}
+
+
+function cleanParameterName(name) {
+
+    if(!name) return "";
+
+    name = String(name).trim();
+
+    if(!name) return "";
+
+    const lower = name.toLowerCase();
+
+    const ignored = [
+        "pcba",
+        "workno",
+        "stamptime",
+        "stationip",
+        "station",
+        "result",
+        "summary",
+        "date_time"
+    ];
+
+    if(ignored.includes(lower)) {
+        return "";
+    }
+
+    // Remove UMA_ prefix so the display matches the Focus log
+    if(name.toUpperCase().startsWith("UMA_")) {
+        name = name.substring(4);
+    }
+
+    return name;
+}
+
+
+function parseNumber(value) {
+
+    if(value === undefined || value === null) {
+        return null;
+    }
+
+    value = String(value)
+        .trim()
+        .replace(/,/g, "");
+
+    if(
+        value === "" ||
+        value === "-" ||
+        value === "N/A"
     ) {
+        return null;
+    }
 
-        const item = measurementMatch[1].trim();
+    const number = Number(value);
 
-        const value =
-            parseFloat(measurementMatch[2]);
+    return Number.isFinite(number) ? number : null;
+}
 
-        const lowerSpec =
-            parseFloat(measurementMatch[3]);
 
-        const result =
-            value >= lowerSpec
-                ? "PASS"
-                : "FAIL";
+// ============================================================
+// FINISH
+// ============================================================
 
-        data.measurements.push({
-            item,
-            value,
-            lowerSpec,
-            result
+function finishAnalysis() {
+
+    document.getElementById("results")
+        .classList.remove("hidden");
+
+    document.getElementById("totalSN").textContent =
+        appData.units.length;
+
+    document.getElementById("goodSN").textContent =
+        appData.units.filter(x => x.result === "GOOD").length;
+
+    document.getElementById("ngSN").textContent =
+        appData.units.filter(x => x.result === "NG").length;
+
+    document.getElementById("totalParams").textContent =
+        appData.parameters.length;
+
+    selectedIndex = 0;
+
+    renderSNTable();
+
+    populateParameterSelectors();
+
+    selectSN(0);
+}
+
+
+// ============================================================
+// SN TABLE
+// ============================================================
+
+function setSNFilter(filter) {
+
+    snFilter = filter;
+
+    renderSNTable();
+}
+
+
+function renderSNTable() {
+
+    const tbody =
+        document.getElementById("snTable");
+
+    tbody.innerHTML = "";
+
+    const search =
+        document.getElementById("snSearch")
+        .value
+        .toLowerCase();
+
+    let displayNumber = 0;
+
+    appData.units.forEach((unit, index) => {
+
+        if(
+            snFilter !== "ALL" &&
+            unit.result !== snFilter
+        ) {
+            return;
+        }
+
+        if(
+            search &&
+            !unit.sn.toLowerCase().includes(search)
+        ) {
+            return;
+        }
+
+        displayNumber++;
+
+        const tr = document.createElement("tr");
+
+        tr.className =
+            "clickable" +
+            (index === selectedIndex ? " selected" : "");
+
+        tr.onclick = () => selectSN(index);
+
+        const failures =
+            unit.failures
+                .map(x => x.parameter)
+                .join(", ");
+
+        tr.innerHTML = `
+            <td>${displayNumber}</td>
+            <td><b>${escapeHTML(unit.sn)}</b></td>
+            <td>${escapeHTML(unit.work)}</td>
+            <td>${escapeHTML(unit.time)}</td>
+            <td>${escapeHTML(unit.station)}</td>
+            <td>
+                ${unit.result === "NG"
+                    ? '<span class="badge badge-ng">NG</span>'
+                    : '<span class="badge badge-good">GOOD</span>'}
+            </td>
+            <td>${unit.failures.length}</td>
+            <td class="${unit.failures.length ? 'ng' : ''}">
+                ${escapeHTML(failures || "—")}
+            </td>
+        `;
+
+        tbody.appendChild(tr);
+    });
+}
+
+
+// ============================================================
+// SELECT SN
+// ============================================================
+
+function selectSN(index) {
+
+    if(index < 0 || index >= appData.units.length) return;
+
+    selectedIndex = index;
+
+    const unit = appData.units[index];
+
+    document.getElementById("selectedSN").textContent =
+        unit.sn;
+
+    document.getElementById("selectedInfo").innerHTML = `
+        <div class="${unit.result === 'NG' ? 'fail-box' : 'pass-box'}">
+            <b>Result:</b>
+            ${unit.result}
+            &nbsp;&nbsp;
+            <b>Work Order:</b>
+            ${escapeHTML(unit.work || "—")}
+            &nbsp;&nbsp;
+            <b>Time:</b>
+            ${escapeHTML(unit.time || "—")}
+            &nbsp;&nbsp;
+            <b>NG Count:</b>
+            ${unit.failures.length}
+        </div>
+    `;
+
+    renderSNTable();
+
+    renderParameterTable();
+
+    populateParameterSelectors();
+
+    drawChart();
+}
+
+
+// ============================================================
+// PARAMETER TABLE
+// ============================================================
+
+function showParamMode(mode) {
+
+    paramMode = mode;
+
+    renderParameterTable();
+}
+
+
+function renderParameterTable() {
+
+    if(selectedIndex < 0) return;
+
+    const unit =
+        appData.units[selectedIndex];
+
+    const tbody =
+        document.getElementById("paramTable");
+
+    tbody.innerHTML = "";
+
+    let count = 0;
+
+    appData.parameters.forEach(parameter => {
+
+        if(!(parameter in unit.values)) return;
+
+        const value = unit.values[parameter];
+
+        const spec =
+            appData.specs[parameter] || {};
+
+        const lower = spec.lower;
+        const upper = spec.upper;
+
+        let failed = false;
+
+        if(lower !== undefined && value < lower) {
+            failed = true;
+        }
+
+        if(upper !== undefined && value > upper) {
+            failed = true;
+        }
+
+        const status =
+            failed ? "NG" : "GOOD";
+
+        if(
+            paramMode === "NG" &&
+            !failed
+        ) return;
+
+        if(
+            paramMode === "GOOD" &&
+            failed
+        ) return;
+
+        count++;
+
+        let difference = "—";
+
+        if(lower !== undefined && value < lower) {
+            difference =
+                formatNumber(value - lower);
+        }
+        else if(upper !== undefined && value > upper) {
+            difference =
+                formatNumber(value - upper);
+        }
+
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${count}</td>
+            <td><b>${escapeHTML(parameter)}</b></td>
+            <td>${formatNumber(value)}</td>
+            <td>${lower !== undefined ? formatNumber(lower) : "—"}</td>
+            <td>${upper !== undefined ? formatNumber(upper) : "—"}</td>
+            <td class="${failed ? 'ng' : ''}">
+                ${difference}
+            </td>
+            <td>
+                ${failed
+                    ? '<span class="badge badge-ng">NG</span>'
+                    : '<span class="badge badge-good">GOOD</span>'}
+            </td>
+        `;
+
+        tbody.appendChild(tr);
+    });
+}
+
+
+// ============================================================
+// PARAMETER SELECTORS
+// ============================================================
+
+function populateParameterSelectors() {
+
+    const select =
+        document.getElementById("parameterSelect");
+
+    const global =
+        document.getElementById("globalParameter");
+
+    const current =
+        select.value;
+
+    select.innerHTML = "";
+    global.innerHTML = "";
+
+    appData.parameters.forEach(parameter => {
+
+        const option =
+            document.createElement("option");
+
+        option.value = parameter;
+        option.textContent = parameter;
+
+        select.appendChild(option);
+
+        const option2 =
+            document.createElement("option");
+
+        option2.value = parameter;
+        option2.textContent = parameter;
+
+        global.appendChild(option2);
+    });
+
+    if(
+        current &&
+        appData.parameters.includes(current)
+    ) {
+        select.value = current;
+    }
+}
+
+
+// ============================================================
+// GRAPH
+// ============================================================
+
+function drawChart() {
+
+    if(selectedIndex < 0) return;
+
+    const canvas =
+        document.getElementById("chart");
+
+    const ctx =
+        canvas.getContext("2d");
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    const parameter =
+        document.getElementById("parameterSelect").value;
+
+    if(!parameter) return;
+
+    const mode =
+        document.getElementById("graphMode").value;
+
+    const spec =
+        appData.specs[parameter] || {};
+
+    let points = [];
+
+    if(mode === "single") {
+
+        const unit =
+            appData.units[selectedIndex];
+
+        if(unit.values[parameter] !== undefined) {
+
+            points.push({
+                label: unit.sn,
+                value: unit.values[parameter]
+            });
+        }
+
+    } else {
+
+        appData.units.forEach(unit => {
+
+            if(unit.values[parameter] !== undefined) {
+
+                points.push({
+                    label: unit.sn,
+                    value: unit.values[parameter]
+                });
+            }
         });
     }
 
-    return data;
+    if(!points.length) {
+
+        document.getElementById("chartInfo").textContent =
+            "No data available for this parameter.";
+
+        return;
+    }
+
+    document.getElementById("chartInfo").textContent =
+        parameter +
+        " | LL: " +
+        (spec.lower !== undefined ? spec.lower : "N/A") +
+        " | UL: " +
+        (spec.upper !== undefined ? spec.upper : "N/A");
+
+    drawLineChart(
+        ctx,
+        canvas,
+        points,
+        spec.lower,
+        spec.upper
+    );
+}
+
+
+function drawLineChart(
+    ctx,
+    canvas,
+    points,
+    lower,
+    upper
+) {
+
+    const W = canvas.width;
+    const H = canvas.height;
+
+    const left = 75;
+    const right = 30;
+    const top = 35;
+    const bottom = 75;
+
+    const graphW =
+        W - left - right;
+
+    const graphH =
+        H - top - bottom;
+
+    let values =
+        points.map(p => p.value);
+
+    if(lower !== undefined) values.push(lower);
+    if(upper !== undefined) values.push(upper);
+
+    let min =
+        Math.min(...values);
+
+    let max =
+        Math.max(...values);
+
+    if(min === max) {
+        min -= 5;
+        max += 5;
+    }
+
+    const padding =
+        (max - min) * 0.12;
+
+    min -= padding;
+    max += padding;
+
+    function y(value) {
+
+        return top +
+            (max - value) /
+            (max - min) *
+            graphH;
+    }
+
+    // Background
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0,0,W,H);
+
+    // Grid
+    ctx.strokeStyle = "#e5e7eb";
+    ctx.lineWidth = 1;
+
+    for(let i = 0; i <= 5; i++) {
+
+        const yy =
+            top + i * graphH / 5;
+
+        ctx.beginPath();
+        ctx.moveTo(left, yy);
+        ctx.lineTo(W-right, yy);
+        ctx.stroke();
+
+        const value =
+            max -
+            i * (max-min)/5;
+
+        ctx.fillStyle = "#64748b";
+        ctx.font = "12px Arial";
+        ctx.fillText(
+            value.toFixed(1),
+            15,
+            yy + 4
+        );
+    }
+
+    // Axes
+    ctx.strokeStyle = "#334155";
+    ctx.lineWidth = 1;
+
+    ctx.beginPath();
+    ctx.moveTo(left, top);
+    ctx.lineTo(left, H-bottom);
+    ctx.lineTo(W-right, H-bottom);
+    ctx.stroke();
+
+    // Lower limit
+    if(lower !== undefined) {
+
+        const yy = y(lower);
+
+        ctx.strokeStyle = "#dc2626";
+        ctx.lineWidth = 2;
+
+        ctx.setLineDash([8,5]);
+
+        ctx.beginPath();
+        ctx.moveTo(left, yy);
+        ctx.lineTo(W-right, yy);
+        ctx.stroke();
+
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = "#dc2626";
+        ctx.font = "bold 13px Arial";
+        ctx.fillText(
+            "LL = " + formatNumber(lower),
+            left + 8,
+            yy - 6
+        );
+    }
+
+    // Upper limit
+    if(upper !== undefined) {
+
+        const yy = y(upper);
+
+        ctx.strokeStyle = "#dc2626";
+        ctx.lineWidth = 2;
+
+        ctx.setLineDash([8,5]);
+
+        ctx.beginPath();
+        ctx.moveTo(left, yy);
+        ctx.lineTo(W-right, yy);
+        ctx.stroke();
+
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = "#dc2626";
+        ctx.font = "bold 13px Arial";
+        ctx.fillText(
+            "UL = " + formatNumber(upper),
+            left + 8,
+            yy - 6
+        );
+    }
+
+    // Actual line
+    ctx.strokeStyle = "#123b6d";
+    ctx.lineWidth = 2;
+
+    ctx.beginPath();
+
+    points.forEach((point, i) => {
+
+        const x =
+            left +
+            (points.length === 1
+                ? graphW / 2
+                : i * graphW / (points.length - 1));
+
+        const yy = y(point.value);
+
+        if(i === 0) {
+            ctx.moveTo(x, yy);
+        } else {
+            ctx.lineTo(x, yy);
+        }
+    });
+
+    ctx.stroke();
+
+    // Points
+    points.forEach((point, i) => {
+
+        const x =
+            left +
+            (points.length === 1
+                ? graphW / 2
+                : i * graphW / (points.length - 1));
+
+        const yy = y(point.value);
+
+        const failed =
+            (lower !== undefined && point.value < lower) ||
+            (upper !== undefined && point.value > upper);
+
+        ctx.beginPath();
+
+        ctx.arc(
+            x,
+            yy,
+            5,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fillStyle =
+            failed ? "#dc2626" : "#123b6d";
+
+        ctx.fill();
+
+        // Labels for single unit
+        if(points.length <= 20) {
+
+            ctx.save();
+
+            ctx.translate(
+                x,
+                H-bottom+15
+            );
+
+            ctx.rotate(-Math.PI/4);
+
+            ctx.fillStyle = "#475569";
+            ctx.font = "11px Arial";
+
+            ctx.fillText(
+                point.label,
+                0,
+                0
+            );
+
+            ctx.restore();
+        }
+    });
+
+    // Graph title
+    ctx.fillStyle = "#1f2937";
+    ctx.font = "bold 15px Arial";
+
+    ctx.fillText(
+        "Actual Measurement",
+        left,
+        20
+    );
+}
+
+
+// ============================================================
+// PARAMETER SUMMARY
+// ============================================================
+
+function renderParameterSummary() {
+
+    const parameter =
+        document.getElementById("globalParameter").value;
+
+    const tbody =
+        document.getElementById("parameterSummary");
+
+    tbody.innerHTML = "";
+
+    const spec =
+        appData.specs[parameter] || {};
+
+    appData.units.forEach((unit,index) => {
+
+        if(unit.values[parameter] === undefined) return;
+
+        const value =
+            unit.values[parameter];
+
+        const failed =
+            (spec.lower !== undefined && value < spec.lower) ||
+            (spec.upper !== undefined && value > spec.upper);
+
+        const tr =
+            document.createElement("tr");
+
+        tr.className = "clickable";
+
+        tr.onclick = () => selectSN(index);
+
+        tr.innerHTML = `
+            <td>${index + 1}</td>
+            <td><b>${escapeHTML(unit.sn)}</b></td>
+            <td>${formatNumber(value)}</td>
+            <td>${spec.lower !== undefined
+                ? formatNumber(spec.lower)
+                : "—"}</td>
+            <td>${spec.upper !== undefined
+                ? formatNumber(spec.upper)
+                : "—"}</td>
+            <td>
+                ${failed
+                    ? '<span class="badge badge-ng">NG</span>'
+                    : '<span class="badge badge-good">GOOD</span>'}
+            </td>
+        `;
+
+        tbody.appendChild(tr);
+    });
+}
+
+
+// ============================================================
+// NEXT / PREVIOUS NG
+// ============================================================
+
+function nextNG() {
+
+    if(!appData.units.length) return;
+
+    for(
+        let step = 1;
+        step <= appData.units.length;
+        step++
+    ) {
+
+        const index =
+            (selectedIndex + step) %
+            appData.units.length;
+
+        if(appData.units[index].result === "NG") {
+
+            selectSN(index);
+            return;
+        }
+    }
+
+    alert("No NG units found.");
+}
+
+
+function previousNG() {
+
+    if(!appData.units.length) return;
+
+    for(
+        let step = 1;
+        step <= appData.units.length;
+        step++
+    ) {
+
+        let index =
+            selectedIndex - step;
+
+        if(index < 0) {
+            index += appData.units.length;
+        }
+
+        if(appData.units[index].result === "NG") {
+
+            selectSN(index);
+            return;
+        }
+    }
+
+    alert("No NG units found.");
+}
+
+
+// ============================================================
+// RESET / CLEAR
+// ============================================================
+
+function resetApp() {
+
+    appData = {
+        units: [],
+        parameters: [],
+        specs: {}
+    };
+
+    selectedIndex = -1;
+    snFilter = "ALL";
+    paramMode = "ALL";
+}
+
+
+function clearData() {
+
+    document.getElementById("inputData").value = "";
+
+    document.getElementById("results")
+        .classList.add("hidden");
+
+    document.getElementById("dataStatus")
+        .textContent = "";
+
+    resetApp();
+}
+
+
+// ============================================================
+// FORMATTING
+// ============================================================
+
+function formatNumber(value) {
+
+    if(value === undefined || value === null) {
+        return "—";
+    }
+
+    if(
+        Math.abs(value) >= 100 ||
+        Number.isInteger(value)
+    ) {
+        return value.toFixed(2);
+    }
+
+    return value.toFixed(3);
+}
+
+
+function escapeHTML(value) {
+
+    return String(value || "")
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
 }
 
 </script>
