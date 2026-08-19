@@ -1276,6 +1276,23 @@ function parseCSVData(text) {
         if (specNames.includes(first)) continue;
 
         const sn = snIndex >= 0 ? String(row[snIndex] || "").trim() : "";
+
+        /*
+         * IMPORTANT:
+         * SPC summary rows (Lower, Upper, MIN, MAX, Mean, Sigma,
+         * CpL, CpU, Cpk, etc.) are not actual units.
+         * Only rows containing a real SN/PCBA are allowed to become records.
+         */
+        if (!sn) continue;
+
+        const normalizedSN = sn.toUpperCase().replace(/\s+/g, "");
+        const nonSNRows = new Set([
+            "LOWER", "UPPER", "MIN", "MAX", "MEAN", "SIGMA",
+            "CPL", "CPU", "CPLU", "CPK", "CP", "PPK", "PP"
+        ]);
+
+        if (nonSNRows.has(normalizedSN)) continue;
+
         const workNo = workNoIndex >= 0 ? String(row[workNoIndex] || "").trim() : "";
         const stampTime = timeIndex >= 0 ? String(row[timeIndex] || "").trim() : "";
         const stationIP = stationIndex >= 0 ? String(row[stationIndex] || "").trim() : "";
@@ -4253,8 +4270,7 @@ function isExcludedMTFItem(name) {
         upper.includes("VIS_LP-MM") ||
         upper.includes("VIS_DISTANCE") ||
         upper.includes("IR_LP-MM") ||
-        upper.includes("IR_DISTANCE") ||
-        upper.includes("CPK")
+        upper.includes("IR_DISTANCE")
     ) {
 
         return true;
