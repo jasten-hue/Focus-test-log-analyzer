@@ -104,10 +104,6 @@ button,
     display: none;
 }
 
-/* ============================================================
-   SUMMARY
-   ============================================================ */
-
 .summary-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -140,11 +136,12 @@ button,
     color: #dc2626;
 }
 
+
 /* ============================================================
-   FILTERS / SEARCH
+   SEARCH + FILTER
    ============================================================ */
 
-.controls {
+.toolbar {
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
@@ -154,21 +151,11 @@ button,
 .search-box {
     flex: 1;
     min-width: 250px;
-}
-
-.search-box input {
-    width: 100%;
     padding: 11px 13px;
     border: 1px solid #cfd4da;
     border-radius: 7px;
-    font-family: Consolas, monospace;
-    font-size: 13px;
-}
-
-.filter-buttons {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
 }
 
 .filter-btn {
@@ -181,15 +168,16 @@ button,
     color: white;
 }
 
-.filter-btn.ng-active {
+.filter-btn.ng-filter.active {
     background: #dc2626;
     color: white;
 }
 
-.filter-btn.good-active {
+.filter-btn.good-filter.active {
     background: #059669;
     color: white;
 }
+
 
 /* ============================================================
    RESULT LIST
@@ -213,9 +201,9 @@ button,
     grid-template-columns:
         50px
         minmax(180px, 1fr)
-        130px
-        minmax(150px, 220px)
-        120px;
+        110px
+        180px
+        110px;
 
     align-items: center;
     gap: 12px;
@@ -264,6 +252,12 @@ button,
     font-size: 13px;
 }
 
+.good-description {
+    color: #059669;
+    font-weight: bold;
+    font-size: 13px;
+}
+
 .test-count {
     color: #6b7280;
     font-size: 12px;
@@ -279,6 +273,7 @@ button,
 .sn-card.expanded .sn-content {
     display: block;
 }
+
 
 /* ============================================================
    TEST LOG
@@ -316,23 +311,19 @@ button,
 }
 
 .section-title {
-    margin: 15px 0 8px;
-    font-size: 15px;
+    margin: 14px 0 8px;
+    font-size: 14px;
     font-weight: bold;
     color: #374151;
 }
 
-/* ============================================================
-   DAY / NIGHT MODE
-   ============================================================ */
-
 .mode-title {
-    margin-top: 18px;
-    margin-bottom: 8px;
-    padding: 7px 10px;
-    font-size: 14px;
-    font-weight: bold;
+    font-size: 15px;
+    padding: 8px 10px;
     border-radius: 5px;
+    margin-top: 12px;
+    margin-bottom: 8px;
+    font-weight: bold;
 }
 
 .day-mode-title {
@@ -344,6 +335,7 @@ button,
     background: #eef2ff;
     color: #3730a3;
 }
+
 
 /* ============================================================
    TABLE
@@ -391,6 +383,7 @@ tr.ng-row td {
     font-weight: bold;
 }
 
+
 /* ============================================================
    GRAPH
    ============================================================ */
@@ -405,6 +398,7 @@ canvas {
     width: 100% !important;
     height: 100% !important;
 }
+
 
 /* ============================================================
    OTHER
@@ -433,10 +427,11 @@ canvas {
 }
 
 .no-results {
-    padding: 25px;
+    padding: 30px;
     text-align: center;
     color: #6b7280;
 }
+
 
 /* ============================================================
    RESPONSIVE
@@ -452,10 +447,11 @@ canvas {
         grid-template-columns:
             35px
             1fr
-            90px;
+            80px;
     }
 
     .ng-description,
+    .good-description,
     .test-count {
         grid-column: 2 / 4;
         text-align: left;
@@ -474,20 +470,13 @@ canvas {
             1fr
             70px;
     }
-
-    .controls {
-        flex-direction: column;
-    }
-
-    .search-box {
-        min-width: 100%;
-    }
 }
 
 </style>
 </head>
 
 <body>
+
 
 <div class="header">
 
@@ -499,234 +488,247 @@ canvas {
 
 </div>
 
+
 <div class="container">
 
-    <!-- =====================================================
-         INPUT
-         ===================================================== -->
 
-    <div class="card">
+<!-- ============================================================
+     INPUT
+============================================================ -->
 
-        <div class="input-title">
-            Paste Log / CSV Data
-        </div>
+<div class="card">
 
-        <textarea
-            id="logInput"
-            placeholder="Paste your .log or .csv data here..."
-        ></textarea>
+    <div class="input-title">
+        Paste Log / CSV Data
+    </div>
 
-        <div class="buttons">
+    <textarea
+        id="logInput"
+        placeholder="Paste your .log or .csv data here..."
+    ></textarea>
 
-            <label class="file-label">
+    <div class="buttons">
 
-                Browse Data
+        <label class="file-label">
 
-                <input
-                    type="file"
-                    id="fileInput"
-                    accept=".log,.txt,.csv"
-                >
+            Browse Data
 
-            </label>
-
-            <button
-                class="analyze-btn"
-                onclick="analyzeLog()"
+            <input
+                type="file"
+                id="fileInput"
+                accept=".log,.txt,.csv"
             >
-                Analyze
-            </button>
 
-            <button
-                class="clear-btn"
-                onclick="clearAll()"
-            >
-                Clear
-            </button>
+        </label>
 
-        </div>
+        <button
+            class="analyze-btn"
+            onclick="analyzeLog()"
+        >
+            Analyze
+        </button>
 
-        <div
-            id="fileInfo"
-            class="format-info"
-        ></div>
+        <button
+            class="clear-btn"
+            onclick="clearAll()"
+        >
+            Clear
+        </button>
 
     </div>
 
     <div
-        id="errorBox"
-        class="error"
+        id="fileInfo"
+        class="format-info"
     ></div>
 
+</div>
 
-    <!-- =====================================================
-         SUMMARY
-         ===================================================== -->
 
-    <div
-        id="summaryCard"
-        class="card"
-        style="display:none;"
-    >
+<!-- ============================================================
+     ERROR
+============================================================ -->
 
-        <div class="input-title">
-            Test Summary
-        </div>
+<div
+    id="errorBox"
+    class="error"
+></div>
 
-        <div class="summary-grid">
 
-            <div class="summary-box">
+<!-- ============================================================
+     SUMMARY
+============================================================ -->
 
-                <div class="label">
-                    Total SN
-                </div>
+<div
+    id="summaryCard"
+    class="card"
+    style="display:none;"
+>
 
-                <div
-                    id="totalSN"
-                    class="number"
-                >
-                    0
-                </div>
-
-            </div>
-
-            <div class="summary-box">
-
-                <div class="label">
-                    GOOD
-                </div>
-
-                <div
-                    id="goodSN"
-                    class="number good-number"
-                >
-                    0
-                </div>
-
-            </div>
-
-            <div class="summary-box">
-
-                <div class="label">
-                    NG
-                </div>
-
-                <div
-                    id="ngSN"
-                    class="number ng-number"
-                >
-                    0
-                </div>
-
-            </div>
-
-            <div class="summary-box">
-
-                <div class="label">
-                    Test Logs
-                </div>
-
-                <div
-                    id="totalTests"
-                    class="number"
-                >
-                    0
-                </div>
-
-            </div>
-
-        </div>
-
+    <div class="input-title">
+        Test Summary
     </div>
 
+    <div class="summary-grid">
 
-    <!-- =====================================================
-         RESULTS
-         ===================================================== -->
+        <div class="summary-box">
 
-    <div
-        id="resultsCard"
-        class="card"
-        style="display:none;"
-    >
-
-        <div class="input-title">
-            SN Results
-        </div>
-
-        <!-- SEARCH + FILTER -->
-
-        <div class="controls">
-
-            <div class="search-box">
-
-                <input
-                    type="text"
-                    id="snSearch"
-                    placeholder="Search SN..."
-                    oninput="applyFilters()"
-                >
-
+            <div class="label">
+                Total SN
             </div>
 
-            <div class="filter-buttons">
-
-                <button
-                    id="filterAll"
-                    class="filter-btn active"
-                    onclick="setFilter('ALL')"
-                >
-                    ALL
-                </button>
-
-                <button
-                    id="filterNG"
-                    class="filter-btn"
-                    onclick="setFilter('NG')"
-                >
-                    🔴 NG ONLY
-                </button>
-
-                <button
-                    id="filterGOOD"
-                    class="filter-btn"
-                    onclick="setFilter('GOOD')"
-                >
-                    🟢 GOOD ONLY
-                </button>
-
+            <div
+                id="totalSN"
+                class="number"
+            >
+                0
             </div>
 
         </div>
 
-        <div
-            id="resultList"
-            class="result-list"
-        ></div>
+
+        <div class="summary-box">
+
+            <div class="label">
+                GOOD
+            </div>
+
+            <div
+                id="goodSN"
+                class="number good-number"
+            >
+                0
+            </div>
+
+        </div>
+
+
+        <div class="summary-box">
+
+            <div class="label">
+                NG
+            </div>
+
+            <div
+                id="ngSN"
+                class="number ng-number"
+            >
+                0
+            </div>
+
+        </div>
+
+
+        <div class="summary-box">
+
+            <div class="label">
+                Test Logs
+            </div>
+
+            <div
+                id="totalTests"
+                class="number"
+            >
+                0
+            </div>
+
+        </div>
 
     </div>
 
 </div>
 
 
+<!-- ============================================================
+     RESULTS
+============================================================ -->
+
+<div
+    id="resultsCard"
+    class="card"
+    style="display:none;"
+>
+
+    <div class="input-title">
+        SN Results
+    </div>
+
+
+    <!-- SEARCH + FILTER -->
+
+    <div class="toolbar">
+
+        <input
+            id="snSearch"
+            class="search-box"
+            type="text"
+            placeholder="Search SN..."
+            oninput="applyFilters()"
+        >
+
+
+        <button
+            id="filterAll"
+            class="filter-btn active"
+            onclick="setFilter('ALL')"
+        >
+            ALL
+        </button>
+
+
+        <button
+            id="filterNG"
+            class="filter-btn ng-filter"
+            onclick="setFilter('NG')"
+        >
+            🔴 NG ONLY
+        </button>
+
+
+        <button
+            id="filterGOOD"
+            class="filter-btn good-filter"
+            onclick="setFilter('GOOD')"
+        >
+            🟢 GOOD ONLY
+        </button>
+
+    </div>
+
+
+    <div
+        id="resultList"
+        class="result-list"
+    ></div>
+
+</div>
+
+
+</div>
+
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 
 <script>
 
+
 /* ============================================================
    GLOBAL DATA
-   ============================================================ */
+============================================================ */
 
 let groupedData = {};
 
-let chartInstances = {};
+let chartInstances = new Map();
 
 let currentFilter = "ALL";
+
+let originalRecords = [];
 
 
 /* ============================================================
    FILE BROWSER
-   ============================================================ */
+============================================================ */
 
 document
     .getElementById("fileInput")
@@ -748,16 +750,12 @@ document
                 function(e) {
 
                     document
-                        .getElementById(
-                            "logInput"
-                        )
+                        .getElementById("logInput")
                         .value =
                             e.target.result;
 
                     document
-                        .getElementById(
-                            "fileInfo"
-                        )
+                        .getElementById("fileInfo")
                         .textContent =
                             "Loaded: " +
                             file.name +
@@ -784,7 +782,7 @@ document
 
 /* ============================================================
    MAIN ANALYZER
-   ============================================================ */
+============================================================ */
 
 function analyzeLog() {
 
@@ -804,12 +802,18 @@ function analyzeLog() {
         return;
     }
 
+
     groupedData = {};
+
+    originalRecords = [];
+
 
     const format =
         detectFormat(raw);
 
+
     let records = [];
+
 
     if (format === "CSV") {
 
@@ -823,9 +827,9 @@ function analyzeLog() {
 
     }
 
+
     /*
-     * Automatically try the other parser
-     * if nothing was found.
+     * Automatic fallback.
      */
 
     if (records.length === 0) {
@@ -844,6 +848,7 @@ function analyzeLog() {
 
     }
 
+
     if (records.length === 0) {
 
         showError(
@@ -853,7 +858,28 @@ function analyzeLog() {
         return;
     }
 
-    groupRecords(records);
+
+    /*
+     * Preserve every record.
+     */
+
+    originalRecords =
+        records.map(
+            (record, index) => {
+
+                record.originalIndex =
+                    index;
+
+                return record;
+
+            }
+        );
+
+
+    groupRecords(
+        originalRecords
+    );
+
 
     renderSummary();
 
@@ -864,12 +890,13 @@ function analyzeLog() {
 
 /* ============================================================
    FORMAT DETECTION
-   ============================================================ */
+============================================================ */
 
 function detectFormat(text) {
 
     const lower =
         text.toLowerCase();
+
 
     if (
         lower.includes("pcba,") &&
@@ -882,6 +909,7 @@ function detectFormat(text) {
         return "CSV";
     }
 
+
     if (
         lower.includes("item_mtf") ||
         lower.includes("spec: lower")
@@ -889,6 +917,7 @@ function detectFormat(text) {
 
         return "LOG";
     }
+
 
     if (
         lower.includes(",") &&
@@ -898,13 +927,14 @@ function detectFormat(text) {
         return "CSV";
     }
 
+
     return "LOG";
 }
 
 
 /* ============================================================
    CSV LINE PARSER
-   ============================================================ */
+============================================================ */
 
 function parseCSVLine(line) {
 
@@ -914,6 +944,7 @@ function parseCSVLine(line) {
 
     let inQuotes = false;
 
+
     for (
         let i = 0;
         i < line.length;
@@ -922,6 +953,7 @@ function parseCSVLine(line) {
 
         const char =
             line[i];
+
 
         if (char === '"') {
 
@@ -938,6 +970,7 @@ function parseCSVLine(line) {
 
                 inQuotes =
                     !inQuotes;
+
             }
 
         } else if (
@@ -954,12 +987,16 @@ function parseCSVLine(line) {
         } else {
 
             current += char;
+
         }
+
     }
+
 
     values.push(
         current.trim()
     );
+
 
     return values;
 }
@@ -967,11 +1004,12 @@ function parseCSVLine(line) {
 
 /* ============================================================
    CSV PARSER
-   ============================================================ */
+============================================================ */
 
 function parseCSVData(text) {
 
     const records = [];
+
 
     const lines =
         text
@@ -979,7 +1017,9 @@ function parseCSVData(text) {
             .replace(/\r/g, "\n")
             .split("\n");
 
+
     let headerIndex = -1;
+
 
     for (
         let i = 0;
@@ -989,6 +1029,7 @@ function parseCSVData(text) {
 
         const lower =
             lines[i].toLowerCase();
+
 
         if (
             lower.includes("pcba") &&
@@ -1000,18 +1041,24 @@ function parseCSVData(text) {
 
             break;
         }
+
     }
 
+
     if (headerIndex === -1) {
+
         return records;
     }
+
 
     const headers =
         parseCSVLine(
             lines[headerIndex]
         );
 
+
     const specRows = {};
+
 
     for (
         let i = headerIndex + 1;
@@ -1024,14 +1071,17 @@ function parseCSVData(text) {
                 lines[i]
             );
 
+
         if (!row.length) {
             continue;
         }
+
 
         const first =
             String(row[0] || "")
                 .trim()
                 .toLowerCase();
+
 
         if (
             [
@@ -1049,10 +1099,18 @@ function parseCSVData(text) {
 
             specRows[first] =
                 row;
+
         }
+
     }
 
+
+    /*
+     * Find all MTF columns.
+     */
+
     const measurementColumns = [];
+
 
     for (
         let i = 0;
@@ -1065,15 +1123,33 @@ function parseCSVData(text) {
                 headers[i] || ""
             ).trim();
 
+
         if (
             header
                 .toUpperCase()
                 .includes("MTF")
         ) {
 
+            /*
+             * Remove these four items.
+             */
+
+            if (
+                isExcludedMTFItem(
+                    header
+                )
+            ) {
+
+                continue;
+            }
+
+
             measurementColumns.push(i);
+
         }
+
     }
+
 
     if (
         measurementColumns.length === 0
@@ -1081,6 +1157,11 @@ function parseCSVData(text) {
 
         return records;
     }
+
+
+    /*
+     * Read every actual data row.
+     */
 
     for (
         let rowIndex = headerIndex + 1;
@@ -1093,16 +1174,17 @@ function parseCSVData(text) {
                 lines[rowIndex]
             );
 
-        if (
-            row.length === 0
-        ) {
+
+        if (!row.length) {
             continue;
         }
+
 
         const first =
             String(row[0] || "")
                 .trim()
                 .toLowerCase();
+
 
         if (
             [
@@ -1121,6 +1203,7 @@ function parseCSVData(text) {
             continue;
         }
 
+
         if (
             row.every(
                 x =>
@@ -1131,43 +1214,84 @@ function parseCSVData(text) {
             continue;
         }
 
+
         const sn =
             getFirstExistingValue(
                 row,
                 [
-                    findHeader(headers, "SN"),
-                    findHeader(headers, "SERIAL"),
-                    findHeader(headers, "SERIALNUMBER"),
-                    findHeader(headers, "PCBA")
+                    findHeader(
+                        headers,
+                        "SN"
+                    ),
+
+                    findHeader(
+                        headers,
+                        "SERIAL"
+                    ),
+
+                    findHeader(
+                        headers,
+                        "SERIALNUMBER"
+                    ),
+
+                    findHeader(
+                        headers,
+                        "PCBA"
+                    )
                 ]
             );
+
 
         const workNo =
             getFirstExistingValue(
                 row,
                 [
-                    findHeader(headers, "WORKNO"),
-                    findHeader(headers, "WORKNO."),
-                    findHeader(headers, "WORK NO")
+                    findHeader(
+                        headers,
+                        "WORKNO"
+                    ),
+
+                    findHeader(
+                        headers,
+                        "WORKNO."
+                    ),
+
+                    findHeader(
+                        headers,
+                        "WORK NO"
+                    )
                 ]
             );
+
 
         const stampTime =
             getFirstExistingValue(
                 row,
                 [
-                    findHeader(headers, "STAMPTIME"),
-                    findHeader(headers, "DATE_TIME"),
-                    findHeader(headers, "DATETIME")
+                    findHeader(
+                        headers,
+                        "STAMPTIME"
+                    ),
+
+                    findHeader(
+                        headers,
+                        "DATE_TIME"
+                    ),
+
+                    findHeader(
+                        headers,
+                        "DATETIME"
+                    )
                 ]
             );
 
-        let hasMeasurement = false;
 
         const measurements = [];
 
+
         for (
-            const columnIndex of measurementColumns
+            const columnIndex
+            of measurementColumns
         ) {
 
             const itemName =
@@ -1175,21 +1299,12 @@ function parseCSVData(text) {
                     headers[columnIndex] || ""
                 ).trim();
 
-            /*
-             * Ignore unwanted Distance / LP items.
-             */
-            if (
-                isExcludedMTFItem(itemName)
-            ) {
-
-                continue;
-            }
-
-            const rawValue =
-                row[columnIndex];
 
             const value =
-                toNumber(rawValue);
+                toNumber(
+                    row[columnIndex]
+                );
+
 
             if (
                 value === null
@@ -1198,7 +1313,6 @@ function parseCSVData(text) {
                 continue;
             }
 
-            hasMeasurement = true;
 
             const lower =
                 getSpecValue(
@@ -1206,67 +1320,52 @@ function parseCSVData(text) {
                     columnIndex
                 );
 
+
             const upper =
                 getSpecValue(
                     specRows.upper,
                     columnIndex
                 );
 
+
+            const result =
+                evaluateResult(
+                    value,
+                    lower,
+                    upper
+                );
+
+
             measurements.push({
 
-                name: itemName,
+                name:
+                    itemName,
 
-                value: value,
+                value:
+                    value,
 
-                lower: lower,
+                lower:
+                    lower,
 
-                upper: upper,
-
-                min:
-                    getSpecValue(
-                        specRows.min,
-                        columnIndex
-                    ),
-
-                max:
-                    getSpecValue(
-                        specRows.max,
-                        columnIndex
-                    ),
-
-                mean:
-                    getSpecValue(
-                        specRows.mean,
-                        columnIndex
-                    ),
-
-                sigma:
-                    getSpecValue(
-                        specRows.sigma,
-                        columnIndex
-                    ),
+                upper:
+                    upper,
 
                 result:
-                    evaluateResult(
-                        value,
-                        lower,
-                        upper
-                    ),
+                    result,
 
                 type:
-                    getMTFType(itemName)
+                    getMTFType(
+                        itemName
+                    )
 
             });
 
         }
 
-        if (
-            hasMeasurement
-        ) {
 
-            measurements.sort(
-                sortMTFItems
-            );
+        if (
+            measurements.length > 0
+        ) {
 
             records.push({
 
@@ -1291,132 +1390,6 @@ function parseCSVData(text) {
 
     }
 
-    /*
-     * Fallback for specification-only CSV.
-     */
-
-    if (
-        records.length === 0 &&
-        specRows.mean
-    ) {
-
-        const measurements = [];
-
-        for (
-            const columnIndex of measurementColumns
-        ) {
-
-            const itemName =
-                String(
-                    headers[columnIndex] || ""
-                ).trim();
-
-            if (
-                isExcludedMTFItem(itemName)
-            ) {
-
-                continue;
-            }
-
-            const value =
-                getSpecValue(
-                    specRows.mean,
-                    columnIndex
-                );
-
-            if (
-                value === null
-            ) {
-                continue;
-            }
-
-            const lower =
-                getSpecValue(
-                    specRows.lower,
-                    columnIndex
-                );
-
-            const upper =
-                getSpecValue(
-                    specRows.upper,
-                    columnIndex
-                );
-
-            measurements.push({
-
-                name:
-                    itemName,
-
-                value:
-                    value,
-
-                lower:
-                    lower,
-
-                upper:
-                    upper,
-
-                min:
-                    getSpecValue(
-                        specRows.min,
-                        columnIndex
-                    ),
-
-                max:
-                    getSpecValue(
-                        specRows.max,
-                        columnIndex
-                    ),
-
-                mean:
-                    value,
-
-                sigma:
-                    getSpecValue(
-                        specRows.sigma,
-                        columnIndex
-                    ),
-
-                result:
-                    evaluateResult(
-                        value,
-                        lower,
-                        upper
-                    ),
-
-                type:
-                    getMTFType(itemName)
-
-            });
-
-        }
-
-        measurements.sort(
-            sortMTFItems
-        );
-
-        if (
-            measurements.length > 0
-        ) {
-
-            records.push({
-
-                sn: "",
-
-                workNo: "",
-
-                time: "",
-
-                source: "CSV",
-
-                measurements:
-                    measurements
-
-            });
-
-        }
-
-    }
 
     return records;
 }
@@ -1424,11 +1397,12 @@ function parseCSVData(text) {
 
 /* ============================================================
    ORIGINAL LOG PARSER
-   ============================================================ */
+============================================================ */
 
 function parseOriginalLog(text) {
 
     const records = [];
+
 
     const lines =
         text
@@ -1436,7 +1410,9 @@ function parseOriginalLog(text) {
             .replace(/\r/g, "\n")
             .split("\n");
 
+
     let currentRecord = null;
+
 
     for (
         let i = 0;
@@ -1447,6 +1423,7 @@ function parseOriginalLog(text) {
         const line =
             lines[i];
 
+
         /*
          * Detect SN.
          */
@@ -1456,6 +1433,7 @@ function parseOriginalLog(text) {
                 /(?:Load SNFile:\s*|SN:\s*)([A-Za-z0-9._-]+)/
             );
 
+
         if (snMatch) {
 
             if (
@@ -1463,14 +1441,12 @@ function parseOriginalLog(text) {
                 currentRecord.measurements.length > 0
             ) {
 
-                currentRecord.measurements.sort(
-                    sortMTFItems
-                );
-
                 records.push(
                     currentRecord
                 );
+
             }
+
 
             currentRecord = {
 
@@ -1479,18 +1455,24 @@ function parseOriginalLog(text) {
                         snMatch[1]
                     ),
 
-                workNo: "",
+                workNo:
+                    "",
 
-                time: "",
+                time:
+                    "",
 
-                source: "LOG",
+                source:
+                    "LOG",
 
-                measurements: []
+                measurements:
+                    []
 
             };
 
+
             continue;
         }
+
 
         /*
          * Date / Time.
@@ -1500,6 +1482,7 @@ function parseOriginalLog(text) {
             line.match(
                 /Date_Time:\s*(.+)/i
             );
+
 
         if (
             dateMatch &&
@@ -1512,14 +1495,16 @@ function parseOriginalLog(text) {
             continue;
         }
 
+
         /*
-         * Item + Value.
+         * MTF item.
          */
 
         const itemMatch =
             line.match(
                 /Item:\s*([^;]+);\s*Value:\s*([+-]?\d+(?:\.\d+)?)/i
             );
+
 
         if (
             itemMatch &&
@@ -1529,28 +1514,34 @@ function parseOriginalLog(text) {
             const name =
                 itemMatch[1].trim();
 
+
             /*
-             * Remove Distance / LP-mm.
+             * Ignore excluded MTF items.
              */
 
             if (
-                isExcludedMTFItem(name)
+                isExcludedMTFItem(
+                    name
+                )
             ) {
 
                 continue;
             }
+
 
             const value =
                 Number(
                     itemMatch[2]
                 );
 
+
             let lower = null;
 
             let upper = null;
 
+
             /*
-             * Search specification nearby.
+             * Search nearby specification.
              */
 
             for (
@@ -1562,18 +1553,19 @@ function parseOriginalLog(text) {
                 j++
             ) {
 
-                const specMatch =
+                const lowerMatch =
                     lines[j].match(
-                        /SPEC:\s*LOWER=([+-]?\d+(?:\.\d+)?)/i
+                        /SPEC:\s*LOWER\s*=\s*([+-]?\d+(?:\.\d+)?)/i
                     );
 
+
                 if (
-                    specMatch
+                    lowerMatch
                 ) {
 
                     lower =
                         Number(
-                            specMatch[1]
+                            lowerMatch[1]
                         );
 
                     break;
@@ -1581,67 +1573,79 @@ function parseOriginalLog(text) {
 
             }
 
-            const upperMatch =
-                lines
-                    .slice(
-                        i,
-                        Math.min(
-                            i + 5,
-                            lines.length
-                        )
-                    )
-                    .join(" ")
-                    .match(
-                        /SPEC:\s*(?:LOWER=[^,\]]+,\s*)?UPPER=([+-]?\d+(?:\.\d+)?)/i
-                    );
 
-            if (
-                upperMatch
+            /*
+             * Search for upper if available.
+             */
+
+            for (
+                let j = i;
+                j < Math.min(
+                    i + 5,
+                    lines.length
+                );
+                j++
             ) {
 
-                upper =
-                    Number(
-                        upperMatch[1]
+                const upperMatch =
+                    lines[j].match(
+                        /SPEC:\s*UPPER\s*=\s*([+-]?\d+(?:\.\d+)?)/i
                     );
+
+
+                if (
+                    upperMatch
+                ) {
+
+                    upper =
+                        Number(
+                            upperMatch[1]
+                        );
+
+                    break;
+                }
+
             }
 
-            currentRecord.measurements.push({
 
-                name:
-                    name,
-
-                value:
+            const result =
+                evaluateResult(
                     value,
-
-                lower:
                     lower,
+                    upper
+                );
 
-                upper:
-                    upper,
 
-                min: null,
+            currentRecord
+                .measurements
+                .push({
 
-                max: null,
+                    name:
+                        name,
 
-                mean: null,
-
-                sigma: null,
-
-                result:
-                    evaluateResult(
+                    value:
                         value,
+
+                    lower:
                         lower,
-                        upper
-                    ),
 
-                type:
-                    getMTFType(name)
+                    upper:
+                        upper,
 
-            });
+                    result:
+                        result,
+
+                    type:
+                        getMTFType(
+                            name
+                        )
+
+                });
 
         }
 
     }
+
 
     /*
      * Save final record.
@@ -1652,31 +1656,23 @@ function parseOriginalLog(text) {
         currentRecord.measurements.length > 0
     ) {
 
-        currentRecord.measurements.sort(
-            sortMTFItems
-        );
-
         records.push(
             currentRecord
         );
+
     }
 
+
     /*
-     * Fallback when SN markers are missing.
+     * Fallback.
      */
 
     if (
         records.length === 0
     ) {
 
-        const snMatches =
-            [
-                ...text.matchAll(
-                    /(?:^|\n)\s*SN:\s*([A-Za-z0-9._-]+)/gi
-                )
-            ];
-
         const measurements = [];
+
 
         for (
             const line of lines
@@ -1687,24 +1683,31 @@ function parseOriginalLog(text) {
                     /Item:\s*([^;]+);\s*Value:\s*([+-]?\d+(?:\.\d+)?)/i
                 );
 
+
             if (!match) {
                 continue;
             }
 
+
             const name =
                 match[1].trim();
 
+
             if (
-                isExcludedMTFItem(name)
+                isExcludedMTFItem(
+                    name
+                )
             ) {
 
                 continue;
             }
 
+
             const value =
                 Number(
                     match[2]
                 );
+
 
             measurements.push({
 
@@ -1720,50 +1723,46 @@ function parseOriginalLog(text) {
                 upper:
                     null,
 
-                min:
-                    null,
-
-                max:
-                    null,
-
-                mean:
-                    null,
-
-                sigma:
-                    null,
-
                 result:
                     "GOOD",
 
                 type:
-                    getMTFType(name)
+                    getMTFType(
+                        name
+                    )
 
             });
 
         }
 
-        measurements.sort(
-            sortMTFItems
-        );
 
         if (
             measurements.length > 0
         ) {
 
+            const snMatch =
+                text.match(
+                    /(?:^|\n)\s*SN:\s*([A-Za-z0-9._-]+)/i
+                );
+
+
             records.push({
 
                 sn:
-                    snMatches.length > 0
+                    snMatch
                         ? cleanSN(
-                            snMatches[0][1]
+                            snMatch[1]
                           )
                         : "",
 
-                workNo: "",
+                workNo:
+                    "",
 
-                time: "",
+                time:
+                    "",
 
-                source: "LOG",
+                source:
+                    "LOG",
 
                 measurements:
                     measurements
@@ -1774,17 +1773,19 @@ function parseOriginalLog(text) {
 
     }
 
+
     return records;
 }
 
 
 /* ============================================================
-   GROUP BY SN
-   ============================================================ */
+   GROUP RECORDS
+============================================================ */
 
 function groupRecords(records) {
 
     groupedData = {};
+
 
     records.forEach(
         function(record, index) {
@@ -1794,6 +1795,7 @@ function groupRecords(records) {
                 record.sn.trim()
                     ? record.sn.trim()
                     : "NO SN";
+
 
             if (
                 !groupedData[sn]
@@ -1810,85 +1812,80 @@ function groupRecords(records) {
                     overall:
                         "GOOD",
 
-                    ngTypes:
-                        new Set(),
+                    dayNG:
+                        false,
 
-                    ngItems:
-                        []
+                    nightNG:
+                        false
 
                 };
 
             }
 
-            /*
-             * Sort all individual MTF items.
-             */
-
-            record.measurements.sort(
-                sortMTFItems
-            );
-
-            /*
-             * Store original order so that
-             * logs with identical timestamps
-             * remain in their input sequence.
-             */
 
             record.originalIndex =
                 index;
+
 
             groupedData[sn]
                 .tests
                 .push(record);
 
+
             /*
-             * Determine overall result.
+             * Check NG by MODE.
              */
 
-            record.measurements.forEach(
-                function(m) {
+            record.measurements
+                .forEach(
+                    function(m) {
 
-                    if (
-                        m.result !== "NG"
-                    ) {
-                        return;
-                    }
+                        if (
+                            m.result !== "NG"
+                        ) {
 
-                    groupedData[sn]
-                        .overall =
-                            "NG";
+                            return;
+                        }
 
-                    if (
-                        m.type === "VIS"
-                    ) {
 
                         groupedData[sn]
-                            .ngTypes
-                            .add("DAY MODE NG");
+                            .overall =
+                                "NG";
 
-                    } else if (
-                        m.type === "IR"
-                    ) {
 
-                        groupedData[sn]
-                            .ngTypes
-                            .add("NIGHT MODE NG");
+                        /*
+                         * IR = NIGHT MODE.
+                         * Everything else = DAY MODE.
+                         */
+
+                        if (
+                            m.type === "NIGHT"
+                        ) {
+
+                            groupedData[sn]
+                                .nightNG =
+                                    true;
+
+                        } else {
+
+                            groupedData[sn]
+                                .dayNG =
+                                    true;
+
+                        }
+
                     }
-
-                    groupedData[sn]
-                        .ngItems
-                        .push(m);
-
-                }
-            );
+                );
 
         }
     );
 
+
     /*
-     * Sort test logs by timestamp when available.
-     * If timestamps are unavailable or equal,
-     * preserve original input order.
+     * Sort every SN's test logs.
+     *
+     * Time is used when available.
+     * Otherwise original log order is retained.
      */
 
     Object.values(
@@ -1900,34 +1897,33 @@ function groupRecords(records) {
                 function(a, b) {
 
                     const ta =
-                        parseDateValue(
+                        parseTimeValue(
                             a.time
                         );
 
                     const tb =
-                        parseDateValue(
+                        parseTimeValue(
                             b.time
                         );
+
 
                     if (
                         ta !== null &&
                         tb !== null
                     ) {
 
-                        if (
-                            ta !== tb
-                        ) {
-
-                            return ta - tb;
-                        }
+                        return ta - tb;
                     }
+
 
                     return (
                         a.originalIndex -
                         b.originalIndex
                     );
+
                 }
             );
+
 
             snData.tests.forEach(
                 function(test, index) {
@@ -1940,12 +1936,13 @@ function groupRecords(records) {
 
         }
     );
+
 }
 
 
 /* ============================================================
    SUMMARY
-   ============================================================ */
+============================================================ */
 
 function renderSummary() {
 
@@ -1954,11 +1951,13 @@ function renderSummary() {
             groupedData
         );
 
+
     let good = 0;
 
     let ng = 0;
 
     let tests = 0;
+
 
     snList.forEach(
         function(item) {
@@ -1975,119 +1974,107 @@ function renderSummary() {
 
             }
 
+
             tests +=
                 item.tests.length;
 
         }
     );
 
+
     document
         .getElementById("totalSN")
         .textContent =
             snList.length;
+
 
     document
         .getElementById("goodSN")
         .textContent =
             good;
 
+
     document
         .getElementById("ngSN")
         .textContent =
             ng;
+
 
     document
         .getElementById("totalTests")
         .textContent =
             tests;
 
+
     document
         .getElementById("summaryCard")
         .style.display =
             "block";
+
 }
 
 
 /* ============================================================
    FILTER
-   ============================================================ */
+============================================================ */
 
 function setFilter(filter) {
 
     currentFilter =
         filter;
 
-    const all =
-        document.getElementById(
-            "filterAll"
+
+    document
+        .getElementById("filterAll")
+        .classList.toggle(
+            "active",
+            filter === "ALL"
         );
 
-    const ng =
-        document.getElementById(
-            "filterNG"
+
+    document
+        .getElementById("filterNG")
+        .classList.toggle(
+            "active",
+            filter === "NG"
         );
 
-    const good =
-        document.getElementById(
-            "filterGOOD"
+
+    document
+        .getElementById("filterGOOD")
+        .classList.toggle(
+            "active",
+            filter === "GOOD"
         );
 
-    all.className =
-        "filter-btn";
-
-    ng.className =
-        "filter-btn";
-
-    good.className =
-        "filter-btn";
-
-    if (
-        filter === "ALL"
-    ) {
-
-        all.className =
-            "filter-btn active";
-
-    } else if (
-        filter === "NG"
-    ) {
-
-        ng.className =
-            "filter-btn ng-active";
-
-    } else if (
-        filter === "GOOD"
-    ) {
-
-        good.className =
-            "filter-btn good-active";
-    }
 
     applyFilters();
+
 }
 
 
 /* ============================================================
-   SEARCH + FILTER
-   ============================================================ */
+   SEARCH
+============================================================ */
 
 function applyFilters() {
 
     const search =
         document
-            .getElementById(
-                "snSearch"
-            )
+            .getElementById("snSearch")
             .value
             .trim()
             .toLowerCase();
+
 
     const cards =
         document.querySelectorAll(
             ".sn-card"
         );
 
-    let visibleCount = 0;
+
+    let visible = 0;
+
 
     cards.forEach(
         function(card) {
@@ -2096,82 +2083,101 @@ function applyFilters() {
                 card.dataset.sn
                     .toLowerCase();
 
+
             const status =
                 card.dataset.status;
 
+
             const matchesSearch =
-                !search ||
                 sn.includes(search);
+
 
             const matchesFilter =
                 currentFilter === "ALL" ||
-                currentFilter === status;
+                (
+                    currentFilter === "NG" &&
+                    status === "NG"
+                ) ||
+                (
+                    currentFilter === "GOOD" &&
+                    status === "GOOD"
+                );
 
-            if (
+
+            const show =
                 matchesSearch &&
-                matchesFilter
-            ) {
+                matchesFilter;
 
-                card.style.display =
-                    "";
 
-                visibleCount++;
+            card.style.display =
+                show
+                    ? ""
+                    : "none";
 
-            } else {
 
-                card.style.display =
-                    "none";
+            if (show) {
+                visible++;
             }
 
         }
     );
 
-    let empty =
+
+    const noResults =
         document.getElementById(
-            "filterEmpty"
+            "noFilterResults"
         );
 
-    if (!empty) {
 
-        empty =
+    if (
+        noResults
+    ) {
+
+        noResults.remove();
+
+    }
+
+
+    if (
+        visible === 0
+    ) {
+
+        const container =
+            document.getElementById(
+                "resultList"
+            );
+
+
+        const message =
             document.createElement(
                 "div"
             );
 
-        empty.id =
-            "filterEmpty";
 
-        empty.className =
+        message.id =
+            "noFilterResults";
+
+
+        message.className =
             "no-results";
 
-        document
-            .getElementById(
-                "resultList"
-            )
-            .appendChild(empty);
+
+        message.textContent =
+            "No SN matches the current search/filter.";
+
+
+        container.appendChild(
+            message
+        );
+
     }
 
-    if (
-        visibleCount === 0
-    ) {
-
-        empty.textContent =
-            "No SN matches your search/filter.";
-
-        empty.style.display =
-            "block";
-
-    } else {
-
-        empty.style.display =
-            "none";
-    }
 }
 
 
 /* ============================================================
-   RESULTS
-   ============================================================ */
+   RENDER RESULTS
+============================================================ */
 
 function renderResults() {
 
@@ -2181,12 +2187,43 @@ function renderResults() {
                 "resultList"
             );
 
+
     container.innerHTML = "";
+
 
     const snList =
         Object.values(
             groupedData
         );
+
+
+    /*
+     * Sequential SN order.
+     *
+     * Natural sorting makes:
+     *
+     * SN1
+     * SN2
+     * SN10
+     *
+     * instead of:
+     *
+     * SN1
+     * SN10
+     * SN2
+     */
+
+    snList.sort(
+        function(a, b) {
+
+            return naturalCompare(
+                a.sn,
+                b.sn
+            );
+
+        }
+    );
+
 
     if (
         snList.length === 0
@@ -2198,13 +2235,6 @@ function renderResults() {
         return;
     }
 
-    /*
-     * Sort SNs naturally.
-     */
-
-    snList.sort(
-        naturalSNCompare
-    );
 
     snList.forEach(
         function(snData, index) {
@@ -2214,14 +2244,18 @@ function renderResults() {
                     "div"
                 );
 
+
             card.className =
                 "sn-card";
+
 
             card.dataset.sn =
                 snData.sn;
 
+
             card.dataset.status =
                 snData.overall;
+
 
             /*
              * Header.
@@ -2232,35 +2266,44 @@ function renderResults() {
                     "div"
                 );
 
+
             header.className =
                 "sn-header";
+
 
             const number =
                 document.createElement(
                     "div"
                 );
 
+
             number.className =
                 "sn-number";
 
+
             number.textContent =
                 index + 1;
+
 
             const sn =
                 document.createElement(
                     "div"
                 );
 
+
             sn.className =
                 "sn-name";
 
+
             sn.textContent =
                 snData.sn;
+
 
             const status =
                 document.createElement(
                     "div"
                 );
+
 
             status.className =
                 "status " +
@@ -2270,67 +2313,72 @@ function renderResults() {
                         : "good"
                 );
 
+
             status.textContent =
                 snData.overall;
+
+
+            /*
+             * NG description.
+             *
+             * DAY NG ALWAYS HAS PRIORITY.
+             */
 
             const description =
                 document.createElement(
                     "div"
                 );
 
-            description.className =
-                "ng-description";
-
-            /*
-             * IMPORTANT:
-             *
-             * DAY MODE NG has priority.
-             *
-             * If first/day test is NG,
-             * show DAY MODE NG even if
-             * another night test is also NG.
-             *
-             * NIGHT MODE NG is shown only
-             * when there is no DAY MODE NG.
-             */
 
             if (
                 snData.overall === "NG"
             ) {
 
+                description.className =
+                    "ng-description";
+
+
                 if (
-                    snData.ngTypes.has(
-                        "DAY MODE NG"
-                    )
+                    snData.dayNG
                 ) {
 
                     description.textContent =
                         "DAY MODE NG";
 
                 } else if (
-                    snData.ngTypes.has(
-                        "NIGHT MODE NG"
-                    )
+                    snData.nightNG
                 ) {
 
                     description.textContent =
                         "NIGHT MODE NG";
 
+                } else {
+
+                    description.textContent =
+                        "NG";
+
                 }
 
             } else {
 
+                description.className =
+                    "good-description";
+
                 description.textContent =
-                    "—";
+                    "GOOD";
+
             }
+
 
             const count =
                 document.createElement(
                     "div"
                 );
 
+
             count.className =
                 "test-count";
+
 
             count.textContent =
                 snData.tests.length +
@@ -2339,6 +2387,7 @@ function renderResults() {
                         ? " test log"
                         : " test logs"
                 );
+
 
             header.appendChild(number);
 
@@ -2352,7 +2401,7 @@ function renderResults() {
 
 
             /*
-             * Expanded content.
+             * Content.
              */
 
             const content =
@@ -2360,11 +2409,13 @@ function renderResults() {
                     "div"
                 );
 
+
             content.className =
                 "sn-content";
 
+
             /*
-             * Every test log remains separate.
+             * Every test log remains separated.
              */
 
             snData.tests.forEach(
@@ -2392,6 +2443,7 @@ function renderResults() {
                     card.classList.toggle(
                         "expanded"
                     );
+
 
                     if (
                         card.classList.contains(
@@ -2435,6 +2487,7 @@ function renderResults() {
         }
     );
 
+
     document
         .getElementById(
             "resultsCard"
@@ -2442,13 +2495,15 @@ function renderResults() {
         .style.display =
             "block";
 
+
     applyFilters();
+
 }
 
 
 /* ============================================================
-   TEST LOG UI
-   ============================================================ */
+   CREATE TEST LOG
+============================================================ */
 
 function createTestLog(
     snData,
@@ -2460,40 +2515,50 @@ function createTestLog(
             "div"
         );
 
+
     wrapper.className =
         "test-log";
+
 
     const header =
         document.createElement(
             "div"
         );
 
+
     header.className =
         "test-header";
+
 
     const title =
         document.createElement(
             "div"
         );
 
+
     title.className =
         "test-title";
+
 
     title.textContent =
         "Test Log " +
         test.testNumber;
+
 
     const time =
         document.createElement(
             "div"
         );
 
+
     time.className =
         "test-time";
+
 
     time.textContent =
         test.time ||
         "Time not available";
+
 
     header.appendChild(title);
 
@@ -2505,50 +2570,61 @@ function createTestLog(
             "div"
         );
 
+
     body.className =
         "test-body";
 
 
     /*
-     * Split into Day / Night.
+     * Sort measurements first.
+     *
+     * DAY MODE:
+     * 1A_1
+     * 1A_2
+     * 1A_3
+     * ...
+     *
+     * NIGHT MODE:
+     * 1B_IR_1
+     * 1B_IR_2
+     * ...
      */
 
-    const day =
-        test.measurements
-            .filter(
-                m =>
-                    m.type === "VIS" ||
-                    m.type === "OTHER"
-            )
-            .filter(
-                m =>
-                    !isExcludedMTFItem(
-                        m.name
-                    )
-            )
+    const measurements =
+        [...test.measurements]
             .sort(
-                sortMTFItems
-            );
-
-    const night =
-        test.measurements
-            .filter(
-                m =>
-                    m.type === "IR"
-            )
-            .filter(
-                m =>
-                    !isExcludedMTFItem(
-                        m.name
-                    )
-            )
-            .sort(
-                sortMTFItems
+                naturalMeasurementCompare
             );
 
 
     /*
      * DAY MODE
+     *
+     * Everything that isn't IR.
+     */
+
+    const day =
+        measurements.filter(
+            m =>
+                m.type === "DAY"
+        );
+
+
+    /*
+     * NIGHT MODE
+     *
+     * IR measurements.
+     */
+
+    const night =
+        measurements.filter(
+            m =>
+                m.type === "NIGHT"
+        );
+
+
+    /*
+     * DAY FIRST.
      */
 
     if (
@@ -2559,7 +2635,7 @@ function createTestLog(
             createModeSection(
                 "DAY MODE",
                 day,
-                "day"
+                "day-mode-title"
             )
         );
 
@@ -2567,7 +2643,7 @@ function createTestLog(
 
 
     /*
-     * NIGHT MODE
+     * NIGHT SECOND.
      */
 
     if (
@@ -2578,7 +2654,7 @@ function createTestLog(
             createModeSection(
                 "NIGHT MODE",
                 night,
-                "night"
+                "night-mode-title"
             )
         );
 
@@ -2586,23 +2662,13 @@ function createTestLog(
 
 
     /*
-     * Graph.
+     * GRAPH
+     *
+     * Combined DAY -> NIGHT sequence.
      */
 
-    const graphMeasurements =
-        test.measurements
-            .filter(
-                m =>
-                    !isExcludedMTFItem(
-                        m.name
-                    )
-            )
-            .sort(
-                sortMTFItems
-            );
-
     if (
-        graphMeasurements.length > 0
+        measurements.length > 0
     ) {
 
         const chartTitle =
@@ -2610,35 +2676,48 @@ function createTestLog(
                 "div"
             );
 
+
         chartTitle.className =
             "section-title";
 
+
         chartTitle.textContent =
-            "MTF Graph";
+            "MTF Graph — DAY MODE → NIGHT MODE";
+
 
         body.appendChild(
             chartTitle
         );
+
 
         const graph =
             document.createElement(
                 "div"
             );
 
+
         graph.className =
             "graph-container";
+
 
         const canvas =
             document.createElement(
                 "canvas"
             );
 
+
         canvas.chartData =
-            graphMeasurements;
+            measurements;
 
-        graph.appendChild(canvas);
 
-        body.appendChild(graph);
+        graph.appendChild(
+            canvas
+        );
+
+
+        body.appendChild(
+            graph
+        );
 
     }
 
@@ -2647,18 +2726,19 @@ function createTestLog(
 
     wrapper.appendChild(body);
 
+
     return wrapper;
 }
 
 
 /* ============================================================
-   DAY / NIGHT SECTION
-   ============================================================ */
+   MODE SECTION
+============================================================ */
 
 function createModeSection(
     title,
     measurements,
-    mode
+    titleClass
 ) {
 
     const section =
@@ -2666,70 +2746,54 @@ function createModeSection(
             "div"
         );
 
+
     const titleElement =
         document.createElement(
             "div"
         );
 
+
     titleElement.className =
         "mode-title " +
-        (
-            mode === "day"
-                ? "day-mode-title"
-                : "night-mode-title"
-        );
+        titleClass;
+
 
     titleElement.textContent =
         title;
+
 
     section.appendChild(
         titleElement
     );
 
-    section.appendChild(
-        createMeasurementTable(
-            measurements
-        )
-    );
-
-    return section;
-}
-
-
-/* ============================================================
-   MEASUREMENT TABLE
-   ============================================================ */
-
-function createMeasurementTable(
-    measurements
-) {
 
     const tableWrapper =
         document.createElement(
             "div"
         );
 
+
     tableWrapper.className =
         "mtf-table-wrapper";
+
 
     const table =
         document.createElement(
             "table"
         );
 
+
     const thead =
         document.createElement(
             "thead"
         );
+
 
     const headerRow =
         document.createElement(
             "tr"
         );
 
-    /*
-     * ONLY THESE FOUR COLUMNS.
-     */
 
     [
         "MTF Item",
@@ -2744,15 +2808,21 @@ function createMeasurementTable(
                     "th"
                 );
 
+
             th.textContent =
                 text;
+
 
             headerRow.appendChild(th);
 
         }
     );
 
-    thead.appendChild(headerRow);
+
+    thead.appendChild(
+        headerRow
+    );
+
 
     const tbody =
         document.createElement(
@@ -2760,24 +2830,7 @@ function createMeasurementTable(
         );
 
 
-    /*
-     * Sequential ordering.
-     */
-
-    const sorted =
-        [...measurements]
-            .filter(
-                m =>
-                    !isExcludedMTFItem(
-                        m.name
-                    )
-            )
-            .sort(
-                sortMTFItems
-            );
-
-
-    sorted.forEach(
+    measurements.forEach(
         function(m) {
 
             const row =
@@ -2785,25 +2838,41 @@ function createMeasurementTable(
                     "tr"
                 );
 
+
             row.className =
                 m.result === "NG"
                     ? "ng-row"
                     : "pass-row";
 
 
+            /*
+             * ITEM
+             */
+
             const itemCell =
                 document.createElement(
                     "td"
                 );
 
+
             itemCell.textContent =
                 m.name;
 
+
+            row.appendChild(
+                itemCell
+            );
+
+
+            /*
+             * VALUE
+             */
 
             const valueCell =
                 document.createElement(
                     "td"
                 );
+
 
             valueCell.textContent =
                 formatNumber(
@@ -2811,24 +2880,45 @@ function createMeasurementTable(
                 );
 
 
-            const llCell =
+            row.appendChild(
+                valueCell
+            );
+
+
+            /*
+             * LL
+             */
+
+            const lowerCell =
                 document.createElement(
                     "td"
                 );
 
-            llCell.textContent =
+
+            lowerCell.textContent =
                 formatNumber(
                     m.lower
                 );
 
+
+            row.appendChild(
+                lowerCell
+            );
+
+
+            /*
+             * RESULT
+             */
 
             const resultCell =
                 document.createElement(
                     "td"
                 );
 
+
             resultCell.textContent =
                 m.result;
+
 
             resultCell.className =
                 m.result === "NG"
@@ -2836,33 +2926,46 @@ function createMeasurementTable(
                     : "result-pass";
 
 
-            row.appendChild(itemCell);
+            row.appendChild(
+                resultCell
+            );
 
-            row.appendChild(valueCell);
 
-            row.appendChild(llCell);
-
-            row.appendChild(resultCell);
-
-            tbody.appendChild(row);
+            tbody.appendChild(
+                row
+            );
 
         }
     );
 
 
-    table.appendChild(thead);
+    table.appendChild(
+        thead
+    );
 
-    table.appendChild(tbody);
 
-    tableWrapper.appendChild(table);
+    table.appendChild(
+        tbody
+    );
 
-    return tableWrapper;
+
+    tableWrapper.appendChild(
+        table
+    );
+
+
+    section.appendChild(
+        tableWrapper
+    );
+
+
+    return section;
 }
 
 
 /* ============================================================
    GRAPH
-   ============================================================ */
+============================================================ */
 
 function drawChart(canvas) {
 
@@ -2874,31 +2977,28 @@ function drawChart(canvas) {
         return;
     }
 
+
+    /*
+     * Destroy old chart.
+     */
+
     if (
-        chartInstances[canvas]
+        chartInstances.has(canvas)
     ) {
 
-        chartInstances[canvas].destroy();
+        try {
+
+            chartInstances
+                .get(canvas)
+                .destroy();
+
+        } catch(e) {}
 
     }
 
 
-    /*
-     * Remove unwanted items
-     * and sort sequentially.
-     */
-
     const measurements =
-        canvas.chartData
-            .filter(
-                m =>
-                    !isExcludedMTFItem(
-                        m.name
-                    )
-            )
-            .sort(
-                sortMTFItems
-            );
+        canvas.chartData;
 
 
     const labels =
@@ -2906,10 +3006,12 @@ function drawChart(canvas) {
             m => m.name
         );
 
+
     const values =
         measurements.map(
             m => m.value
         );
+
 
     const lower =
         measurements.map(
@@ -2917,46 +3019,66 @@ function drawChart(canvas) {
         );
 
 
+    /*
+     * DAY MODE values are first,
+     * NIGHT MODE values second.
+     */
+
     const datasets = [
 
         {
-            label: "MTF Value",
+            label:
+                "MTF Value",
 
-            data: values,
+            data:
+                values,
 
-            borderWidth: 2,
+            borderWidth:
+                2,
 
-            pointRadius: 4,
+            pointRadius:
+                4,
 
-            tension: 0.2
+            tension:
+                0.2
+
         },
 
         {
-            label: "LL",
+            label:
+                "LL",
 
-            data: lower,
+            data:
+                lower,
 
-            borderWidth: 2,
+            borderWidth:
+                2,
 
-            borderDash: [
-                6,
-                4
-            ],
+            borderDash:
+                [
+                    6,
+                    4
+                ],
 
-            pointRadius: 0,
+            pointRadius:
+                0,
 
-            spanGaps: true
+            spanGaps:
+                true
+
         }
 
     ];
 
 
-    chartInstances[canvas] =
+    const chart =
         new Chart(
             canvas.getContext("2d"),
             {
 
-                type: "line",
+                type:
+                    "line",
+
 
                 data: {
 
@@ -2968,6 +3090,7 @@ function drawChart(canvas) {
 
                 },
 
+
                 options: {
 
                     responsive:
@@ -2976,6 +3099,7 @@ function drawChart(canvas) {
                     maintainAspectRatio:
                         false,
 
+
                     interaction: {
 
                         mode:
@@ -2983,7 +3107,9 @@ function drawChart(canvas) {
 
                         intersect:
                             false
+
                     },
+
 
                     plugins: {
 
@@ -2991,16 +3117,16 @@ function drawChart(canvas) {
 
                             display:
                                 true
+
                         },
+
 
                         tooltip: {
 
                             callbacks: {
 
                                 afterBody:
-                                    function(
-                                        context
-                                    ) {
+                                    function(context) {
 
                                         if (
                                             !context ||
@@ -3008,28 +3134,32 @@ function drawChart(canvas) {
                                         ) {
 
                                             return [];
+
                                         }
+
 
                                         const index =
                                             context[0]
                                                 .dataIndex;
+
 
                                         const item =
                                             measurements[
                                                 index
                                             ];
 
-                                        return [
 
-                                            "Result: " +
-                                            item.result,
+                                        return [
 
                                             "Mode: " +
                                             (
-                                                item.type === "IR"
+                                                item.type === "NIGHT"
                                                     ? "NIGHT MODE"
                                                     : "DAY MODE"
-                                            )
+                                            ),
+
+                                            "Result: " +
+                                            item.result
 
                                         ];
 
@@ -3040,6 +3170,7 @@ function drawChart(canvas) {
                         }
 
                     },
+
 
                     scales: {
 
@@ -3060,6 +3191,7 @@ function drawChart(canvas) {
 
                         },
 
+
                         y: {
 
                             beginAtZero:
@@ -3074,191 +3206,185 @@ function drawChart(canvas) {
             }
         );
 
+
+    chartInstances.set(
+        canvas,
+        chart
+    );
+
 }
 
 
 /* ============================================================
-   SORT MTF ITEMS
-   ============================================================ */
+   NATURAL ITEM SORT
+============================================================ */
 
-function sortMTFItems(a, b) {
+function naturalMeasurementCompare(a, b) {
 
-    const nameA =
-        String(
-            a.name || a
-        );
+    /*
+     * DAY MODE always first.
+     */
 
-    const nameB =
-        String(
-            b.name || b
-        );
-
-
-    function extract(name) {
-
-        /*
-         * Examples:
-         *
-         * UMA_MTF_1A_1_H
-         * UMA_MTF_1A_1_V
-         * UMA_MTF_1B_IR_1_H
-         * UMA_MTF_1B_IR_1_V
-         */
-
-        const match =
-            name.match(
-                /(?:MTF_[^_]+_(?:IR_)?)(\d+)_([HV])/i
-            );
-
-        if (match) {
-
-            return {
-
-                number:
-                    Number(
-                        match[1]
-                    ),
-
-                direction:
-                    match[2]
-                        .toUpperCase()
-
-            };
-
-        }
+    const modeA =
+        a.type === "NIGHT"
+            ? 1
+            : 0;
 
 
-        /*
-         * Fallback.
-         */
-
-        const fallback =
-            name.match(
-                /_(\d+)_([HV])(?:_|$)/i
-            );
-
-        if (fallback) {
-
-            return {
-
-                number:
-                    Number(
-                        fallback[1]
-                    ),
-
-                direction:
-                    fallback[2]
-                        .toUpperCase()
-
-            };
-
-        }
-
-
-        return {
-
-            number:
-                999999,
-
-            direction:
-                ""
-
-        };
-
-    }
-
-
-    const A =
-        extract(nameA);
-
-    const B =
-        extract(nameB);
+    const modeB =
+        b.type === "NIGHT"
+            ? 1
+            : 0;
 
 
     if (
-        A.number !== B.number
+        modeA !== modeB
     ) {
 
-        return (
-            A.number -
-            B.number
-        );
+        return modeA - modeB;
 
     }
 
 
     /*
-     * H before V.
+     * Natural text comparison.
+     *
+     * This makes:
+     *
+     * 1
+     * 2
+     * 3
+     * ...
+     * 9
+     *
+     * instead of:
+     *
+     * 1
+     * 10
+     * 2
      */
 
-    if (
-        A.direction === "H" &&
-        B.direction === "V"
-    ) {
-
-        return -1;
-    }
-
-    if (
-        A.direction === "V" &&
-        B.direction === "H"
-    ) {
-
-        return 1;
-    }
-
-
-    return nameA.localeCompare(
-        nameB
+    return naturalCompare(
+        a.name,
+        b.name
     );
+
+}
+
+
+function naturalCompare(a, b) {
+
+    const aa =
+        String(a || "")
+            .toLowerCase()
+            .match(
+                /\d+|\D+/g
+            ) || [];
+
+
+    const bb =
+        String(b || "")
+            .toLowerCase()
+            .match(
+                /\d+|\D+/g
+            ) || [];
+
+
+    const length =
+        Math.max(
+            aa.length,
+            bb.length
+        );
+
+
+    for (
+        let i = 0;
+        i < length;
+        i++
+    ) {
+
+        if (
+            aa[i] === undefined
+        ) {
+
+            return -1;
+        }
+
+
+        if (
+            bb[i] === undefined
+        ) {
+
+            return 1;
+        }
+
+
+        if (
+            aa[i] === bb[i]
+        ) {
+
+            continue;
+        }
+
+
+        const na =
+            Number(aa[i]);
+
+
+        const nb =
+            Number(bb[i]);
+
+
+        if (
+            !Number.isNaN(na) &&
+            !Number.isNaN(nb)
+        ) {
+
+            return na - nb;
+
+        }
+
+
+        return aa[i]
+            .localeCompare(
+                bb[i]
+            );
+
+    }
+
+
+    return 0;
 }
 
 
 /* ============================================================
    EXCLUDED MTF ITEMS
-   ============================================================ */
+============================================================ */
 
 function isExcludedMTFItem(name) {
 
     const upper =
-        String(
-            name || ""
-        )
-        .trim()
-        .toUpperCase();
+        String(name || "")
+            .toUpperCase()
+            .replace(/\s+/g, "");
 
 
     /*
-     * These are intentionally removed
-     * from:
+     * Remove:
      *
-     * - tables
-     * - Day/Night data
-     * - graph
+     * UMA_MTF_1A_VIS_LP-mm
+     * UMA_MTF_1A_VIS_Distance
+     * UMA_MTF_1B_IR_LP-mm
+     * UMA_MTF_1B_IR_Distance
+     *
+     * Also catches minor naming variations.
      */
 
     if (
         upper.includes("VIS_LP-MM") ||
-        upper.includes("VIS_LP_MM") ||
         upper.includes("VIS_DISTANCE") ||
-        upper.includes("IR_DISTANCE") ||
-        upper.includes("IR-LP-MM") ||
         upper.includes("IR_LP-MM") ||
-        upper.includes("IR_LP_MM")
-    ) {
-
-        return true;
-    }
-
-
-    /*
-     * Catch variants where spacing differs.
-     */
-
-    if (
-        upper.includes("DISTANCE") ||
-        upper.includes("LP-MM") ||
-        upper.includes("LP_MM")
+        upper.includes("IR_DISTANCE")
     ) {
 
         return true;
@@ -3271,101 +3397,45 @@ function isExcludedMTFItem(name) {
 
 /* ============================================================
    MTF TYPE
-   ============================================================ */
+============================================================ */
 
 function getMTFType(name) {
 
     const upper =
-        String(
-            name || ""
-        )
-        .toUpperCase();
+        String(name || "")
+            .toUpperCase();
 
 
     /*
-     * IR has priority for actual
-     * night mode items.
+     * IR = NIGHT MODE.
      */
 
     if (
-        upper.includes("_IR_") ||
-        upper.includes("IR_")
+        upper.includes("IR")
     ) {
 
-        return "IR";
+        return "NIGHT";
     }
 
 
     /*
-     * VIS = Day Mode.
+     * Everything else MTF = DAY MODE.
+     *
+     * This includes:
+     *
+     * UMA_MTF_1A_1_H
+     * UMA_MTF_1A_1_V
+     * UMA_MTF_1A_2_H
+     * etc.
      */
 
-    if (
-        upper.includes("VIS")
-    ) {
-
-        return "VIS";
-    }
-
-
-    /*
-     * Other MTF is treated as Day Mode.
-     */
-
-    return "OTHER";
+    return "DAY";
 }
 
 
 /* ============================================================
-   DATE PARSER
-   ============================================================ */
-
-function parseDateValue(value) {
-
-    if (
-        !value
-    ) {
-
-        return null;
-    }
-
-    const parsed =
-        Date.parse(
-            String(value)
-        );
-
-    if (
-        Number.isNaN(parsed)
-    ) {
-
-        return null;
-    }
-
-    return parsed;
-}
-
-
-/* ============================================================
-   NATURAL SN SORT
-   ============================================================ */
-
-function naturalSNCompare(a, b) {
-
-    return String(a.sn || "")
-        .localeCompare(
-            String(b.sn || ""),
-            undefined,
-            {
-                numeric: true,
-                sensitivity: "base"
-            }
-        );
-}
-
-
-/* ============================================================
-   HEADER FINDER
-   ============================================================ */
+   NUMBER HELPERS
+============================================================ */
 
 function findHeader(
     headers,
@@ -3379,6 +3449,7 @@ function findHeader(
 
         return -1;
     }
+
 
     const target =
         String(wanted)
@@ -3420,10 +3491,6 @@ function findHeader(
 }
 
 
-/* ============================================================
-   GET FIRST VALUE
-   ============================================================ */
-
 function getFirstExistingValue(
     row,
     indexes
@@ -3451,13 +3518,10 @@ function getFirstExistingValue(
 
     }
 
+
     return "";
 }
 
-
-/* ============================================================
-   SPEC VALUE
-   ============================================================ */
 
 function getSpecValue(
     row,
@@ -3473,15 +3537,12 @@ function getSpecValue(
         return null;
     }
 
+
     return toNumber(
         row[index]
     );
 }
 
-
-/* ============================================================
-   NUMBER
-   ============================================================ */
 
 function toNumber(value) {
 
@@ -3492,6 +3553,7 @@ function toNumber(value) {
 
         return null;
     }
+
 
     const text =
         String(value)
@@ -3536,7 +3598,7 @@ function toNumber(value) {
 
 /* ============================================================
    RESULT
-   ============================================================ */
+============================================================ */
 
 function evaluateResult(
     value,
@@ -3578,8 +3640,8 @@ function evaluateResult(
 
 
 /* ============================================================
-   CLEAN SN
-   ============================================================ */
+   SN CLEAN
+============================================================ */
 
 function cleanSN(sn) {
 
@@ -3603,21 +3665,13 @@ function cleanSN(sn) {
         );
 
 
-    if (
-        value === ""
-    ) {
-
-        return "";
-    }
-
-
     return value;
 }
 
 
 /* ============================================================
    FORMAT NUMBER
-   ============================================================ */
+============================================================ */
 
 function formatNumber(value) {
 
@@ -3641,8 +3695,40 @@ function formatNumber(value) {
 
 
 /* ============================================================
+   TIME SORT
+============================================================ */
+
+function parseTimeValue(time) {
+
+    if (
+        !time
+    ) {
+
+        return null;
+    }
+
+
+    const parsed =
+        Date.parse(
+            String(time)
+        );
+
+
+    if (
+        Number.isNaN(parsed)
+    ) {
+
+        return null;
+    }
+
+
+    return parsed;
+}
+
+
+/* ============================================================
    ERROR
-   ============================================================ */
+============================================================ */
 
 function showError(message) {
 
@@ -3652,8 +3738,10 @@ function showError(message) {
                 "errorBox"
             );
 
+
     box.textContent =
         message;
+
 
     box.style.display =
         "block";
@@ -3668,8 +3756,10 @@ function hideError() {
                 "errorBox"
             );
 
+
     box.style.display =
         "none";
+
 
     box.textContent =
         "";
@@ -3678,7 +3768,7 @@ function hideError() {
 
 /* ============================================================
    CLEAR
-   ============================================================ */
+============================================================ */
 
 function clearAll() {
 
@@ -3705,13 +3795,6 @@ function clearAll() {
 
     document
         .getElementById(
-            "snSearch"
-        )
-        .value = "";
-
-
-    document
-        .getElementById(
             "summaryCard"
         )
         .style.display =
@@ -3730,15 +3813,24 @@ function clearAll() {
         .getElementById(
             "resultList"
         )
-        .innerHTML = "";
+        .innerHTML =
+            "";
+
+
+    document
+        .getElementById(
+            "snSearch"
+        )
+        .value =
+            "";
 
 
     groupedData = {};
 
+    originalRecords = [];
 
-    Object.values(
-        chartInstances
-    ).forEach(
+
+    chartInstances.forEach(
         function(chart) {
 
             try {
@@ -3751,37 +3843,20 @@ function clearAll() {
     );
 
 
-    chartInstances = {};
+    chartInstances.clear();
+
 
     currentFilter =
         "ALL";
 
 
-    document
-        .getElementById(
-            "filterAll"
-        )
-        .className =
-            "filter-btn active";
-
-
-    document
-        .getElementById(
-            "filterNG"
-        )
-        .className =
-            "filter-btn";
-
-
-    document
-        .getElementById(
-            "filterGOOD"
-        )
-        .className =
-            "filter-btn";
+    setFilter(
+        "ALL"
+    );
 
 
     hideError();
+
 }
 
 </script>
