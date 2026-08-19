@@ -2794,475 +2794,161 @@ function renderCollimatorGraphsByFixture() {
 ============================================================ */
 
 function renderFixtureDotGraphs() {
+    const container = document.getElementById("fixtureDotGraphsContainer");
+    if (!container) return;
 
-    const container =
-        document.getElementById(
-            "fixtureDotGraphsContainer"
-        );
-
-    if (!container) {
-        return;
-    }
-
-    /*
-     * Destroy previous charts.
-     */
-
-    fixtureDotChartInstances.forEach(
-        function(chart) {
-
-            try {
-                chart.destroy();
-            } catch (e) {}
-
-        }
-    );
-
+    fixtureDotChartInstances.forEach(function(chart) {
+        try { chart.destroy(); } catch (e) {}
+    });
     fixtureDotChartInstances.clear();
-
     container.innerHTML = "";
 
-    /*
-     * Build:
-     *
-     * {
-     *   fixture: [
-     *      { sn, value, item, mode, result, lower, upper }
-     *   ]
-     * }
-     */
-
     const fixtureData = {};
+    originalRecords.forEach(function(record) {
+        let fixture = String(record.stationIP || "UNKNOWN").trim() || "UNKNOWN";
+        if (!fixtureData[fixture]) fixtureData[fixture] = [];
+        const sn = record.sn && String(record.sn).trim() ? String(record.sn).trim() : "NO SN";
 
-    originalRecords.forEach(
-        function(record) {
+        record.measurements.forEach(function(m, measurementIndex) {
+            const value = Number(m.value);
+            if (!Number.isFinite(value)) return;
+            fixtureData[fixture].push({
+                sn: sn,
+                value: value,
+                item: String(m.name || "UNKNOWN"),
+                mode: m.type === "NIGHT" ? "NIGHT MODE" : "DAY MODE",
+                result: String(m.result || "").toUpperCase(),
+                lower: Number.isFinite(Number(m.lower)) ? Number(m.lower) : null,
+                upper: Number.isFinite(Number(m.upper)) ? Number(m.upper) : null,
+                jitter: ((measurementIndex % 11) - 5) * 0.035
+            });
+        });
+    });
 
-            let fixture =
-                record.stationIP;
+    Object.keys(fixtureData).sort(naturalCompare).forEach(function(fixture, fixtureIndex) {
+        const points = fixtureData[fixture];
+        if (!points.length) return;
 
-            if (
-                fixture === undefined ||
-                fixture === null ||
-                String(fixture).trim() === ""
-            ) {
-                fixture = "UNKNOWN";
-            }
+        // X-axis is now the collimator / MTF item, not every SN.
+        const itemList = [...new Set(points.map(p => p.item))].sort(naturalCompare);
+        const itemIndex = {};
+        itemList.forEach(function(item, index) { itemIndex[item] = index; });
 
-            fixture =
-                String(fixture).trim();
+        const card = document.createElement("div");
+        card.className = "card summary-graph-card";
+        const title = document.createElement("div");
+        title.className = "input-title";
+        title.textContent = "Fixture " + (fixtureIndex + 1) + " — Station IP: " + fixture;
+        const subtitle = document.createElement("div");
+        subtitle.className = "graph-subtitle";
+        subtitle.textContent = "Every MTF value is shown as a dot, grouped by collimator. Red line = LL.";
+        const graphContainer = document.createElement("div");
+        graphContainer.className = "fixture-dot-graph-container";
+        const canvas = document.createElement("canvas");
+        graphContainer.appendChild(canvas);
+        card.appendChild(title); card.appendChild(subtitle); card.appendChild(graphContainer);
+        container.appendChild(card);
 
-            if (!fixtureData[fixture]) {
-                fixtureData[fixture] = [];
-            }
+        const scatterData = points.map(function(point) {
+            return {
+                x: itemIndex[point.item] + point.jitter,
+                y: point.value,
+                sn: point.sn,
+                item: point.item,
+                mode: point.mode,
+                result: point.result,
+                lower: point.lower,
+                upper: point.upper
+            };
+        });
 
-            const sn =
-                record.sn &&
-                String(record.sn).trim()
-                    ? String(record.sn).trim()
-                    : "NO SN";
+        // One LL per collimator. Use the first valid LL found for that item.
+        const lowerByItem = {};
+        points.forEach(function(point) {
+            if (point.lower !== null && lowerByItem[point.item] === undefined) lowerByItem[point.item] = point.lower;
+        });
+        const llData = itemList.map(function(item, index) {
+            return lowerByItem[item] === undefined ? null : { x: index, y: lowerByItem[item] };
+        });
 
-            record.measurements.forEach(
-                function(m, measurementIndex) {
-
-                    const value =
-                        Number(m.value);
-
-                    if (!Number.isFinite(value)) {
-                        return;
-                    }
-
-                    fixtureData[fixture].push({
-
-                        sn: sn,
-
-                        value: value,
-
-                        item:
-                            String(m.name || ""),
-
-                        mode:
-                            m.type === "NIGHT"
-                                ? "NIGHT MODE"
-                                : "DAY MODE",
-
-                        result:
-                            String(m.result || "")
-                                .toUpperCase(),
-
-                        lower:
-                            m.lower,
-
-                        upper:
-                            m.upper,
-
-                        /*
-                         * Small deterministic horizontal offset.
-                         * It prevents several values belonging to the
-                         * same SN from sitting exactly on top of each
-                         * other while keeping them visually attached
-                         * to that SN.
-                         */
-                        jitter:
-                            ((measurementIndex % 7) - 3) * 0.055
-
-                    });
-
-                }
-            );
-
+        const datasets = [{
+            label: "MTF Values",
+            data: scatterData,
+            pointRadius: 4,
+            pointHoverRadius: 7,
+            borderWidth: 0,
+            showLine: false
+        }];
+        if (llData.some(Boolean)) {
+            datasets.push({
+                type: "line",
+                label: "LL",
+                data: llData,
+                borderColor: "red",
+                backgroundColor: "red",
+                borderWidth: 2,
+                pointRadius: 0,
+                pointHoverRadius: 0,
+                showLine: true,
+                spanGaps: false,
+                tension: 0
+            });
         }
-    );
 
-    const fixtures =
-        Object.keys(fixtureData)
-            .sort(naturalCompare);
-
-    if (fixtures.length === 0) {
-        return;
-    }
-
-    /*
-     * Create one graph for every fixture.
-     */
-
-    fixtures.forEach(
-        function(fixture, fixtureIndex) {
-
-            const points =
-                fixtureData[fixture];
-
-            if (!points.length) {
-                return;
-            }
-
-            /*
-             * Keep SN order stable.
-             */
-
-            const snList =
-                [...new Set(
-                    points.map(
-                        p => p.sn
-                    )
-                )].sort(
-                    naturalCompare
-                );
-
-            const snIndex = {};
-
-            snList.forEach(
-                function(sn, index) {
-                    snIndex[sn] = index;
-                }
-            );
-
-            /*
-             * Create card.
-             */
-
-            const card =
-                document.createElement("div");
-
-            card.className =
-                "card summary-graph-card";
-
-            const title =
-                document.createElement("div");
-
-            title.className =
-                "input-title";
-
-            title.textContent =
-                "Fixture " +
-                (fixtureIndex + 1) +
-                " — Station IP: " +
-                fixture;
-
-            const subtitle =
-                document.createElement("div");
-
-            subtitle.className =
-                "graph-subtitle";
-
-            subtitle.textContent =
-                "Dot graph of every MTF value from every SN. " +
-                "No averaging — GOOD and NG measurements are included.";
-
-            /*
-             * Create graph container.
-             */
-
-            const graphContainer =
-                document.createElement("div");
-
-            graphContainer.className =
-                "fixture-dot-graph-container";
-
-            const canvas =
-                document.createElement("canvas");
-
-            graphContainer.appendChild(canvas);
-
-            card.appendChild(title);
-            card.appendChild(subtitle);
-            card.appendChild(graphContainer);
-
-            container.appendChild(card);
-
-            /*
-             * LL / UL:
-             *
-             * Do not draw one global LL/UL line here because a fixture
-             * can contain multiple MTF items with different limits.
-             * The exact LL/UL is available in the tooltip for every dot.
-             */
-
-            const scatterData =
-                points.map(
-                    function(point) {
-
-                        return {
-
-                            x:
-                                snIndex[point.sn] +
-                                point.jitter,
-
-                            y:
-                                point.value,
-
-                            sn:
-                                point.sn,
-
-                            item:
-                                point.item,
-
-                            mode:
-                                point.mode,
-
-                            result:
-                                point.result,
-
-                            lower:
-                                point.lower,
-
-                            upper:
-                                point.upper
-
-                        };
-
-                    }
-                );
-
-            /*
-             * Use one dataset so every measurement remains an
-             * independent dot. The tooltip identifies the exact
-             * MTF item / SN / mode / result.
-             */
-
-            const chart =
-                new Chart(
-                    canvas.getContext("2d"),
-                    {
-
-                        type: "scatter",
-
-                        data: {
-
-                            datasets: [
-
-                                {
-
-                                    label:
-                                        "MTF Values",
-
-                                    data:
-                                        scatterData,
-
-                                    pointRadius: 4,
-
-                                    pointHoverRadius: 7,
-
-                                    borderWidth: 0,
-
-                                    showLine: false
-
-                                }
-
-                            ]
-
-                        },
-
-                        options: {
-
-                            responsive: true,
-
-                            maintainAspectRatio: false,
-
-                            interaction: {
-
-                                mode: "nearest",
-
-                                intersect: true
-
+        const chart = new Chart(canvas.getContext("2d"), {
+            type: "scatter",
+            data: { datasets: datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: "nearest", intersect: true },
+                plugins: {
+                    legend: { display: true },
+                    tooltip: {
+                        callbacks: {
+                            title: function(context) {
+                                const p = context && context.length ? context[0].raw : null;
+                                return p && p.item ? "Collimator: " + p.item : "LL";
                             },
-
-                            plugins: {
-
-                                legend: {
-
-                                    display: true
-
-                                },
-
-                                tooltip: {
-
-                                    callbacks: {
-
-                                        title:
-                                            function(context) {
-
-                                                if (
-                                                    !context ||
-                                                    !context.length
-                                                ) {
-                                                    return "";
-                                                }
-
-                                                const p =
-                                                    context[0]
-                                                        .raw;
-
-                                                return (
-                                                    "SN: " +
-                                                    p.sn
-                                                );
-
-                                            },
-
-                                        label:
-                                            function(context) {
-
-                                                const p =
-                                                    context.raw;
-
-                                                return [
-
-                                                    "MTF: " +
-                                                    p.item,
-
-                                                    "Value: " +
-                                                    formatNumber(
-                                                        p.y
-                                                    ),
-
-                                                    "Mode: " +
-                                                    p.mode,
-
-                                                    "Result: " +
-                                                    p.result,
-
-                                                    "LL: " +
-                                                    formatNumber(
-                                                        p.lower
-                                                    ),
-
-                                                    "UL: " +
-                                                    formatNumber(
-                                                        p.upper
-                                                    )
-
-                                                ];
-
-                                            }
-
-                                    }
-
-                                }
-
-                            },
-
-                            scales: {
-
-                                x: {
-
-                                    type: "linear",
-
-                                    min:
-                                        -0.5,
-
-                                    max:
-                                        Math.max(
-                                            0.5,
-                                            snList.length - 0.5
-                                        ),
-
-                                    ticks: {
-
-                                        stepSize: 1,
-
-                                        autoSkip: false,
-
-                                        maxRotation: 75,
-
-                                        minRotation: 45,
-
-                                        callback:
-                                            function(value) {
-
-                                                const index =
-                                                    Math.round(
-                                                        Number(value)
-                                                    );
-
-                                                return snList[index] || "";
-
-                                            }
-
-                                    },
-
-                                    title: {
-
-                                        display: true,
-
-                                        text:
-                                            "Serial Number (SN)"
-
-                                    }
-
-                                },
-
-                                y: {
-
-                                    beginAtZero: false,
-
-                                    title: {
-
-                                        display: true,
-
-                                        text:
-                                            "MTF Value"
-
-                                    }
-
-                                }
-
+                            label: function(context) {
+                                const p = context.raw;
+                                if (context.dataset.label === "LL") return "LL: " + formatNumber(p.y);
+                                return [
+                                    "Value: " + formatNumber(p.y),
+                                    "SN: " + p.sn,
+                                    "Mode: " + p.mode,
+                                    "Result: " + p.result,
+                                    "LL: " + formatNumber(p.lower),
+                                    "UL: " + formatNumber(p.upper)
+                                ];
                             }
-
                         }
-
                     }
-                );
-
-            fixtureDotChartInstances.set(
-                fixture,
-                chart
-            );
-
-        }
-    );
-
+                },
+                scales: {
+                    x: {
+                        type: "linear",
+                        min: -0.5,
+                        max: Math.max(0.5, itemList.length - 0.5),
+                        ticks: {
+                            stepSize: 1,
+                            autoSkip: false,
+                            callback: function(value) {
+                                return itemList[Math.round(Number(value))] || "";
+                            }
+                        },
+                        title: { display: true, text: "Collimator" }
+                    },
+                    y: {
+                        beginAtZero: false,
+                        title: { display: true, text: "MTF Value" }
+                    }
+                }
+            }
+        });
+        fixtureDotChartInstances.set(fixture, chart);
+    });
 }
-
 
 /* ============================================================
    FILTER
