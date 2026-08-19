@@ -7,6 +7,7 @@
 <title>FOCUS TEST LOG ANALYZER</title>
 
 <style>
+
 * {
     box-sizing: border-box;
 }
@@ -140,7 +141,7 @@ button,
 }
 
 /* ============================================================
-   SEARCH / FILTER
+   FILTERS / SEARCH
    ============================================================ */
 
 .controls {
@@ -153,27 +154,21 @@ button,
 .search-box {
     flex: 1;
     min-width: 250px;
-    position: relative;
 }
 
 .search-box input {
     width: 100%;
-    padding: 11px 14px;
+    padding: 11px 13px;
     border: 1px solid #cfd4da;
     border-radius: 7px;
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 14px;
-    outline: none;
-}
-
-.search-box input:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 2px rgba(37,99,235,0.12);
+    font-family: Consolas, monospace;
+    font-size: 13px;
 }
 
 .filter-buttons {
     display: flex;
     gap: 8px;
+    flex-wrap: wrap;
 }
 
 .filter-btn {
@@ -197,7 +192,7 @@ button,
 }
 
 /* ============================================================
-   SN RESULTS
+   RESULT LIST
    ============================================================ */
 
 .result-list {
@@ -213,13 +208,15 @@ button,
     background: white;
 }
 
-.sn-card.hidden {
-    display: none;
-}
-
 .sn-header {
     display: grid;
-    grid-template-columns: 50px minmax(180px, 1fr) 110px 180px 110px;
+    grid-template-columns:
+        50px
+        minmax(180px, 1fr)
+        130px
+        minmax(150px, 220px)
+        120px;
+
     align-items: center;
     gap: 12px;
     padding: 13px 15px;
@@ -294,10 +291,6 @@ button,
     overflow: hidden;
 }
 
-.test-log:last-child {
-    margin-bottom: 0;
-}
-
 .test-header {
     background: #f3f4f6;
     padding: 11px 14px;
@@ -323,31 +316,38 @@ button,
 }
 
 .section-title {
-    margin: 14px 0 8px;
+    margin: 15px 0 8px;
     font-size: 15px;
     font-weight: bold;
+    color: #374151;
 }
 
+/* ============================================================
+   DAY / NIGHT MODE
+   ============================================================ */
+
 .mode-title {
-    padding: 8px 10px;
-    margin-top: 15px;
-    background: #374151;
-    color: white;
-    border-radius: 5px 5px 0 0;
+    margin-top: 18px;
+    margin-bottom: 8px;
+    padding: 7px 10px;
     font-size: 14px;
     font-weight: bold;
+    border-radius: 5px;
 }
 
 .day-mode-title {
-    background: #f3f4f6;
-    color: #92400e;
-    border: 1px solid #e5e7eb;
+    background: #fff7ed;
+    color: #c2410c;
 }
 
 .night-mode-title {
-    background: #1f2937;
-    color: #60a5fa;
+    background: #eef2ff;
+    color: #3730a3;
 }
+
+/* ============================================================
+   TABLE
+   ============================================================ */
 
 .mtf-table-wrapper {
     overflow-x: auto;
@@ -406,17 +406,14 @@ canvas {
     height: 100% !important;
 }
 
+/* ============================================================
+   OTHER
+   ============================================================ */
+
 .empty {
     padding: 35px;
     text-align: center;
     color: #6b7280;
-}
-
-.no-results {
-    padding: 25px;
-    text-align: center;
-    color: #6b7280;
-    display: none;
 }
 
 .error {
@@ -435,6 +432,16 @@ canvas {
     font-size: 12px;
 }
 
+.no-results {
+    padding: 25px;
+    text-align: center;
+    color: #6b7280;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
 @media (max-width: 900px) {
 
     .summary-grid {
@@ -442,7 +449,10 @@ canvas {
     }
 
     .sn-header {
-        grid-template-columns: 35px 1fr 80px;
+        grid-template-columns:
+            35px
+            1fr
+            90px;
     }
 
     .ng-description,
@@ -459,22 +469,42 @@ canvas {
     }
 
     .sn-header {
-        grid-template-columns: 30px 1fr 70px;
+        grid-template-columns:
+            30px
+            1fr
+            70px;
+    }
+
+    .controls {
+        flex-direction: column;
+    }
+
+    .search-box {
+        min-width: 100%;
     }
 }
+
 </style>
 </head>
 
 <body>
 
 <div class="header">
+
     <h1>FOCUS TEST LOG ANALYZER</h1>
-    <p>MTF VIS / IR log and SPC data analyzer</p>
+
+    <p>
+        MTF VIS / IR log and SPC data analyzer
+    </p>
+
 </div>
 
 <div class="container">
 
-    <!-- INPUT -->
+    <!-- =====================================================
+         INPUT
+         ===================================================== -->
+
     <div class="card">
 
         <div class="input-title">
@@ -489,12 +519,15 @@ canvas {
         <div class="buttons">
 
             <label class="file-label">
+
                 Browse Data
+
                 <input
                     type="file"
                     id="fileInput"
                     accept=".log,.txt,.csv"
                 >
+
             </label>
 
             <button
@@ -525,7 +558,11 @@ canvas {
         class="error"
     ></div>
 
-    <!-- SUMMARY -->
+
+    <!-- =====================================================
+         SUMMARY
+         ===================================================== -->
+
     <div
         id="summaryCard"
         class="card"
@@ -539,42 +576,74 @@ canvas {
         <div class="summary-grid">
 
             <div class="summary-box">
-                <div class="label">Total SN</div>
+
+                <div class="label">
+                    Total SN
+                </div>
+
                 <div
                     id="totalSN"
                     class="number"
-                >0</div>
+                >
+                    0
+                </div>
+
             </div>
 
             <div class="summary-box">
-                <div class="label">GOOD</div>
+
+                <div class="label">
+                    GOOD
+                </div>
+
                 <div
                     id="goodSN"
                     class="number good-number"
-                >0</div>
+                >
+                    0
+                </div>
+
             </div>
 
             <div class="summary-box">
-                <div class="label">NG</div>
+
+                <div class="label">
+                    NG
+                </div>
+
                 <div
                     id="ngSN"
                     class="number ng-number"
-                >0</div>
+                >
+                    0
+                </div>
+
             </div>
 
             <div class="summary-box">
-                <div class="label">Test Logs</div>
+
+                <div class="label">
+                    Test Logs
+                </div>
+
                 <div
                     id="totalTests"
                     class="number"
-                >0</div>
+                >
+                    0
+                </div>
+
             </div>
 
         </div>
 
     </div>
 
-    <!-- RESULTS -->
+
+    <!-- =====================================================
+         RESULTS
+         ===================================================== -->
+
     <div
         id="resultsCard"
         class="card"
@@ -586,6 +655,7 @@ canvas {
         </div>
 
         <!-- SEARCH + FILTER -->
+
         <div class="controls">
 
             <div class="search-box">
@@ -618,7 +688,7 @@ canvas {
                 </button>
 
                 <button
-                    id="filterGood"
+                    id="filterGOOD"
                     class="filter-btn"
                     onclick="setFilter('GOOD')"
                 >
@@ -634,16 +704,10 @@ canvas {
             class="result-list"
         ></div>
 
-        <div
-            id="noResults"
-            class="no-results"
-        >
-            No SN matches the current search/filter.
-        </div>
-
     </div>
 
 </div>
+
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -654,7 +718,9 @@ canvas {
    ============================================================ */
 
 let groupedData = {};
+
 let chartInstances = {};
+
 let currentFilter = "ALL";
 
 
@@ -664,43 +730,56 @@ let currentFilter = "ALL";
 
 document
     .getElementById("fileInput")
-    .addEventListener("change", function(event) {
+    .addEventListener(
+        "change",
+        function(event) {
 
-        const file = event.target.files[0];
+            const file =
+                event.target.files[0];
 
-        if (!file) {
-            return;
+            if (!file) {
+                return;
+            }
+
+            const reader =
+                new FileReader();
+
+            reader.onload =
+                function(e) {
+
+                    document
+                        .getElementById(
+                            "logInput"
+                        )
+                        .value =
+                            e.target.result;
+
+                    document
+                        .getElementById(
+                            "fileInfo"
+                        )
+                        .textContent =
+                            "Loaded: " +
+                            file.name +
+                            " (" +
+                            file.size.toLocaleString() +
+                            " bytes)";
+
+                };
+
+            reader.onerror =
+                function() {
+
+                    showError(
+                        "Unable to read the selected file."
+                    );
+
+                };
+
+            reader.readAsText(file);
+
         }
-
-        const reader = new FileReader();
-
-        reader.onload = function(e) {
-
-            document
-                .getElementById("logInput")
-                .value = e.target.result;
-
-            document
-                .getElementById("fileInfo")
-                .textContent =
-                    "Loaded: " +
-                    file.name +
-                    " (" +
-                    file.size.toLocaleString() +
-                    " bytes)";
-
-        };
-
-        reader.onerror = function() {
-
-            showError(
-                "Unable to read the selected file."
-            );
-
-        };
-
-        reader.readAsText(file);
-    });
+    );
 
 
 /* ============================================================
@@ -741,11 +820,14 @@ function analyzeLog() {
 
         records =
             parseOriginalLog(raw);
+
     }
 
     /*
-     * Try the other parser if necessary.
+     * Automatically try the other parser
+     * if nothing was found.
      */
+
     if (records.length === 0) {
 
         if (format === "CSV") {
@@ -757,7 +839,9 @@ function analyzeLog() {
 
             records =
                 parseCSVData(raw);
+
         }
+
     }
 
     if (records.length === 0) {
@@ -836,7 +920,8 @@ function parseCSVLine(line) {
         i++
     ) {
 
-        const char = line[i];
+        const char =
+            line[i];
 
         if (char === '"') {
 
@@ -846,11 +931,13 @@ function parseCSVLine(line) {
             ) {
 
                 current += '"';
+
                 i++;
 
             } else {
 
-                inQuotes = !inQuotes;
+                inQuotes =
+                    !inQuotes;
             }
 
         } else if (
@@ -910,6 +997,7 @@ function parseCSVData(text) {
         ) {
 
             headerIndex = i;
+
             break;
         }
     }
@@ -932,7 +1020,9 @@ function parseCSVData(text) {
     ) {
 
         const row =
-            parseCSVLine(lines[i]);
+            parseCSVLine(
+                lines[i]
+            );
 
         if (!row.length) {
             continue;
@@ -957,7 +1047,8 @@ function parseCSVData(text) {
             ].includes(first)
         ) {
 
-            specRows[first] = row;
+            specRows[first] =
+                row;
         }
     }
 
@@ -970,11 +1061,13 @@ function parseCSVData(text) {
     ) {
 
         const header =
-            String(headers[i] || "")
-                .trim();
+            String(
+                headers[i] || ""
+            ).trim();
 
         if (
-            header.toUpperCase()
+            header
+                .toUpperCase()
                 .includes("MTF")
         ) {
 
@@ -1000,7 +1093,9 @@ function parseCSVData(text) {
                 lines[rowIndex]
             );
 
-        if (!row.length) {
+        if (
+            row.length === 0
+        ) {
             continue;
         }
 
@@ -1067,6 +1162,8 @@ function parseCSVData(text) {
                 ]
             );
 
+        let hasMeasurement = false;
+
         const measurements = [];
 
         for (
@@ -1079,19 +1176,20 @@ function parseCSVData(text) {
                 ).trim();
 
             /*
-             * REMOVE VIS LP-mm and VIS Distance.
+             * Ignore unwanted Distance / LP items.
              */
             if (
-                shouldExcludeItem(itemName)
+                isExcludedMTFItem(itemName)
             ) {
 
                 continue;
             }
 
+            const rawValue =
+                row[columnIndex];
+
             const value =
-                toNumber(
-                    row[columnIndex]
-                );
+                toNumber(rawValue);
 
             if (
                 value === null
@@ -1099,6 +1197,8 @@ function parseCSVData(text) {
 
                 continue;
             }
+
+            hasMeasurement = true;
 
             const lower =
                 getSpecValue(
@@ -1112,30 +1212,6 @@ function parseCSVData(text) {
                     columnIndex
                 );
 
-            const min =
-                getSpecValue(
-                    specRows.min,
-                    columnIndex
-                );
-
-            const max =
-                getSpecValue(
-                    specRows.max,
-                    columnIndex
-                );
-
-            const mean =
-                getSpecValue(
-                    specRows.mean,
-                    columnIndex
-                );
-
-            const sigma =
-                getSpecValue(
-                    specRows.sigma,
-                    columnIndex
-                );
-
             measurements.push({
 
                 name: itemName,
@@ -1146,13 +1222,29 @@ function parseCSVData(text) {
 
                 upper: upper,
 
-                min: min,
+                min:
+                    getSpecValue(
+                        specRows.min,
+                        columnIndex
+                    ),
 
-                max: max,
+                max:
+                    getSpecValue(
+                        specRows.max,
+                        columnIndex
+                    ),
 
-                mean: mean,
+                mean:
+                    getSpecValue(
+                        specRows.mean,
+                        columnIndex
+                    ),
 
-                sigma: sigma,
+                sigma:
+                    getSpecValue(
+                        specRows.sigma,
+                        columnIndex
+                    ),
 
                 result:
                     evaluateResult(
@@ -1162,17 +1254,19 @@ function parseCSVData(text) {
                     ),
 
                 type:
-                    getMTFType(itemName),
-
-                mode:
-                    getMode(itemName)
+                    getMTFType(itemName)
 
             });
+
         }
 
         if (
-            measurements.length > 0
+            hasMeasurement
         ) {
+
+            measurements.sort(
+                sortMTFItems
+            );
 
             records.push({
 
@@ -1190,8 +1284,138 @@ function parseCSVData(text) {
 
                 measurements:
                     measurements
+
             });
+
         }
+
+    }
+
+    /*
+     * Fallback for specification-only CSV.
+     */
+
+    if (
+        records.length === 0 &&
+        specRows.mean
+    ) {
+
+        const measurements = [];
+
+        for (
+            const columnIndex of measurementColumns
+        ) {
+
+            const itemName =
+                String(
+                    headers[columnIndex] || ""
+                ).trim();
+
+            if (
+                isExcludedMTFItem(itemName)
+            ) {
+
+                continue;
+            }
+
+            const value =
+                getSpecValue(
+                    specRows.mean,
+                    columnIndex
+                );
+
+            if (
+                value === null
+            ) {
+                continue;
+            }
+
+            const lower =
+                getSpecValue(
+                    specRows.lower,
+                    columnIndex
+                );
+
+            const upper =
+                getSpecValue(
+                    specRows.upper,
+                    columnIndex
+                );
+
+            measurements.push({
+
+                name:
+                    itemName,
+
+                value:
+                    value,
+
+                lower:
+                    lower,
+
+                upper:
+                    upper,
+
+                min:
+                    getSpecValue(
+                        specRows.min,
+                        columnIndex
+                    ),
+
+                max:
+                    getSpecValue(
+                        specRows.max,
+                        columnIndex
+                    ),
+
+                mean:
+                    value,
+
+                sigma:
+                    getSpecValue(
+                        specRows.sigma,
+                        columnIndex
+                    ),
+
+                result:
+                    evaluateResult(
+                        value,
+                        lower,
+                        upper
+                    ),
+
+                type:
+                    getMTFType(itemName)
+
+            });
+
+        }
+
+        measurements.sort(
+            sortMTFItems
+        );
+
+        if (
+            measurements.length > 0
+        ) {
+
+            records.push({
+
+                sn: "",
+
+                workNo: "",
+
+                time: "",
+
+                source: "CSV",
+
+                measurements:
+                    measurements
+
+            });
+
+        }
+
     }
 
     return records;
@@ -1223,6 +1447,10 @@ function parseOriginalLog(text) {
         const line =
             lines[i];
 
+        /*
+         * Detect SN.
+         */
+
         const snMatch =
             line.match(
                 /(?:Load SNFile:\s*|SN:\s*)([A-Za-z0-9._-]+)/
@@ -1234,6 +1462,10 @@ function parseOriginalLog(text) {
                 currentRecord &&
                 currentRecord.measurements.length > 0
             ) {
+
+                currentRecord.measurements.sort(
+                    sortMTFItems
+                );
 
                 records.push(
                     currentRecord
@@ -1247,25 +1479,26 @@ function parseOriginalLog(text) {
                         snMatch[1]
                     ),
 
-                workNo:
-                    "",
+                workNo: "",
 
-                time:
-                    "",
+                time: "",
 
-                source:
-                    "LOG",
+                source: "LOG",
 
-                measurements:
-                    []
+                measurements: []
+
             };
 
             continue;
         }
 
+        /*
+         * Date / Time.
+         */
+
         const dateMatch =
             line.match(
-                /Date_Time:\s*(.+)/
+                /Date_Time:\s*(.+)/i
             );
 
         if (
@@ -1279,9 +1512,13 @@ function parseOriginalLog(text) {
             continue;
         }
 
+        /*
+         * Item + Value.
+         */
+
         const itemMatch =
             line.match(
-                /Item:\s*([^;]+);\s*Value:\s*([+-]?\d+(?:\.\d+)?)/
+                /Item:\s*([^;]+);\s*Value:\s*([+-]?\d+(?:\.\d+)?)/i
             );
 
         if (
@@ -1293,10 +1530,11 @@ function parseOriginalLog(text) {
                 itemMatch[1].trim();
 
             /*
-             * REMOVE VIS LP-mm and VIS Distance.
+             * Remove Distance / LP-mm.
              */
+
             if (
-                shouldExcludeItem(name)
+                isExcludedMTFItem(name)
             ) {
 
                 continue;
@@ -1308,11 +1546,19 @@ function parseOriginalLog(text) {
                 );
 
             let lower = null;
+
             let upper = null;
+
+            /*
+             * Search specification nearby.
+             */
 
             for (
                 let j = i;
-                j < Math.min(i + 3, lines.length);
+                j < Math.min(
+                    i + 5,
+                    lines.length
+                );
                 j++
             ) {
 
@@ -1321,7 +1567,9 @@ function parseOriginalLog(text) {
                         /SPEC:\s*LOWER=([+-]?\d+(?:\.\d+)?)/i
                     );
 
-                if (specMatch) {
+                if (
+                    specMatch
+                ) {
 
                     lower =
                         Number(
@@ -1330,6 +1578,31 @@ function parseOriginalLog(text) {
 
                     break;
                 }
+
+            }
+
+            const upperMatch =
+                lines
+                    .slice(
+                        i,
+                        Math.min(
+                            i + 5,
+                            lines.length
+                        )
+                    )
+                    .join(" ")
+                    .match(
+                        /SPEC:\s*(?:LOWER=[^,\]]+,\s*)?UPPER=([+-]?\d+(?:\.\d+)?)/i
+                    );
+
+            if (
+                upperMatch
+            ) {
+
+                upper =
+                    Number(
+                        upperMatch[1]
+                    );
             }
 
             currentRecord.measurements.push({
@@ -1346,17 +1619,13 @@ function parseOriginalLog(text) {
                 upper:
                     upper,
 
-                min:
-                    null,
+                min: null,
 
-                max:
-                    null,
+                max: null,
 
-                mean:
-                    null,
+                mean: null,
 
-                sigma:
-                    null,
+                sigma: null,
 
                 result:
                     evaluateResult(
@@ -1366,18 +1635,26 @@ function parseOriginalLog(text) {
                     ),
 
                 type:
-                    getMTFType(name),
+                    getMTFType(name)
 
-                mode:
-                    getMode(name)
             });
+
         }
+
     }
+
+    /*
+     * Save final record.
+     */
 
     if (
         currentRecord &&
         currentRecord.measurements.length > 0
     ) {
+
+        currentRecord.measurements.sort(
+            sortMTFItems
+        );
 
         records.push(
             currentRecord
@@ -1385,8 +1662,9 @@ function parseOriginalLog(text) {
     }
 
     /*
-     * Fallback.
+     * Fallback when SN markers are missing.
      */
+
     if (
         records.length === 0
     ) {
@@ -1406,7 +1684,7 @@ function parseOriginalLog(text) {
 
             const match =
                 line.match(
-                    /Item:\s*([^;]+);\s*Value:\s*([+-]?\d+(?:\.\d+)?)/
+                    /Item:\s*([^;]+);\s*Value:\s*([+-]?\d+(?:\.\d+)?)/i
                 );
 
             if (!match) {
@@ -1417,8 +1695,9 @@ function parseOriginalLog(text) {
                 match[1].trim();
 
             if (
-                shouldExcludeItem(name)
+                isExcludedMTFItem(name)
             ) {
+
                 continue;
             }
 
@@ -1457,12 +1736,15 @@ function parseOriginalLog(text) {
                     "GOOD",
 
                 type:
-                    getMTFType(name),
+                    getMTFType(name)
 
-                mode:
-                    getMode(name)
             });
+
         }
+
+        measurements.sort(
+            sortMTFItems
+        );
 
         if (
             measurements.length > 0
@@ -1477,19 +1759,19 @@ function parseOriginalLog(text) {
                           )
                         : "",
 
-                workNo:
-                    "",
+                workNo: "",
 
-                time:
-                    "",
+                time: "",
 
-                source:
-                    "LOG",
+                source: "LOG",
 
                 measurements:
                     measurements
+
             });
+
         }
+
     }
 
     return records;
@@ -1497,7 +1779,7 @@ function parseOriginalLog(text) {
 
 
 /* ============================================================
-   GROUP RECORDS
+   GROUP BY SN
    ============================================================ */
 
 function groupRecords(records) {
@@ -1505,7 +1787,7 @@ function groupRecords(records) {
     groupedData = {};
 
     records.forEach(
-        function(record) {
+        function(record, index) {
 
             const sn =
                 record.sn &&
@@ -1528,32 +1810,40 @@ function groupRecords(records) {
                     overall:
                         "GOOD",
 
-                    dayNG:
-                        false,
-
-                    nightNG:
-                        false,
+                    ngTypes:
+                        new Set(),
 
                     ngItems:
                         []
+
                 };
+
             }
 
-            record.testNumber =
-                groupedData[sn]
-                    .tests.length + 1;
+            /*
+             * Sort all individual MTF items.
+             */
+
+            record.measurements.sort(
+                sortMTFItems
+            );
 
             /*
-             * Sort the measurements inside
-             * every test immediately.
+             * Store original order so that
+             * logs with identical timestamps
+             * remain in their input sequence.
              */
-            record.measurements.sort(
-                sequentialMTFSort
-            );
+
+            record.originalIndex =
+                index;
 
             groupedData[sn]
                 .tests
                 .push(record);
+
+            /*
+             * Determine overall result.
+             */
 
             record.measurements.forEach(
                 function(m) {
@@ -1561,7 +1851,6 @@ function groupRecords(records) {
                     if (
                         m.result !== "NG"
                     ) {
-
                         return;
                     }
 
@@ -1569,33 +1858,88 @@ function groupRecords(records) {
                         .overall =
                             "NG";
 
+                    if (
+                        m.type === "VIS"
+                    ) {
+
+                        groupedData[sn]
+                            .ngTypes
+                            .add("DAY MODE NG");
+
+                    } else if (
+                        m.type === "IR"
+                    ) {
+
+                        groupedData[sn]
+                            .ngTypes
+                            .add("NIGHT MODE NG");
+                    }
+
                     groupedData[sn]
                         .ngItems
                         .push(m);
 
-                    if (
-                        m.mode === "DAY"
-                    ) {
-
-                        groupedData[sn]
-                            .dayNG = true;
-
-                    } else if (
-                        m.mode === "NIGHT"
-                    ) {
-
-                        groupedData[sn]
-                            .nightNG = true;
-                    }
                 }
             );
+
         }
     );
 
     /*
-     * Keep SN order based on first appearance.
-     * Test order remains the original log order.
+     * Sort test logs by timestamp when available.
+     * If timestamps are unavailable or equal,
+     * preserve original input order.
      */
+
+    Object.values(
+        groupedData
+    ).forEach(
+        function(snData) {
+
+            snData.tests.sort(
+                function(a, b) {
+
+                    const ta =
+                        parseDateValue(
+                            a.time
+                        );
+
+                    const tb =
+                        parseDateValue(
+                            b.time
+                        );
+
+                    if (
+                        ta !== null &&
+                        tb !== null
+                    ) {
+
+                        if (
+                            ta !== tb
+                        ) {
+
+                            return ta - tb;
+                        }
+                    }
+
+                    return (
+                        a.originalIndex -
+                        b.originalIndex
+                    );
+                }
+            );
+
+            snData.tests.forEach(
+                function(test, index) {
+
+                    test.testNumber =
+                        index + 1;
+
+                }
+            );
+
+        }
+    );
 }
 
 
@@ -1611,7 +1955,9 @@ function renderSummary() {
         );
 
     let good = 0;
+
     let ng = 0;
+
     let tests = 0;
 
     snList.forEach(
@@ -1626,10 +1972,12 @@ function renderSummary() {
             } else {
 
                 good++;
+
             }
 
             tests +=
                 item.tests.length;
+
         }
     );
 
@@ -1661,6 +2009,167 @@ function renderSummary() {
 
 
 /* ============================================================
+   FILTER
+   ============================================================ */
+
+function setFilter(filter) {
+
+    currentFilter =
+        filter;
+
+    const all =
+        document.getElementById(
+            "filterAll"
+        );
+
+    const ng =
+        document.getElementById(
+            "filterNG"
+        );
+
+    const good =
+        document.getElementById(
+            "filterGOOD"
+        );
+
+    all.className =
+        "filter-btn";
+
+    ng.className =
+        "filter-btn";
+
+    good.className =
+        "filter-btn";
+
+    if (
+        filter === "ALL"
+    ) {
+
+        all.className =
+            "filter-btn active";
+
+    } else if (
+        filter === "NG"
+    ) {
+
+        ng.className =
+            "filter-btn ng-active";
+
+    } else if (
+        filter === "GOOD"
+    ) {
+
+        good.className =
+            "filter-btn good-active";
+    }
+
+    applyFilters();
+}
+
+
+/* ============================================================
+   SEARCH + FILTER
+   ============================================================ */
+
+function applyFilters() {
+
+    const search =
+        document
+            .getElementById(
+                "snSearch"
+            )
+            .value
+            .trim()
+            .toLowerCase();
+
+    const cards =
+        document.querySelectorAll(
+            ".sn-card"
+        );
+
+    let visibleCount = 0;
+
+    cards.forEach(
+        function(card) {
+
+            const sn =
+                card.dataset.sn
+                    .toLowerCase();
+
+            const status =
+                card.dataset.status;
+
+            const matchesSearch =
+                !search ||
+                sn.includes(search);
+
+            const matchesFilter =
+                currentFilter === "ALL" ||
+                currentFilter === status;
+
+            if (
+                matchesSearch &&
+                matchesFilter
+            ) {
+
+                card.style.display =
+                    "";
+
+                visibleCount++;
+
+            } else {
+
+                card.style.display =
+                    "none";
+            }
+
+        }
+    );
+
+    let empty =
+        document.getElementById(
+            "filterEmpty"
+        );
+
+    if (!empty) {
+
+        empty =
+            document.createElement(
+                "div"
+            );
+
+        empty.id =
+            "filterEmpty";
+
+        empty.className =
+            "no-results";
+
+        document
+            .getElementById(
+                "resultList"
+            )
+            .appendChild(empty);
+    }
+
+    if (
+        visibleCount === 0
+    ) {
+
+        empty.textContent =
+            "No SN matches your search/filter.";
+
+        empty.style.display =
+            "block";
+
+    } else {
+
+        empty.style.display =
+            "none";
+    }
+}
+
+
+/* ============================================================
    RESULTS
    ============================================================ */
 
@@ -1668,7 +2177,9 @@ function renderResults() {
 
     const container =
         document
-            .getElementById("resultList");
+            .getElementById(
+                "resultList"
+            );
 
     container.innerHTML = "";
 
@@ -1687,6 +2198,14 @@ function renderResults() {
         return;
     }
 
+    /*
+     * Sort SNs naturally.
+     */
+
+    snList.sort(
+        naturalSNCompare
+    );
+
     snList.forEach(
         function(snData, index) {
 
@@ -1698,14 +2217,15 @@ function renderResults() {
             card.className =
                 "sn-card";
 
-            /*
-             * Used by search/filter.
-             */
             card.dataset.sn =
-                snData.sn.toLowerCase();
+                snData.sn;
 
-            card.dataset.result =
+            card.dataset.status =
                 snData.overall;
+
+            /*
+             * Header.
+             */
 
             const header =
                 document.createElement(
@@ -1764,25 +2284,39 @@ function renderResults() {
             /*
              * IMPORTANT:
              *
-             * DAY NG ALWAYS HAS PRIORITY.
+             * DAY MODE NG has priority.
              *
-             * Only if there is no DAY NG and
-             * there is NIGHT NG do we display
-             * NIGHT MODE NG.
+             * If first/day test is NG,
+             * show DAY MODE NG even if
+             * another night test is also NG.
+             *
+             * NIGHT MODE NG is shown only
+             * when there is no DAY MODE NG.
              */
+
             if (
-                snData.dayNG
+                snData.overall === "NG"
             ) {
 
-                description.textContent =
-                    "DAY MODE NG";
+                if (
+                    snData.ngTypes.has(
+                        "DAY MODE NG"
+                    )
+                ) {
 
-            } else if (
-                snData.nightNG
-            ) {
+                    description.textContent =
+                        "DAY MODE NG";
 
-                description.textContent =
-                    "NIGHT MODE NG";
+                } else if (
+                    snData.ngTypes.has(
+                        "NIGHT MODE NG"
+                    )
+                ) {
+
+                    description.textContent =
+                        "NIGHT MODE NG";
+
+                }
 
             } else {
 
@@ -1807,10 +2341,19 @@ function renderResults() {
                 );
 
             header.appendChild(number);
+
             header.appendChild(sn);
+
             header.appendChild(status);
+
             header.appendChild(description);
+
             header.appendChild(count);
+
+
+            /*
+             * Expanded content.
+             */
 
             const content =
                 document.createElement(
@@ -1821,8 +2364,9 @@ function renderResults() {
                 "sn-content";
 
             /*
-             * EVERY TEST LOG for the SN.
+             * Every test log remains separate.
              */
+
             snData.tests.forEach(
                 function(test) {
 
@@ -1832,8 +2376,14 @@ function renderResults() {
                             test
                         )
                     );
+
                 }
             );
+
+
+            /*
+             * Expand / collapse.
+             */
 
             header.addEventListener(
                 "click",
@@ -1862,25 +2412,33 @@ function renderResults() {
                                             drawChart(
                                                 canvas
                                             );
+
                                         }
                                     );
 
                             },
                             50
                         );
+
                     }
+
                 }
             );
 
+
             card.appendChild(header);
+
             card.appendChild(content);
 
             container.appendChild(card);
+
         }
     );
 
     document
-        .getElementById("resultsCard")
+        .getElementById(
+            "resultsCard"
+        )
         .style.display =
             "block";
 
@@ -1938,7 +2496,9 @@ function createTestLog(
         "Time not available";
 
     header.appendChild(title);
+
     header.appendChild(time);
+
 
     const body =
         document.createElement(
@@ -1948,101 +2508,101 @@ function createTestLog(
     body.className =
         "test-body";
 
+
     /*
-     * DAY MODE
+     * Split into Day / Night.
      */
+
     const day =
         test.measurements
             .filter(
                 m =>
-                    m.mode === "DAY"
+                    m.type === "VIS" ||
+                    m.type === "OTHER"
+            )
+            .filter(
+                m =>
+                    !isExcludedMTFItem(
+                        m.name
+                    )
+            )
+            .sort(
+                sortMTFItems
             );
 
-    /*
-     * NIGHT MODE
-     */
     const night =
         test.measurements
             .filter(
                 m =>
-                    m.mode === "NIGHT"
-            );
-
-    /*
-     * Any unknown MTF item.
-     */
-    const other =
-        test.measurements
+                    m.type === "IR"
+            )
             .filter(
                 m =>
-                    m.mode !== "DAY" &&
-                    m.mode !== "NIGHT"
+                    !isExcludedMTFItem(
+                        m.name
+                    )
+            )
+            .sort(
+                sortMTFItems
             );
 
+
     /*
-     * Already sorted, but sort again
-     * for safety.
+     * DAY MODE
      */
-    day.sort(
-        sequentialMTFSort
-    );
-
-    night.sort(
-        sequentialMTFSort
-    );
-
-    other.sort(
-        sequentialMTFSort
-    );
 
     if (
         day.length > 0
     ) {
 
         body.appendChild(
-            createMeasurementSection(
+            createModeSection(
                 "DAY MODE",
                 day,
                 "day"
             )
         );
+
     }
+
+
+    /*
+     * NIGHT MODE
+     */
 
     if (
         night.length > 0
     ) {
 
         body.appendChild(
-            createMeasurementSection(
+            createModeSection(
                 "NIGHT MODE",
                 night,
                 "night"
             )
         );
+
     }
 
-    /*
-     * Only show Other MTF when an item cannot
-     * be identified as Day or Night.
-     */
-    if (
-        other.length > 0
-    ) {
-
-        body.appendChild(
-            createMeasurementSection(
-                "OTHER MTF",
-                other,
-                "other"
-            )
-        );
-    }
 
     /*
      * Graph.
      */
+
+    const graphMeasurements =
+        test.measurements
+            .filter(
+                m =>
+                    !isExcludedMTFItem(
+                        m.name
+                    )
+            )
+            .sort(
+                sortMTFItems
+            );
+
     if (
-        test.measurements.length > 0
+        graphMeasurements.length > 0
     ) {
 
         const chartTitle =
@@ -2074,22 +2634,17 @@ function createTestLog(
             );
 
         canvas.chartData =
-            test.measurements
-                .slice()
-                .sort(
-                    sequentialMTFSort
-                );
+            graphMeasurements;
 
-        graph.appendChild(
-            canvas
-        );
+        graph.appendChild(canvas);
 
-        body.appendChild(
-            graph
-        );
+        body.appendChild(graph);
+
     }
 
+
     wrapper.appendChild(header);
+
     wrapper.appendChild(body);
 
     return wrapper;
@@ -2097,10 +2652,10 @@ function createTestLog(
 
 
 /* ============================================================
-   MEASUREMENT TABLE
+   DAY / NIGHT SECTION
    ============================================================ */
 
-function createMeasurementSection(
+function createModeSection(
     title,
     measurements,
     mode
@@ -2121,9 +2676,7 @@ function createMeasurementSection(
         (
             mode === "day"
                 ? "day-mode-title"
-                : mode === "night"
-                    ? "night-mode-title"
-                    : ""
+                : "night-mode-title"
         );
 
     titleElement.textContent =
@@ -2132,6 +2685,24 @@ function createMeasurementSection(
     section.appendChild(
         titleElement
     );
+
+    section.appendChild(
+        createMeasurementTable(
+            measurements
+        )
+    );
+
+    return section;
+}
+
+
+/* ============================================================
+   MEASUREMENT TABLE
+   ============================================================ */
+
+function createMeasurementTable(
+    measurements
+) {
 
     const tableWrapper =
         document.createElement(
@@ -2156,14 +2727,14 @@ function createMeasurementSection(
             "tr"
         );
 
+    /*
+     * ONLY THESE FOUR COLUMNS.
+     */
+
     [
         "MTF Item",
         "Value",
         "LL",
-        "MIN",
-        "MAX",
-        "MEAN",
-        "SIGMA",
         "Result"
     ].forEach(
         function(text) {
@@ -2176,22 +2747,37 @@ function createMeasurementSection(
             th.textContent =
                 text;
 
-            headerRow.appendChild(
-                th
-            );
+            headerRow.appendChild(th);
+
         }
     );
 
-    thead.appendChild(
-        headerRow
-    );
+    thead.appendChild(headerRow);
 
     const tbody =
         document.createElement(
             "tbody"
         );
 
-    measurements.forEach(
+
+    /*
+     * Sequential ordering.
+     */
+
+    const sorted =
+        [...measurements]
+            .filter(
+                m =>
+                    !isExcludedMTFItem(
+                        m.name
+                    )
+            )
+            .sort(
+                sortMTFItems
+            );
+
+
+    sorted.forEach(
         function(m) {
 
             const row =
@@ -2204,92 +2790,73 @@ function createMeasurementSection(
                     ? "ng-row"
                     : "pass-row";
 
-            const values = [
 
-                m.name,
-
-                formatNumber(
-                    m.value
-                ),
-
-                formatNumber(
-                    m.lower
-                ),
-
-                formatNumber(
-                    m.min
-                ),
-
-                formatNumber(
-                    m.max
-                ),
-
-                formatNumber(
-                    m.mean
-                ),
-
-                formatNumber(
-                    m.sigma
-                )
-            ];
-
-            values.forEach(
-                function(value) {
-
-                    const td =
-                        document.createElement(
-                            "td"
-                        );
-
-                    td.textContent =
-                        value;
-
-                    row.appendChild(
-                        td
-                    );
-                }
-            );
-
-            const result =
+            const itemCell =
                 document.createElement(
                     "td"
                 );
 
-            result.textContent =
+            itemCell.textContent =
+                m.name;
+
+
+            const valueCell =
+                document.createElement(
+                    "td"
+                );
+
+            valueCell.textContent =
+                formatNumber(
+                    m.value
+                );
+
+
+            const llCell =
+                document.createElement(
+                    "td"
+                );
+
+            llCell.textContent =
+                formatNumber(
+                    m.lower
+                );
+
+
+            const resultCell =
+                document.createElement(
+                    "td"
+                );
+
+            resultCell.textContent =
                 m.result;
 
-            result.className =
+            resultCell.className =
                 m.result === "NG"
                     ? "result-ng"
                     : "result-pass";
 
-            row.appendChild(
-                result
-            );
 
-            tbody.appendChild(
-                row
-            );
+            row.appendChild(itemCell);
+
+            row.appendChild(valueCell);
+
+            row.appendChild(llCell);
+
+            row.appendChild(resultCell);
+
+            tbody.appendChild(row);
+
         }
     );
 
-    table.appendChild(
-        thead
-    );
 
-    table.appendChild(
-        tbody
-    );
+    table.appendChild(thead);
 
-    tableWrapper.appendChild(
-        table
-    );
+    table.appendChild(tbody);
 
-    section.appendChild(
-        tableWrapper
-    );
+    tableWrapper.appendChild(table);
 
-    return section;
+    return tableWrapper;
 }
 
 
@@ -2311,12 +2878,28 @@ function drawChart(canvas) {
         chartInstances[canvas]
     ) {
 
-        chartInstances[canvas]
-            .destroy();
+        chartInstances[canvas].destroy();
+
     }
 
+
+    /*
+     * Remove unwanted items
+     * and sort sequentially.
+     */
+
     const measurements =
-        canvas.chartData;
+        canvas.chartData
+            .filter(
+                m =>
+                    !isExcludedMTFItem(
+                        m.name
+                    )
+            )
+            .sort(
+                sortMTFItems
+            );
+
 
     const labels =
         measurements.map(
@@ -2333,59 +2916,47 @@ function drawChart(canvas) {
             m => m.lower
         );
 
-    /*
-     * UL REMOVED.
-     */
+
     const datasets = [
 
         {
-            label:
-                "MTF Value",
+            label: "MTF Value",
 
-            data:
-                values,
+            data: values,
 
-            borderWidth:
-                2,
+            borderWidth: 2,
 
-            pointRadius:
-                4,
+            pointRadius: 4,
 
-            tension:
-                0.2
+            tension: 0.2
         },
 
         {
-            label:
-                "LL",
+            label: "LL",
 
-            data:
-                lower,
+            data: lower,
 
-            borderWidth:
-                2,
+            borderWidth: 2,
 
-            borderDash:
-                [
-                    6,
-                    4
-                ],
+            borderDash: [
+                6,
+                4
+            ],
 
-            pointRadius:
-                0,
+            pointRadius: 0,
 
-            spanGaps:
-                true
+            spanGaps: true
         }
+
     ];
+
 
     chartInstances[canvas] =
         new Chart(
             canvas.getContext("2d"),
             {
 
-                type:
-                    "line",
+                type: "line",
 
                 data: {
 
@@ -2394,6 +2965,7 @@ function drawChart(canvas) {
 
                     datasets:
                         datasets
+
                 },
 
                 options: {
@@ -2416,6 +2988,7 @@ function drawChart(canvas) {
                     plugins: {
 
                         legend: {
+
                             display:
                                 true
                         },
@@ -2428,6 +3001,14 @@ function drawChart(canvas) {
                                     function(
                                         context
                                     ) {
+
+                                        if (
+                                            !context ||
+                                            !context.length
+                                        ) {
+
+                                            return [];
+                                        }
 
                                         const index =
                                             context[0]
@@ -2444,12 +3025,20 @@ function drawChart(canvas) {
                                             item.result,
 
                                             "Mode: " +
-                                            item.mode
+                                            (
+                                                item.type === "IR"
+                                                    ? "NIGHT MODE"
+                                                    : "DAY MODE"
+                                            )
 
                                         ];
+
                                     }
+
                             }
+
                         }
+
                     },
 
                     scales: {
@@ -2466,236 +3055,215 @@ function drawChart(canvas) {
 
                                 minRotation:
                                     45
+
                             }
+
                         },
 
                         y: {
 
                             beginAtZero:
                                 false
+
                         }
+
                     }
+
                 }
+
             }
         );
+
 }
 
 
 /* ============================================================
-   FILTER
+   SORT MTF ITEMS
    ============================================================ */
 
-function setFilter(filter) {
+function sortMTFItems(a, b) {
 
-    currentFilter =
-        filter;
-
-    const all =
-        document
-            .getElementById("filterAll");
-
-    const ng =
-        document
-            .getElementById("filterNG");
-
-    const good =
-        document
-            .getElementById("filterGood");
-
-    all.className =
-        "filter-btn";
-
-    ng.className =
-        "filter-btn";
-
-    good.className =
-        "filter-btn";
-
-    if (
-        filter === "ALL"
-    ) {
-
-        all.classList.add(
-            "active"
+    const nameA =
+        String(
+            a.name || a
         );
 
-    } else if (
-        filter === "NG"
-    ) {
-
-        ng.classList.add(
-            "ng-active"
+    const nameB =
+        String(
+            b.name || b
         );
 
-    } else if (
-        filter === "GOOD"
-    ) {
 
-        good.classList.add(
-            "good-active"
-        );
-    }
+    function extract(name) {
 
-    applyFilters();
-}
+        /*
+         * Examples:
+         *
+         * UMA_MTF_1A_1_H
+         * UMA_MTF_1A_1_V
+         * UMA_MTF_1B_IR_1_H
+         * UMA_MTF_1B_IR_1_V
+         */
 
+        const match =
+            name.match(
+                /(?:MTF_[^_]+_(?:IR_)?)(\d+)_([HV])/i
+            );
 
-function applyFilters() {
+        if (match) {
 
-    const search =
-        document
-            .getElementById("snSearch")
-            .value
-            .trim()
-            .toLowerCase();
+            return {
 
-    const cards =
-        document.querySelectorAll(
-            ".sn-card"
-        );
+                number:
+                    Number(
+                        match[1]
+                    ),
 
-    let visible =
-        0;
+                direction:
+                    match[2]
+                        .toUpperCase()
 
-    cards.forEach(
-        function(card) {
+            };
 
-            const sn =
-                card.dataset.sn || "";
-
-            const result =
-                card.dataset.result || "";
-
-            const searchMatch =
-                !search ||
-                sn.includes(search);
-
-            let filterMatch = true;
-
-            if (
-                currentFilter === "NG"
-            ) {
-
-                filterMatch =
-                    result === "NG";
-
-            } else if (
-                currentFilter === "GOOD"
-            ) {
-
-                filterMatch =
-                    result === "GOOD";
-            }
-
-            if (
-                searchMatch &&
-                filterMatch
-            ) {
-
-                card.classList.remove(
-                    "hidden"
-                );
-
-                visible++;
-
-            } else {
-
-                card.classList.add(
-                    "hidden"
-                );
-            }
         }
+
+
+        /*
+         * Fallback.
+         */
+
+        const fallback =
+            name.match(
+                /_(\d+)_([HV])(?:_|$)/i
+            );
+
+        if (fallback) {
+
+            return {
+
+                number:
+                    Number(
+                        fallback[1]
+                    ),
+
+                direction:
+                    fallback[2]
+                        .toUpperCase()
+
+            };
+
+        }
+
+
+        return {
+
+            number:
+                999999,
+
+            direction:
+                ""
+
+        };
+
+    }
+
+
+    const A =
+        extract(nameA);
+
+    const B =
+        extract(nameB);
+
+
+    if (
+        A.number !== B.number
+    ) {
+
+        return (
+            A.number -
+            B.number
+        );
+
+    }
+
+
+    /*
+     * H before V.
+     */
+
+    if (
+        A.direction === "H" &&
+        B.direction === "V"
+    ) {
+
+        return -1;
+    }
+
+    if (
+        A.direction === "V" &&
+        B.direction === "H"
+    ) {
+
+        return 1;
+    }
+
+
+    return nameA.localeCompare(
+        nameB
     );
-
-    document
-        .getElementById("noResults")
-        .style.display =
-            visible === 0
-                ? "block"
-                : "none";
 }
 
 
 /* ============================================================
-   MODE DETECTION
+   EXCLUDED MTF ITEMS
    ============================================================ */
 
-function getMode(name) {
+function isExcludedMTFItem(name) {
 
     const upper =
-        String(name || "")
-            .toUpperCase();
+        String(
+            name || ""
+        )
+        .trim()
+        .toUpperCase();
+
 
     /*
-     * MTF_1A = DAY MODE
-     */
-    if (
-        upper.includes("MTF_1A")
-    ) {
-
-        return "DAY";
-    }
-
-    /*
-     * MTF_1B = NIGHT MODE
-     */
-    if (
-        upper.includes("MTF_1B")
-    ) {
-
-        return "NIGHT";
-    }
-
-    /*
-     * Also support names containing
-     * explicit DAY/NIGHT.
-     */
-    if (
-        upper.includes("DAY")
-    ) {
-
-        return "DAY";
-    }
-
-    if (
-        upper.includes("NIGHT")
-    ) {
-
-        return "NIGHT";
-    }
-
-    return "OTHER";
-}
-
-
-/* ============================================================
-   EXCLUDE VIS LP / DISTANCE
-   ============================================================ */
-
-function shouldExcludeItem(name) {
-
-    const upper =
-        String(name || "")
-            .toUpperCase()
-            .replace(/\s+/g, "");
-
-    /*
-     * Remove:
+     * These are intentionally removed
+     * from:
      *
-     * UMA_MTF_1A_VIS_LP-mm
-     * UMA_MTF_1A_VIS_Distance
-     *
-     * Also catches slight naming variations.
+     * - tables
+     * - Day/Night data
+     * - graph
      */
+
     if (
-        upper.includes("VIS_LP") ||
-        upper.includes("VISLP") ||
+        upper.includes("VIS_LP-MM") ||
+        upper.includes("VIS_LP_MM") ||
         upper.includes("VIS_DISTANCE") ||
-        upper.includes("VISDISTANCE")
+        upper.includes("IR_DISTANCE") ||
+        upper.includes("IR-LP-MM") ||
+        upper.includes("IR_LP-MM") ||
+        upper.includes("IR_LP_MM")
     ) {
 
         return true;
     }
+
+
+    /*
+     * Catch variants where spacing differs.
+     */
+
+    if (
+        upper.includes("DISTANCE") ||
+        upper.includes("LP-MM") ||
+        upper.includes("LP_MM")
+    ) {
+
+        return true;
+    }
+
 
     return false;
 }
@@ -2708,8 +3276,29 @@ function shouldExcludeItem(name) {
 function getMTFType(name) {
 
     const upper =
-        String(name || "")
-            .toUpperCase();
+        String(
+            name || ""
+        )
+        .toUpperCase();
+
+
+    /*
+     * IR has priority for actual
+     * night mode items.
+     */
+
+    if (
+        upper.includes("_IR_") ||
+        upper.includes("IR_")
+    ) {
+
+        return "IR";
+    }
+
+
+    /*
+     * VIS = Day Mode.
+     */
 
     if (
         upper.includes("VIS")
@@ -2718,161 +3307,64 @@ function getMTFType(name) {
         return "VIS";
     }
 
-    if (
-        upper.includes("IR")
-    ) {
 
-        return "IR";
-    }
+    /*
+     * Other MTF is treated as Day Mode.
+     */
 
     return "OTHER";
 }
 
 
 /* ============================================================
-   SEQUENTIAL MTF SORT
-   ============================================================
+   DATE PARSER
+   ============================================================ */
 
-   Examples:
+function parseDateValue(value) {
 
-   UMA_MTF_1A_1_H
-   UMA_MTF_1A_1_V
-   UMA_MTF_1A_2_H
-   UMA_MTF_1A_2_V
-   UMA_MTF_1A_3_H
-   UMA_MTF_1A_3_V
-   ...
-   UMA_MTF_1A_9_H
-   UMA_MTF_1A_9_V
-*/
-
-function sequentialMTFSort(a, b) {
-
-    const aInfo =
-        getMTFSequenceInfo(
-            a.name
-        );
-
-    const bInfo =
-        getMTFSequenceInfo(
-            b.name
-        );
-
-    /*
-     * First sort by numeric position.
-     */
     if (
-        aInfo.number !== bInfo.number
+        !value
     ) {
 
-        return (
-            aInfo.number -
-            bInfo.number
-        );
+        return null;
     }
 
-    /*
-     * H before V.
-     */
+    const parsed =
+        Date.parse(
+            String(value)
+        );
+
     if (
-        aInfo.orientation !==
-        bInfo.orientation
+        Number.isNaN(parsed)
     ) {
 
-        const order = {
-            "H": 0,
-            "V": 1,
-            "OTHER": 2
-        };
-
-        return (
-            order[aInfo.orientation] -
-            order[bInfo.orientation]
-        );
+        return null;
     }
 
-    /*
-     * Finally alphabetically.
-     */
-    return String(a.name)
-        .localeCompare(
-            String(b.name)
-        );
-}
-
-
-function getMTFSequenceInfo(name) {
-
-    const text =
-        String(name || "")
-            .toUpperCase();
-
-    /*
-     * Look for the last numeric
-     * MTF position before H/V.
-     *
-     * Examples:
-     *
-     * _1_H
-     * _1_V
-     * _9_H
-     * _9_V
-     */
-    const match =
-        text.match(
-            /_(\d+)_([HV])(?:$|[_-])/i
-        );
-
-    if (match) {
-
-        return {
-
-            number:
-                Number(
-                    match[1]
-                ),
-
-            orientation:
-                match[2]
-        };
-    }
-
-    /*
-     * Alternative:
-     * find any number after 1A/1B.
-     */
-    const alt =
-        text.match(
-            /MTF_1[AB].*?(\d+).*?([HV])/i
-        );
-
-    if (alt) {
-
-        return {
-
-            number:
-                Number(
-                    alt[1]
-                ),
-
-            orientation:
-                alt[2]
-        };
-    }
-
-    return {
-
-        number:
-            999999,
-
-        orientation:
-            "OTHER"
-    };
+    return parsed;
 }
 
 
 /* ============================================================
-   HELPERS
+   NATURAL SN SORT
+   ============================================================ */
+
+function naturalSNCompare(a, b) {
+
+    return String(a.sn || "")
+        .localeCompare(
+            String(b.sn || ""),
+            undefined,
+            {
+                numeric: true,
+                sensitivity: "base"
+            }
+        );
+}
+
+
+/* ============================================================
+   HEADER FINDER
    ============================================================ */
 
 function findHeader(
@@ -2891,7 +3383,11 @@ function findHeader(
     const target =
         String(wanted)
             .toLowerCase()
-            .replace(/[\s_.-]/g, "");
+            .replace(
+                /[\s_.-]/g,
+                ""
+            );
+
 
     for (
         let i = 0;
@@ -2900,9 +3396,15 @@ function findHeader(
     ) {
 
         const current =
-            String(headers[i] || "")
-                .toLowerCase()
-                .replace(/[\s_.-]/g, "");
+            String(
+                headers[i] || ""
+            )
+            .toLowerCase()
+            .replace(
+                /[\s_.-]/g,
+                ""
+            );
+
 
         if (
             current === target
@@ -2910,11 +3412,17 @@ function findHeader(
 
             return i;
         }
+
     }
+
 
     return -1;
 }
 
+
+/* ============================================================
+   GET FIRST VALUE
+   ============================================================ */
 
 function getFirstExistingValue(
     row,
@@ -2930,18 +3438,26 @@ function getFirstExistingValue(
             index !== null &&
             index >= 0 &&
             row[index] !== undefined &&
-            String(row[index]).trim() !== ""
+            String(
+                row[index]
+            ).trim() !== ""
         ) {
 
             return String(
                 row[index]
             ).trim();
+
         }
+
     }
 
     return "";
 }
 
+
+/* ============================================================
+   SPEC VALUE
+   ============================================================ */
 
 function getSpecValue(
     row,
@@ -2963,6 +3479,10 @@ function getSpecValue(
 }
 
 
+/* ============================================================
+   NUMBER
+   ============================================================ */
+
 function toNumber(value) {
 
     if (
@@ -2977,6 +3497,7 @@ function toNumber(value) {
         String(value)
             .trim();
 
+
     if (
         text === "" ||
         text === "-" ||
@@ -2987,11 +3508,13 @@ function toNumber(value) {
         return null;
     }
 
+
     const cleaned =
         text.replace(
             /[^0-9eE+.\-]/g,
             ""
         );
+
 
     if (
         cleaned === ""
@@ -3000,14 +3523,20 @@ function toNumber(value) {
         return null;
     }
 
+
     const number =
         Number(cleaned);
+
 
     return Number.isFinite(number)
         ? number
         : null;
 }
 
+
+/* ============================================================
+   RESULT
+   ============================================================ */
 
 function evaluateResult(
     value,
@@ -3023,6 +3552,7 @@ function evaluateResult(
         return "GOOD";
     }
 
+
     if (
         lower !== null &&
         lower !== undefined &&
@@ -3031,6 +3561,7 @@ function evaluateResult(
 
         return "NG";
     }
+
 
     if (
         upper !== null &&
@@ -3041,9 +3572,14 @@ function evaluateResult(
         return "NG";
     }
 
+
     return "GOOD";
 }
 
+
+/* ============================================================
+   CLEAN SN
+   ============================================================ */
 
 function cleanSN(sn) {
 
@@ -3055,14 +3591,17 @@ function cleanSN(sn) {
         return "";
     }
 
+
     let value =
         String(sn).trim();
+
 
     value =
         value.replace(
             /^["']|["']$/g,
             ""
         );
+
 
     if (
         value === ""
@@ -3071,9 +3610,14 @@ function cleanSN(sn) {
         return "";
     }
 
+
     return value;
 }
 
+
+/* ============================================================
+   FORMAT NUMBER
+   ============================================================ */
 
 function formatNumber(value) {
 
@@ -3085,6 +3629,7 @@ function formatNumber(value) {
 
         return "—";
     }
+
 
     return Number(value)
         .toFixed(3)
@@ -3103,7 +3648,9 @@ function showError(message) {
 
     const box =
         document
-            .getElementById("errorBox");
+            .getElementById(
+                "errorBox"
+            );
 
     box.textContent =
         message;
@@ -3117,7 +3664,9 @@ function hideError() {
 
     const box =
         document
-            .getElementById("errorBox");
+            .getElementById(
+                "errorBox"
+            );
 
     box.style.display =
         "none";
@@ -3134,38 +3683,58 @@ function hideError() {
 function clearAll() {
 
     document
-        .getElementById("logInput")
+        .getElementById(
+            "logInput"
+        )
         .value = "";
 
-    document
-        .getElementById("fileInput")
-        .value = "";
 
     document
-        .getElementById("fileInfo")
+        .getElementById(
+            "fileInput"
+        )
+        .value = "";
+
+
+    document
+        .getElementById(
+            "fileInfo"
+        )
         .textContent = "";
 
+
     document
-        .getElementById("summaryCard")
+        .getElementById(
+            "snSearch"
+        )
+        .value = "";
+
+
+    document
+        .getElementById(
+            "summaryCard"
+        )
         .style.display =
             "none";
 
+
     document
-        .getElementById("resultsCard")
+        .getElementById(
+            "resultsCard"
+        )
         .style.display =
             "none";
 
+
     document
-        .getElementById("resultList")
+        .getElementById(
+            "resultList"
+        )
         .innerHTML = "";
 
-    document
-        .getElementById("snSearch")
-        .value = "";
 
     groupedData = {};
 
-    currentFilter = "ALL";
 
     Object.values(
         chartInstances
@@ -3173,15 +3742,44 @@ function clearAll() {
         function(chart) {
 
             try {
+
                 chart.destroy();
+
             } catch(e) {}
 
         }
     );
 
+
     chartInstances = {};
 
-    setFilter("ALL");
+    currentFilter =
+        "ALL";
+
+
+    document
+        .getElementById(
+            "filterAll"
+        )
+        .className =
+            "filter-btn active";
+
+
+    document
+        .getElementById(
+            "filterNG"
+        )
+        .className =
+            "filter-btn";
+
+
+    document
+        .getElementById(
+            "filterGOOD"
+        )
+        .className =
+            "filter-btn";
+
 
     hideError();
 }
