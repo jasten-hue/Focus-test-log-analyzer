@@ -12,242 +12,322 @@
 
 body {
     margin: 0;
-    font-family: Arial, sans-serif;
-    background: #f3f5f7;
-    color: #1f2937;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #0f172a;
+    color: #e5e7eb;
 }
 
 header {
-    background: #123b6d;
-    color: white;
-    padding: 18px 28px;
+    background: #111827;
+    border-bottom: 1px solid #334155;
+    padding: 22px 30px;
 }
 
 header h1 {
     margin: 0;
-    font-size: 25px;
+    font-size: 26px;
 }
 
 header p {
-    margin: 5px 0 0;
-    opacity: .85;
+    margin: 7px 0 0;
+    color: #94a3b8;
 }
 
 .container {
-    max-width: 1450px;
+    max-width: 1500px;
     margin: auto;
-    padding: 20px;
+    padding: 25px;
 }
 
 .card {
-    background: white;
-    border-radius: 10px;
-    padding: 18px;
-    margin-bottom: 18px;
-    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    background: #111827;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.card h2 {
+    margin-top: 0;
+    font-size: 19px;
+}
+
+.input-area {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
 }
 
 textarea {
     width: 100%;
-    min-height: 230px;
+    min-height: 260px;
     resize: vertical;
-    padding: 14px;
-    border: 1px solid #cbd5e1;
+    background: #020617;
+    color: #e5e7eb;
+    border: 1px solid #475569;
     border-radius: 8px;
+    padding: 15px;
     font-family: Consolas, monospace;
     font-size: 13px;
 }
 
-button, select {
-    padding: 10px 15px;
+textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+.buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+button,
+.file-label {
+    border: 0;
     border-radius: 7px;
-    border: 1px solid #cbd5e1;
-    background: white;
+    padding: 11px 18px;
     cursor: pointer;
+    font-weight: bold;
     font-size: 14px;
 }
 
-button:hover {
-    background: #eef3f8;
-}
-
 .primary {
-    background: #123b6d;
+    background: #2563eb;
     color: white;
-    border-color: #123b6d;
 }
 
 .primary:hover {
-    background: #0d2d54;
+    background: #1d4ed8;
 }
 
-.danger {
-    background: #dc2626;
+.secondary {
+    background: #334155;
     color: white;
-    border-color: #dc2626;
 }
 
-.good {
-    color: #15803d;
-    font-weight: bold;
+.secondary:hover {
+    background: #475569;
 }
 
-.ng {
-    color: #dc2626;
-    font-weight: bold;
+.file-label {
+    background: #16a34a;
+    color: white;
+    display: inline-block;
 }
 
-.warning {
-    color: #b45309;
-    font-weight: bold;
+.file-label:hover {
+    background: #15803d;
 }
 
-.stats {
+input[type="file"] {
+    display: none;
+}
+
+.summary {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 12px;
 }
 
-.stat {
-    padding: 16px;
+.summary-box {
+    background: #020617;
+    border: 1px solid #334155;
     border-radius: 9px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    padding: 15px;
 }
 
-.stat-title {
+.summary-title {
+    color: #94a3b8;
     font-size: 12px;
-    color: #64748b;
     text-transform: uppercase;
 }
 
-.stat-value {
-    font-size: 26px;
+.summary-value {
+    margin-top: 7px;
+    font-size: 19px;
     font-weight: bold;
-    margin-top: 5px;
 }
 
-.filters {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    align-items: center;
+.good {
+    color: #22c55e;
 }
 
-.table-wrap {
+.ng {
+    color: #ef4444;
+}
+
+.warning {
+    color: #f59e0b;
+}
+
+.info {
+    color: #38bdf8;
+}
+
+.table-wrapper {
     overflow-x: auto;
-    max-height: 520px;
+    max-height: 600px;
     overflow-y: auto;
 }
 
 table {
-    border-collapse: collapse;
     width: 100%;
+    border-collapse: collapse;
     font-size: 13px;
 }
 
 th {
     position: sticky;
     top: 0;
-    background: #123b6d;
-    color: white;
-    padding: 9px;
+    background: #1e293b;
+    color: #cbd5e1;
+    padding: 11px;
     text-align: left;
-    z-index: 2;
+    border-bottom: 1px solid #475569;
 }
 
 td {
-    padding: 8px;
-    border-bottom: 1px solid #e5e7eb;
+    padding: 10px;
+    border-bottom: 1px solid #1e293b;
 }
 
 tr:hover {
-    background: #f8fafc;
+    background: #172033;
 }
 
-tr.clickable {
-    cursor: pointer;
+.ng-row {
+    background: rgba(239, 68, 68, 0.08);
 }
 
-tr.selected {
-    background: #dbeafe;
+.pass-row {
+    background: rgba(34, 197, 94, 0.025);
 }
 
-.badge {
+.result-badge {
     display: inline-block;
-    padding: 4px 8px;
+    padding: 4px 9px;
     border-radius: 20px;
     font-size: 11px;
     font-weight: bold;
 }
 
-.badge-good {
-    background: #dcfce7;
-    color: #166534;
+.pass-badge {
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
 }
 
-.badge-ng {
-    background: #fee2e2;
-    color: #991b1b;
+.ng-badge {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
 }
 
-.badge-unknown {
-    background: #fef3c7;
-    color: #92400e;
-}
-
-.detail-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 18px;
-}
-
-.fail-box {
-    border-left: 5px solid #dc2626;
-    background: #fff1f2;
-    padding: 14px;
-    margin-bottom: 10px;
-    border-radius: 6px;
-}
-
-.pass-box {
-    border-left: 5px solid #16a34a;
-    background: #f0fdf4;
-    padding: 14px;
-    border-radius: 6px;
-}
-
-.chart-container {
+.graph-container {
     width: 100%;
     overflow-x: auto;
 }
 
-canvas {
+#graph {
+    width: 100%;
+    min-width: 850px;
+    height: 500px;
+    background: #020617;
+    border-radius: 10px;
+    border: 1px solid #334155;
+}
+
+.legend {
+    display: flex;
+    gap: 20px;
+    margin-top: 12px;
+    color: #cbd5e1;
+    font-size: 13px;
+}
+
+.legend span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.dot-pass {
+    background: #22c55e;
+}
+
+.dot-ng {
+    background: #ef4444;
+}
+
+.dot-ll {
+    background: #f59e0b;
+}
+
+.filters {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.filter-btn {
+    background: #334155;
+    color: #e2e8f0;
+    border: 1px solid #475569;
+}
+
+.filter-btn.active {
+    background: #2563eb;
+    border-color: #3b82f6;
+}
+
+.status-message {
+    padding: 12px;
+    border-radius: 7px;
+    margin-bottom: 15px;
+    display: none;
+}
+
+.status-message.show {
     display: block;
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
+}
+
+.status-success {
+    background: rgba(34, 197, 94, .12);
+    border: 1px solid rgba(34, 197, 94, .3);
+    color: #86efac;
+}
+
+.status-error {
+    background: rgba(239, 68, 68, .12);
+    border: 1px solid rgba(239, 68, 68, .3);
+    color: #fca5a5;
+}
+
+.file-name {
+    color: #94a3b8;
+    font-size: 13px;
+    margin-top: 8px;
 }
 
 .hidden {
     display: none;
 }
 
-.small {
-    font-size: 12px;
-    color: #64748b;
-}
-
-h2, h3 {
-    margin-top: 0;
-}
-
-@media(max-width: 800px) {
-    .stats {
+@media (max-width: 900px) {
+    .summary {
         grid-template-columns: repeat(2, 1fr);
     }
+}
 
-    .detail-grid {
+@media (max-width: 600px) {
+    .summary {
         grid-template-columns: 1fr;
     }
 }
@@ -258,1518 +338,1117 @@ h2, h3 {
 
 <header>
     <h1>Focus Test Log Analyzer</h1>
-    <p>SPC / Focus Test MTF data analyzer</p>
+    <p>Paste or browse Focus Test logs to automatically extract MTF data, specifications and test results.</p>
 </header>
 
 <div class="container">
 
     <!-- INPUT -->
     <div class="card">
-        <h2>1. Paste Focus Test Data</h2>
+        <h2>1. Load Focus Test Log</h2>
 
-        <p class="small">
-            Paste your SPC CSV export or Focus Test log below.
-            The application will automatically detect the format.
-        </p>
+        <div class="buttons">
+            <label class="file-label">
+                📂 Choose Log File
+                <input type="file" id="fileInput" accept=".log,.txt,.csv">
+            </label>
 
-        <textarea id="inputData"
-        placeholder="Paste your Focus Test CSV or log data here..."></textarea>
+            <button class="secondary" onclick="clearLog()">
+                🗑 Clear
+            </button>
 
-        <br><br>
+            <button class="primary" onclick="analyzeLog()">
+                🔍 Analyze Log
+            </button>
+        </div>
 
-        <button class="primary" onclick="analyzeData()">
-            ANALYZE DATA
-        </button>
+        <div class="file-name" id="fileName">
+            No file selected
+        </div>
 
-        <button onclick="clearData()">
-            CLEAR
-        </button>
+        <br>
 
-        <span id="dataStatus" class="small"></span>
+        <textarea id="logInput"
+            placeholder="OR paste the complete Focus Test log here...
+
+Example:
+
+26/08/18 11:54:10 I SN: N.EAY67O2DFC
+26/08/18 11:54:10 I 1-Item: MTF_1A_VIS_Distance; Value: 5000 [ SPEC: LOWER=5000 ]
+26/08/18 11:54:10 I 2-Item: MTF_1A_VIS_LP-mm; Value: 83 [ SPEC: LOWER=83 ]
+26/08/18 11:54:10 I 3-Item: MTF_1A_1_H; Value: 55.50 [ SPEC: LOWER=25.0 ]
+..."></textarea>
+
+        <div id="status" class="status-message"></div>
     </div>
 
+
     <!-- SUMMARY -->
-    <div id="results" class="hidden">
+    <div class="card" id="summaryCard">
+        <h2>2. Test Summary</h2>
 
-        <div class="card">
-            <h2>2. Summary</h2>
+        <div class="summary">
 
-            <div class="stats">
-
-                <div class="stat">
-                    <div class="stat-title">Total SN</div>
-                    <div class="stat-value" id="totalSN">0</div>
-                </div>
-
-                <div class="stat">
-                    <div class="stat-title">GOOD</div>
-                    <div class="stat-value good" id="goodSN">0</div>
-                </div>
-
-                <div class="stat">
-                    <div class="stat-title">NG</div>
-                    <div class="stat-value ng" id="ngSN">0</div>
-                </div>
-
-                <div class="stat">
-                    <div class="stat-title">Parameters</div>
-                    <div class="stat-value" id="totalParams">0</div>
-                </div>
-
-            </div>
-        </div>
-
-        <!-- SN LIST -->
-        <div class="card">
-
-            <h2>3. SN / PCBA List</h2>
-
-            <div class="filters">
-
-                <button onclick="setSNFilter('ALL')">ALL</button>
-                <button onclick="setSNFilter('GOOD')">GOOD ONLY</button>
-                <button class="danger" onclick="setSNFilter('NG')">
-                    NG ONLY
-                </button>
-
-                <input
-                    id="snSearch"
-                    type="text"
-                    placeholder="Search SN / PCBA..."
-                    oninput="renderSNTable()"
-                    style="padding:10px;border:1px solid #cbd5e1;border-radius:7px;"
-                >
-
+            <div class="summary-box">
+                <div class="summary-title">SN</div>
+                <div class="summary-value info" id="snValue">—</div>
             </div>
 
-            <br>
+            <div class="summary-box">
+                <div class="summary-title">Overall Result</div>
+                <div class="summary-value" id="overallValue">—</div>
+            </div>
 
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>SN / PCBA</th>
-                            <th>Work Order</th>
-                            <th>Date / Time</th>
-                            <th>Station</th>
-                            <th>Result</th>
-                            <th>NG Count</th>
-                            <th>Failed MTF</th>
-                        </tr>
-                    </thead>
+            <div class="summary-box">
+                <div class="summary-title">Total Items</div>
+                <div class="summary-value" id="totalItems">0</div>
+            </div>
 
-                    <tbody id="snTable"></tbody>
-                </table>
+            <div class="summary-box">
+                <div class="summary-title">PASS</div>
+                <div class="summary-value good" id="passItems">0</div>
+            </div>
+
+            <div class="summary-box">
+                <div class="summary-title">NG</div>
+                <div class="summary-value ng" id="ngItems">0</div>
             </div>
 
         </div>
+    </div>
 
-        <!-- SELECTED SN -->
-        <div class="card">
 
-            <h2>
-                4. Selected SN:
-                <span id="selectedSN">None</span>
-            </h2>
+    <!-- FAILED ITEMS -->
+    <div class="card">
+        <h2>3. Failed Items</h2>
 
-            <div class="filters">
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Value</th>
+                        <th>Lower Limit</th>
+                        <th>Upper Limit</th>
+                        <th>Result</th>
+                    </tr>
+                </thead>
 
-                <button onclick="showParamMode('ALL')">
-                    ALL PARAMETERS
-                </button>
+                <tbody id="failedTable">
+                    <tr>
+                        <td colspan="5">No data loaded.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
-                <button class="danger" onclick="showParamMode('NG')">
-                    NG ONLY
-                </button>
 
-                <button onclick="showParamMode('GOOD')">
-                    GOOD ONLY
-                </button>
+    <!-- ALL DATA -->
+    <div class="card">
+        <h2>4. MTF Data — Ordered Check</h2>
 
-                <button onclick="previousNG()">
-                    ◀ PREVIOUS NG
-                </button>
+        <div class="filters">
+            <button class="filter-btn active" onclick="setFilter('ALL', this)">
+                ALL
+            </button>
 
-                <button class="primary" onclick="nextNG()">
-                    NEXT NG ▶
-                </button>
+            <button class="filter-btn" onclick="setFilter('NG', this)">
+                🔴 NG ONLY
+            </button>
 
-            </div>
-
-            <br>
-
-            <div id="selectedInfo"></div>
-
-            <br>
-
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>MTF Parameter</th>
-                            <th>Actual</th>
-                            <th>LL</th>
-                            <th>UL</th>
-                            <th>Difference</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-
-                    <tbody id="paramTable"></tbody>
-                </table>
-            </div>
-
+            <button class="filter-btn" onclick="setFilter('PASS', this)">
+                🟢 PASS ONLY
+            </button>
         </div>
 
-        <!-- GRAPH -->
-        <div class="card">
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Item</th>
+                        <th>Value</th>
+                        <th>Lower Limit</th>
+                        <th>Upper Limit</th>
+                        <th>Margin to LL</th>
+                        <th>Result</th>
+                    </tr>
+                </thead>
 
-            <h2>5. MTF Visualization</h2>
+                <tbody id="dataTable">
+                    <tr>
+                        <td colspan="7">No data loaded.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
-            <div class="filters">
 
-                <label>
-                    Parameter:
-                    <select id="parameterSelect"
-                            onchange="drawChart()">
-                    </select>
-                </label>
+    <!-- GRAPH -->
+    <div class="card">
+        <h2>5. MTF Visualization</h2>
 
-                <label>
-                    Graph:
-                    <select id="graphMode"
-                            onchange="drawChart()">
-                        <option value="single">Selected SN</option>
-                        <option value="all">All SN</option>
-                    </select>
-                </label>
-
-            </div>
-
-            <br>
-
-            <div class="chart-container">
-                <canvas id="chart" width="1300" height="500"></canvas>
-            </div>
-
-            <p id="chartInfo" class="small"></p>
-
+        <div class="graph-container">
+            <svg id="graph" viewBox="0 0 1200 500"></svg>
         </div>
 
-        <!-- PARAMETER SEARCH -->
-        <div class="card">
+        <div class="legend">
+            <span>
+                <span class="dot dot-pass"></span>
+                PASS
+            </span>
 
-            <h2>6. Find Which SN Failed a Specific MTF</h2>
+            <span>
+                <span class="dot dot-ng"></span>
+                NG
+            </span>
 
-            <div class="filters">
-
-                <select id="globalParameter"
-                        onchange="renderParameterSummary()">
-                </select>
-
-                <button onclick="renderParameterSummary()">
-                    CHECK PARAMETER
-                </button>
-
-            </div>
-
-            <br>
-
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>SN / PCBA</th>
-                            <th>Actual</th>
-                            <th>LL</th>
-                            <th>UL</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-
-                    <tbody id="parameterSummary"></tbody>
-                </table>
-            </div>
-
+            <span>
+                <span class="dot dot-ll"></span>
+                Lower Limit
+            </span>
         </div>
-
     </div>
 
 </div>
 
+
 <script>
 
-let appData = {
-    units: [],
-    parameters: [],
-    specs: {}
-};
-
-let selectedIndex = -1;
-let snFilter = "ALL";
-let paramMode = "ALL";
+let parsedData = [];
+let currentFilter = "ALL";
 
 
-// ============================================================
-// CSV PARSER
-// ============================================================
+/* =========================================================
+   FILE BROWSER
+========================================================= */
 
-function parseCSV(text) {
+document.getElementById("fileInput").addEventListener("change", function(event) {
 
-    const rows = [];
-    let row = [];
-    let cell = "";
-    let insideQuotes = false;
+    const file = event.target.files[0];
 
-    for(let i = 0; i < text.length; i++) {
-
-        const char = text[i];
-        const next = text[i + 1];
-
-        if(char === '"' && insideQuotes && next === '"') {
-            cell += '"';
-            i++;
-            continue;
-        }
-
-        if(char === '"') {
-            insideQuotes = !insideQuotes;
-            continue;
-        }
-
-        if(char === "," && !insideQuotes) {
-            row.push(cell.trim());
-            cell = "";
-            continue;
-        }
-
-        if((char === "\n" || char === "\r") && !insideQuotes) {
-
-            if(char === "\r" && next === "\n") {
-                i++;
-            }
-
-            row.push(cell.trim());
-            cell = "";
-
-            if(row.some(x => x !== "")) {
-                rows.push(row);
-            }
-
-            row = [];
-            continue;
-        }
-
-        cell += char;
-    }
-
-    if(cell !== "" || row.length) {
-        row.push(cell.trim());
-        rows.push(row);
-    }
-
-    return rows;
-}
-
-
-// ============================================================
-// MAIN ANALYZER
-// ============================================================
-
-function analyzeData() {
-
-    const text = document.getElementById("inputData").value.trim();
-
-    if(!text) {
-        alert("Please paste your Focus Test data first.");
+    if (!file) {
         return;
     }
 
-    resetApp();
+    document.getElementById("fileName").textContent =
+        "Selected: " + file.name;
 
-    let detected = "UNKNOWN";
+    const reader = new FileReader();
 
-    if(
-        text.includes("WorkNo") &&
-        (
-            text.includes("StampTime") ||
-            text.includes("StationIP")
-        )
-    ) {
-        detected = "SPC CSV";
-        parseSPCCSV(text);
-    }
-    else if(
-        text.includes("Item:") &&
-        text.includes("SPEC:")
-    ) {
-        detected = "FOCUS LOG";
-        parseRawLog(text);
-    }
-    else {
-        detected = "CSV";
-        parseSPCCSV(text);
-    }
+    reader.onload = function(e) {
 
-    if(appData.units.length === 0) {
+        document.getElementById("logInput").value = e.target.result;
 
-        document.getElementById("dataStatus").textContent =
-            " No recognizable measurement records found.";
-
-        return;
-    }
-
-    document.getElementById("dataStatus").textContent =
-        " Detected: " + detected +
-        " | Records: " + appData.units.length;
-
-    finishAnalysis();
-}
-
-
-// ============================================================
-// SPC CSV PARSER
-// ============================================================
-
-function parseSPCCSV(text) {
-
-    const rows = parseCSV(text);
-
-    if(!rows.length) return;
-
-    // Find actual header row
-    let headerIndex = -1;
-
-    for(let i = 0; i < rows.length; i++) {
-
-        const r = rows[i].map(x => x.toLowerCase());
-
-        if(
-            r.includes("pcba") &&
-            (
-                r.includes("workno") ||
-                r.includes("stamptime")
-            )
-        ) {
-            headerIndex = i;
-            break;
-        }
-    }
-
-    if(headerIndex === -1) return;
-
-    const header = rows[headerIndex];
-
-    const pcbaIndex = findColumn(header, ["PCBA"]);
-    const workIndex = findColumn(header, ["WorkNo", "Work No"]);
-    const timeIndex = findColumn(header, ["StampTime", "Date_Time"]);
-    const stationIndex = findColumn(header, ["StationIP", "Station"]);
-
-    // Find specification rows before actual data
-    for(let i = 0; i < headerIndex; i++) {
-
-        const first = String(rows[i][0] || "").trim().toLowerCase();
-
-        if(
-            first === "lower" ||
-            first === "upper"
-        ) {
-
-            const type = first === "lower" ? "lower" : "upper";
-
-            for(let c = 0; c < header.length; c++) {
-
-                const value = parseNumber(rows[i][c]);
-
-                if(value !== null) {
-
-                    const name = cleanParameterName(header[c]);
-
-                    if(!name) continue;
-
-                    if(!appData.specs[name]) {
-                        appData.specs[name] = {};
-                    }
-
-                    appData.specs[name][type] = value;
-                }
-            }
-        }
-    }
-
-    // Find parameter columns
-    for(let c = 0; c < header.length; c++) {
-
-        const name = cleanParameterName(header[c]);
-
-        if(!name) continue;
-
-        if(
-            c !== pcbaIndex &&
-            c !== workIndex &&
-            c !== timeIndex &&
-            c !== stationIndex
-        ) {
-
-            if(
-                !appData.parameters.includes(name)
-            ) {
-                appData.parameters.push(name);
-            }
-        }
-    }
-
-    // Actual unit rows
-    for(let i = headerIndex + 1; i < rows.length; i++) {
-
-        const row = rows[i];
-
-        const pcba = row[pcbaIndex] || "";
-
-        // Skip statistics rows
-        if(
-            !pcba ||
-            ["Lower","Upper","MIN","MAX","Mean","Sigma","CpL","CpU","Cpk"]
-            .includes(pcba.trim())
-        ) {
-            continue;
-        }
-
-        // Need something that looks like a real SN
-        if(!pcba.trim()) continue;
-
-        const unit = {
-            sn: pcba.trim(),
-            work: workIndex >= 0 ? (row[workIndex] || "") : "",
-            time: timeIndex >= 0 ? (row[timeIndex] || "") : "",
-            station: stationIndex >= 0 ? (row[stationIndex] || "") : "",
-            values: {},
-            failures: []
-        };
-
-        for(let c = 0; c < header.length; c++) {
-
-            const name = cleanParameterName(header[c]);
-
-            if(!name) continue;
-
-            if(!appData.parameters.includes(name)) continue;
-
-            const value = parseNumber(row[c]);
-
-            if(value !== null) {
-                unit.values[name] = value;
-            }
-        }
-
-        calculateUnitResult(unit);
-
-        appData.units.push(unit);
-    }
-}
-
-
-// ============================================================
-// RAW FOCUS LOG PARSER
-// ============================================================
-
-function parseRawLog(text) {
-
-    // Extract SN / PCBA
-    let snMatch =
-        text.match(/GetPCBA:\s*([^\s]+)/i) ||
-        text.match(/SN:\s*([^\s]+)/i);
-
-    let sn = snMatch ? snMatch[1] : "UNKNOWN";
-
-    let workMatch =
-        text.match(/WO:([A-Za-z0-9_-]+)/i);
-
-    let work = workMatch ? workMatch[1] : "";
-
-    let stationMatch =
-        text.match(/MESStationName"?\s*:\s*"([^"]+)/i);
-
-    let station =
-        stationMatch ? stationMatch[1] : "";
-
-    let unit = {
-        sn: sn,
-        work: work,
-        time: "",
-        station: station,
-        values: {},
-        failures: []
+        showStatus(
+            "File loaded successfully. Click Analyze Log.",
+            "success"
+        );
     };
 
-    const regex =
-        /Item:\s*([^;]+);\s*Value:\s*([-\d.]+)\s*\[\s*SPEC:\s*([^\]]+)\]/gi;
+    reader.onerror = function() {
+
+        showStatus(
+            "Unable to read the selected file.",
+            "error"
+        );
+
+    };
+
+    reader.readAsText(file);
+});
+
+
+/* =========================================================
+   ANALYZE
+========================================================= */
+
+function analyzeLog() {
+
+    const log = document.getElementById("logInput").value.trim();
+
+    if (!log) {
+
+        showStatus(
+            "Please paste a log or choose a log file first.",
+            "error"
+        );
+
+        return;
+    }
+
+    try {
+
+        parsedData = parseLog(log);
+
+        updateSummary(log);
+        updateTables();
+        drawGraph();
+
+        showStatus(
+            "Log analyzed successfully. " +
+            parsedData.length +
+            " MTF measurements found.",
+            "success"
+        );
+
+    } catch (error) {
+
+        console.error(error);
+
+        showStatus(
+            "Unable to parse this log.",
+            "error"
+        );
+    }
+}
+
+
+/* =========================================================
+   PARSER
+========================================================= */
+
+function parseLog(log) {
+
+    const lines = log.split(/\r?\n/);
+
+    const results = [];
+
+    let sequence = 0;
+
+    for (const line of lines) {
+
+        /*
+         Example:
+
+         1-Item: MTF_1A_VIS_Distance;
+         Value: 5000
+         [ SPEC: LOWER=5000 ]
+        */
+
+        const itemMatch =
+            line.match(/(?:\d+-)?Item:\s*([^;]+);/i);
+
+        const valueMatch =
+            line.match(/Value:\s*(-?\d+(?:\.\d+)?)/i);
+
+        const lowerMatch =
+            line.match(/LOWER\s*=\s*(-?\d+(?:\.\d+)?)/i);
+
+        const upperMatch =
+            line.match(/UPPER\s*=\s*(-?\d+(?:\.\d+)?)/i);
+
+        if (!itemMatch || !valueMatch) {
+            continue;
+        }
+
+        const item = itemMatch[1].trim();
+
+        const value = parseFloat(valueMatch[1]);
+
+        const lower =
+            lowerMatch
+            ? parseFloat(lowerMatch[1])
+            : null;
+
+        const upper =
+            upperMatch
+            ? parseFloat(upperMatch[1])
+            : null;
+
+        let result = "PASS";
+
+        if (lower !== null && value < lower) {
+            result = "NG";
+        }
+
+        if (upper !== null && value > upper) {
+            result = "NG";
+        }
+
+        sequence++;
+
+        results.push({
+
+            number: sequence,
+
+            item: item,
+
+            value: value,
+
+            lower: lower,
+
+            upper: upper,
+
+            result: result
+
+        });
+
+    }
+
+    return results;
+}
+
+
+/* =========================================================
+   FIND SN
+========================================================= */
+
+function findSN(log) {
 
     let match;
 
-    while((match = regex.exec(text)) !== null) {
-
-        let name = cleanParameterName(match[1]);
-        let value = parseNumber(match[2]);
-
-        if(!name || value === null) continue;
-
-        let specText = match[3];
-
-        let lowerMatch =
-            specText.match(/LOWER\s*=\s*([-\d.]+)/i);
-
-        let upperMatch =
-            specText.match(/UPPER\s*=\s*([-\d.]+)/i);
-
-        if(!appData.specs[name]) {
-            appData.specs[name] = {};
-        }
-
-        if(lowerMatch) {
-            appData.specs[name].lower =
-                parseNumber(lowerMatch[1]);
-        }
-
-        if(upperMatch) {
-            appData.specs[name].upper =
-                parseNumber(upperMatch[1]);
-        }
-
-        if(!appData.parameters.includes(name)) {
-            appData.parameters.push(name);
-        }
-
-        unit.values[name] = value;
-    }
-
-    calculateUnitResult(unit);
-
-    appData.units.push(unit);
-}
-
-
-// ============================================================
-// RESULT CALCULATION
-// ============================================================
-
-function calculateUnitResult(unit) {
-
-    unit.failures = [];
-
-    for(const parameter of appData.parameters) {
-
-        if(!(parameter in unit.values)) continue;
-
-        const value = unit.values[parameter];
-
-        const spec = appData.specs[parameter] || {};
-
-        let failed = false;
-
-        if(
-            spec.lower !== undefined &&
-            value < spec.lower
-        ) {
-            failed = true;
-        }
-
-        if(
-            spec.upper !== undefined &&
-            value > spec.upper
-        ) {
-            failed = true;
-        }
-
-        if(failed) {
-            unit.failures.push({
-                parameter: parameter,
-                value: value,
-                lower: spec.lower,
-                upper: spec.upper
-            });
-        }
-    }
-
-    unit.result =
-        unit.failures.length > 0 ? "NG" : "GOOD";
-}
-
-
-// ============================================================
-// HELPERS
-// ============================================================
-
-function findColumn(header, names) {
-
-    for(const name of names) {
-
-        const index = header.findIndex(
-            x => String(x).trim().toLowerCase() ===
-                 name.toLowerCase()
-        );
-
-        if(index >= 0) return index;
-    }
-
-    return -1;
-}
-
-
-function cleanParameterName(name) {
-
-    if(!name) return "";
-
-    name = String(name).trim();
-
-    if(!name) return "";
-
-    const lower = name.toLowerCase();
-
-    const ignored = [
-        "pcba",
-        "workno",
-        "stamptime",
-        "stationip",
-        "station",
-        "result",
-        "summary",
-        "date_time"
-    ];
-
-    if(ignored.includes(lower)) {
-        return "";
-    }
-
-    // Remove UMA_ prefix so the display matches the Focus log
-    if(name.toUpperCase().startsWith("UMA_")) {
-        name = name.substring(4);
-    }
-
-    return name;
-}
-
-
-function parseNumber(value) {
-
-    if(value === undefined || value === null) {
-        return null;
-    }
-
-    value = String(value)
-        .trim()
-        .replace(/,/g, "");
-
-    if(
-        value === "" ||
-        value === "-" ||
-        value === "N/A"
-    ) {
-        return null;
-    }
-
-    const number = Number(value);
-
-    return Number.isFinite(number) ? number : null;
-}
-
-
-// ============================================================
-// FINISH
-// ============================================================
-
-function finishAnalysis() {
-
-    document.getElementById("results")
-        .classList.remove("hidden");
-
-    document.getElementById("totalSN").textContent =
-        appData.units.length;
-
-    document.getElementById("goodSN").textContent =
-        appData.units.filter(x => x.result === "GOOD").length;
-
-    document.getElementById("ngSN").textContent =
-        appData.units.filter(x => x.result === "NG").length;
-
-    document.getElementById("totalParams").textContent =
-        appData.parameters.length;
-
-    selectedIndex = 0;
-
-    renderSNTable();
-
-    populateParameterSelectors();
-
-    selectSN(0);
-}
-
-
-// ============================================================
-// SN TABLE
-// ============================================================
-
-function setSNFilter(filter) {
-
-    snFilter = filter;
-
-    renderSNTable();
-}
-
-
-function renderSNTable() {
-
-    const tbody =
-        document.getElementById("snTable");
-
-    tbody.innerHTML = "";
-
-    const search =
-        document.getElementById("snSearch")
-        .value
-        .toLowerCase();
-
-    let displayNumber = 0;
-
-    appData.units.forEach((unit, index) => {
-
-        if(
-            snFilter !== "ALL" &&
-            unit.result !== snFilter
-        ) {
-            return;
-        }
-
-        if(
-            search &&
-            !unit.sn.toLowerCase().includes(search)
-        ) {
-            return;
-        }
-
-        displayNumber++;
-
-        const tr = document.createElement("tr");
-
-        tr.className =
-            "clickable" +
-            (index === selectedIndex ? " selected" : "");
-
-        tr.onclick = () => selectSN(index);
-
-        const failures =
-            unit.failures
-                .map(x => x.parameter)
-                .join(", ");
-
-        tr.innerHTML = `
-            <td>${displayNumber}</td>
-            <td><b>${escapeHTML(unit.sn)}</b></td>
-            <td>${escapeHTML(unit.work)}</td>
-            <td>${escapeHTML(unit.time)}</td>
-            <td>${escapeHTML(unit.station)}</td>
-            <td>
-                ${unit.result === "NG"
-                    ? '<span class="badge badge-ng">NG</span>'
-                    : '<span class="badge badge-good">GOOD</span>'}
-            </td>
-            <td>${unit.failures.length}</td>
-            <td class="${unit.failures.length ? 'ng' : ''}">
-                ${escapeHTML(failures || "—")}
-            </td>
-        `;
-
-        tbody.appendChild(tr);
-    });
-}
-
-
-// ============================================================
-// SELECT SN
-// ============================================================
-
-function selectSN(index) {
-
-    if(index < 0 || index >= appData.units.length) return;
-
-    selectedIndex = index;
-
-    const unit = appData.units[index];
-
-    document.getElementById("selectedSN").textContent =
-        unit.sn;
-
-    document.getElementById("selectedInfo").innerHTML = `
-        <div class="${unit.result === 'NG' ? 'fail-box' : 'pass-box'}">
-            <b>Result:</b>
-            ${unit.result}
-            &nbsp;&nbsp;
-            <b>Work Order:</b>
-            ${escapeHTML(unit.work || "—")}
-            &nbsp;&nbsp;
-            <b>Time:</b>
-            ${escapeHTML(unit.time || "—")}
-            &nbsp;&nbsp;
-            <b>NG Count:</b>
-            ${unit.failures.length}
-        </div>
-    `;
-
-    renderSNTable();
-
-    renderParameterTable();
-
-    populateParameterSelectors();
-
-    drawChart();
-}
-
-
-// ============================================================
-// PARAMETER TABLE
-// ============================================================
-
-function showParamMode(mode) {
-
-    paramMode = mode;
-
-    renderParameterTable();
-}
-
-
-function renderParameterTable() {
-
-    if(selectedIndex < 0) return;
-
-    const unit =
-        appData.units[selectedIndex];
-
-    const tbody =
-        document.getElementById("paramTable");
-
-    tbody.innerHTML = "";
-
-    let count = 0;
-
-    appData.parameters.forEach(parameter => {
-
-        if(!(parameter in unit.values)) return;
-
-        const value = unit.values[parameter];
-
-        const spec =
-            appData.specs[parameter] || {};
-
-        const lower = spec.lower;
-        const upper = spec.upper;
-
-        let failed = false;
-
-        if(lower !== undefined && value < lower) {
-            failed = true;
-        }
-
-        if(upper !== undefined && value > upper) {
-            failed = true;
-        }
-
-        const status =
-            failed ? "NG" : "GOOD";
-
-        if(
-            paramMode === "NG" &&
-            !failed
-        ) return;
-
-        if(
-            paramMode === "GOOD" &&
-            failed
-        ) return;
-
-        count++;
-
-        let difference = "—";
-
-        if(lower !== undefined && value < lower) {
-            difference =
-                formatNumber(value - lower);
-        }
-        else if(upper !== undefined && value > upper) {
-            difference =
-                formatNumber(value - upper);
-        }
-
-        const tr = document.createElement("tr");
-
-        tr.innerHTML = `
-            <td>${count}</td>
-            <td><b>${escapeHTML(parameter)}</b></td>
-            <td>${formatNumber(value)}</td>
-            <td>${lower !== undefined ? formatNumber(lower) : "—"}</td>
-            <td>${upper !== undefined ? formatNumber(upper) : "—"}</td>
-            <td class="${failed ? 'ng' : ''}">
-                ${difference}
-            </td>
-            <td>
-                ${failed
-                    ? '<span class="badge badge-ng">NG</span>'
-                    : '<span class="badge badge-good">GOOD</span>'}
-            </td>
-        `;
-
-        tbody.appendChild(tr);
-    });
-}
-
-
-// ============================================================
-// PARAMETER SELECTORS
-// ============================================================
-
-function populateParameterSelectors() {
-
-    const select =
-        document.getElementById("parameterSelect");
-
-    const global =
-        document.getElementById("globalParameter");
-
-    const current =
-        select.value;
-
-    select.innerHTML = "";
-    global.innerHTML = "";
-
-    appData.parameters.forEach(parameter => {
-
-        const option =
-            document.createElement("option");
-
-        option.value = parameter;
-        option.textContent = parameter;
-
-        select.appendChild(option);
-
-        const option2 =
-            document.createElement("option");
-
-        option2.value = parameter;
-        option2.textContent = parameter;
-
-        global.appendChild(option2);
-    });
-
-    if(
-        current &&
-        appData.parameters.includes(current)
-    ) {
-        select.value = current;
-    }
-}
-
-
-// ============================================================
-// GRAPH
-// ============================================================
-
-function drawChart() {
-
-    if(selectedIndex < 0) return;
-
-    const canvas =
-        document.getElementById("chart");
-
-    const ctx =
-        canvas.getContext("2d");
-
-    ctx.clearRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
+    match = log.match(
+        /\bSN:\s*([A-Za-z0-9._-]+)/i
     );
 
-    const parameter =
-        document.getElementById("parameterSelect").value;
-
-    if(!parameter) return;
-
-    const mode =
-        document.getElementById("graphMode").value;
-
-    const spec =
-        appData.specs[parameter] || {};
-
-    let points = [];
-
-    if(mode === "single") {
-
-        const unit =
-            appData.units[selectedIndex];
-
-        if(unit.values[parameter] !== undefined) {
-
-            points.push({
-                label: unit.sn,
-                value: unit.values[parameter]
-            });
-        }
-
-    } else {
-
-        appData.units.forEach(unit => {
-
-            if(unit.values[parameter] !== undefined) {
-
-                points.push({
-                    label: unit.sn,
-                    value: unit.values[parameter]
-                });
-            }
-        });
+    if (match) {
+        return match[1];
     }
 
-    if(!points.length) {
+    match = log.match(
+        /GetPCBA:\s*([A-Za-z0-9._-]+)/i
+    );
 
-        document.getElementById("chartInfo").textContent =
-            "No data available for this parameter.";
+    if (match) {
+        return match[1];
+    }
+
+    match = log.match(
+        /PCBA:\s*([A-Za-z0-9._-]+)/i
+    );
+
+    if (match) {
+        return match[1];
+    }
+
+    return "Unknown";
+}
+
+
+/* =========================================================
+   FIND OVERALL RESULT
+========================================================= */
+
+function findOverallResult(log) {
+
+    if (/Summary:\s*X/i.test(log)) {
+        return "NG";
+    }
+
+    if (/Item_.*Test Fail/i.test(log)) {
+        return "NG";
+    }
+
+    if (/PostErrorCode.*ET/i.test(log)) {
+        return "NG";
+    }
+
+    if (/MES.*;NG;/i.test(log)) {
+        return "NG";
+    }
+
+    if (/Summary:\s*PASS/i.test(log)) {
+        return "PASS";
+    }
+
+    return null;
+}
+
+
+/* =========================================================
+   SUMMARY
+========================================================= */
+
+function updateSummary(log) {
+
+    const sn = findSN(log);
+
+    const explicitResult = findOverallResult(log);
+
+    const calculatedNG =
+        parsedData.filter(x => x.result === "NG").length;
+
+    let overall = explicitResult;
+
+    if (!overall) {
+
+        overall =
+            calculatedNG > 0
+            ? "NG"
+            : "PASS";
+    }
+
+    document.getElementById("snValue").textContent = sn;
+
+    const overallElement =
+        document.getElementById("overallValue");
+
+    overallElement.textContent =
+        overall === "NG"
+        ? "🔴 NG"
+        : "🟢 GOOD";
+
+    overallElement.className =
+        "summary-value " +
+        (overall === "NG" ? "ng" : "good");
+
+    document.getElementById("totalItems").textContent =
+        parsedData.length;
+
+    document.getElementById("passItems").textContent =
+        parsedData.filter(x => x.result === "PASS").length;
+
+    document.getElementById("ngItems").textContent =
+        calculatedNG;
+
+}
+
+
+/* =========================================================
+   TABLES
+========================================================= */
+
+function updateTables() {
+
+    updateMainTable();
+
+    updateFailedTable();
+
+}
+
+
+/* =========================================================
+   MAIN TABLE
+========================================================= */
+
+function updateMainTable() {
+
+    const tbody =
+        document.getElementById("dataTable");
+
+    tbody.innerHTML = "";
+
+    let data = parsedData;
+
+    if (currentFilter === "NG") {
+
+        data =
+            parsedData.filter(x => x.result === "NG");
+
+    }
+
+    if (currentFilter === "PASS") {
+
+        data =
+            parsedData.filter(x => x.result === "PASS");
+
+    }
+
+    if (data.length === 0) {
+
+        tbody.innerHTML =
+            `<tr>
+                <td colspan="7">
+                    No matching data.
+                </td>
+             </tr>`;
 
         return;
     }
 
-    document.getElementById("chartInfo").textContent =
-        parameter +
-        " | LL: " +
-        (spec.lower !== undefined ? spec.lower : "N/A") +
-        " | UL: " +
-        (spec.upper !== undefined ? spec.upper : "N/A");
-
-    drawLineChart(
-        ctx,
-        canvas,
-        points,
-        spec.lower,
-        spec.upper
-    );
-}
-
-
-function drawLineChart(
-    ctx,
-    canvas,
-    points,
-    lower,
-    upper
-) {
-
-    const W = canvas.width;
-    const H = canvas.height;
-
-    const left = 75;
-    const right = 30;
-    const top = 35;
-    const bottom = 75;
-
-    const graphW =
-        W - left - right;
-
-    const graphH =
-        H - top - bottom;
-
-    let values =
-        points.map(p => p.value);
-
-    if(lower !== undefined) values.push(lower);
-    if(upper !== undefined) values.push(upper);
-
-    let min =
-        Math.min(...values);
-
-    let max =
-        Math.max(...values);
-
-    if(min === max) {
-        min -= 5;
-        max += 5;
-    }
-
-    const padding =
-        (max - min) * 0.12;
-
-    min -= padding;
-    max += padding;
-
-    function y(value) {
-
-        return top +
-            (max - value) /
-            (max - min) *
-            graphH;
-    }
-
-    // Background
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0,0,W,H);
-
-    // Grid
-    ctx.strokeStyle = "#e5e7eb";
-    ctx.lineWidth = 1;
-
-    for(let i = 0; i <= 5; i++) {
-
-        const yy =
-            top + i * graphH / 5;
-
-        ctx.beginPath();
-        ctx.moveTo(left, yy);
-        ctx.lineTo(W-right, yy);
-        ctx.stroke();
-
-        const value =
-            max -
-            i * (max-min)/5;
-
-        ctx.fillStyle = "#64748b";
-        ctx.font = "12px Arial";
-        ctx.fillText(
-            value.toFixed(1),
-            15,
-            yy + 4
-        );
-    }
-
-    // Axes
-    ctx.strokeStyle = "#334155";
-    ctx.lineWidth = 1;
-
-    ctx.beginPath();
-    ctx.moveTo(left, top);
-    ctx.lineTo(left, H-bottom);
-    ctx.lineTo(W-right, H-bottom);
-    ctx.stroke();
-
-    // Lower limit
-    if(lower !== undefined) {
-
-        const yy = y(lower);
-
-        ctx.strokeStyle = "#dc2626";
-        ctx.lineWidth = 2;
-
-        ctx.setLineDash([8,5]);
-
-        ctx.beginPath();
-        ctx.moveTo(left, yy);
-        ctx.lineTo(W-right, yy);
-        ctx.stroke();
-
-        ctx.setLineDash([]);
-
-        ctx.fillStyle = "#dc2626";
-        ctx.font = "bold 13px Arial";
-        ctx.fillText(
-            "LL = " + formatNumber(lower),
-            left + 8,
-            yy - 6
-        );
-    }
-
-    // Upper limit
-    if(upper !== undefined) {
-
-        const yy = y(upper);
-
-        ctx.strokeStyle = "#dc2626";
-        ctx.lineWidth = 2;
-
-        ctx.setLineDash([8,5]);
-
-        ctx.beginPath();
-        ctx.moveTo(left, yy);
-        ctx.lineTo(W-right, yy);
-        ctx.stroke();
-
-        ctx.setLineDash([]);
-
-        ctx.fillStyle = "#dc2626";
-        ctx.font = "bold 13px Arial";
-        ctx.fillText(
-            "UL = " + formatNumber(upper),
-            left + 8,
-            yy - 6
-        );
-    }
-
-    // Actual line
-    ctx.strokeStyle = "#123b6d";
-    ctx.lineWidth = 2;
-
-    ctx.beginPath();
-
-    points.forEach((point, i) => {
-
-        const x =
-            left +
-            (points.length === 1
-                ? graphW / 2
-                : i * graphW / (points.length - 1));
-
-        const yy = y(point.value);
-
-        if(i === 0) {
-            ctx.moveTo(x, yy);
-        } else {
-            ctx.lineTo(x, yy);
-        }
-    });
-
-    ctx.stroke();
-
-    // Points
-    points.forEach((point, i) => {
-
-        const x =
-            left +
-            (points.length === 1
-                ? graphW / 2
-                : i * graphW / (points.length - 1));
-
-        const yy = y(point.value);
-
-        const failed =
-            (lower !== undefined && point.value < lower) ||
-            (upper !== undefined && point.value > upper);
-
-        ctx.beginPath();
-
-        ctx.arc(
-            x,
-            yy,
-            5,
-            0,
-            Math.PI * 2
-        );
-
-        ctx.fillStyle =
-            failed ? "#dc2626" : "#123b6d";
-
-        ctx.fill();
-
-        // Labels for single unit
-        if(points.length <= 20) {
-
-            ctx.save();
-
-            ctx.translate(
-                x,
-                H-bottom+15
-            );
-
-            ctx.rotate(-Math.PI/4);
-
-            ctx.fillStyle = "#475569";
-            ctx.font = "11px Arial";
-
-            ctx.fillText(
-                point.label,
-                0,
-                0
-            );
-
-            ctx.restore();
-        }
-    });
-
-    // Graph title
-    ctx.fillStyle = "#1f2937";
-    ctx.font = "bold 15px Arial";
-
-    ctx.fillText(
-        "Actual Measurement",
-        left,
-        20
-    );
-}
-
-
-// ============================================================
-// PARAMETER SUMMARY
-// ============================================================
-
-function renderParameterSummary() {
-
-    const parameter =
-        document.getElementById("globalParameter").value;
-
-    const tbody =
-        document.getElementById("parameterSummary");
-
-    tbody.innerHTML = "";
-
-    const spec =
-        appData.specs[parameter] || {};
-
-    appData.units.forEach((unit,index) => {
-
-        if(unit.values[parameter] === undefined) return;
-
-        const value =
-            unit.values[parameter];
-
-        const failed =
-            (spec.lower !== undefined && value < spec.lower) ||
-            (spec.upper !== undefined && value > spec.upper);
+    data.forEach((row) => {
 
         const tr =
             document.createElement("tr");
 
-        tr.className = "clickable";
+        if (row.result === "NG") {
+            tr.className = "ng-row";
+        } else {
+            tr.className = "pass-row";
+        }
 
-        tr.onclick = () => selectSN(index);
+        let margin = "—";
+
+        if (row.lower !== null) {
+
+            margin =
+                (row.value - row.lower).toFixed(2);
+
+        }
 
         tr.innerHTML = `
-            <td>${index + 1}</td>
-            <td><b>${escapeHTML(unit.sn)}</b></td>
-            <td>${formatNumber(value)}</td>
-            <td>${spec.lower !== undefined
-                ? formatNumber(spec.lower)
-                : "—"}</td>
-            <td>${spec.upper !== undefined
-                ? formatNumber(spec.upper)
-                : "—"}</td>
+
+            <td>${row.number}</td>
+
+            <td><strong>${escapeHtml(row.item)}</strong></td>
+
+            <td>${row.value}</td>
+
             <td>
-                ${failed
-                    ? '<span class="badge badge-ng">NG</span>'
-                    : '<span class="badge badge-good">GOOD</span>'}
+                ${row.lower !== null ? row.lower : "—"}
             </td>
+
+            <td>
+                ${row.upper !== null ? row.upper : "—"}
+            </td>
+
+            <td class="${margin !== "—" && parseFloat(margin) < 0 ? "ng" : "good"}">
+                ${margin}
+            </td>
+
+            <td>
+                ${
+                    row.result === "NG"
+                    ?
+                    '<span class="result-badge ng-badge">NG</span>'
+                    :
+                    '<span class="result-badge pass-badge">PASS</span>'
+                }
+            </td>
+
         `;
 
         tbody.appendChild(tr);
+
     });
+
 }
 
 
-// ============================================================
-// NEXT / PREVIOUS NG
-// ============================================================
+/* =========================================================
+   FAILED TABLE
+========================================================= */
 
-function nextNG() {
+function updateFailedTable() {
 
-    if(!appData.units.length) return;
+    const tbody =
+        document.getElementById("failedTable");
 
-    for(
-        let step = 1;
-        step <= appData.units.length;
-        step++
-    ) {
+    tbody.innerHTML = "";
 
-        const index =
-            (selectedIndex + step) %
-            appData.units.length;
+    const failed =
+        parsedData.filter(x => x.result === "NG");
 
-        if(appData.units[index].result === "NG") {
+    if (failed.length === 0) {
 
-            selectSN(index);
-            return;
-        }
+        tbody.innerHTML =
+            `<tr>
+                <td colspan="5" class="good">
+                    ✓ No failed MTF measurements
+                </td>
+            </tr>`;
+
+        return;
     }
 
-    alert("No NG units found.");
+    failed.forEach(row => {
+
+        const tr =
+            document.createElement("tr");
+
+        tr.className = "ng-row";
+
+        tr.innerHTML = `
+
+            <td>
+                <strong>${escapeHtml(row.item)}</strong>
+            </td>
+
+            <td class="ng">
+                <strong>${row.value}</strong>
+            </td>
+
+            <td>
+                ${row.lower !== null ? row.lower : "—"}
+            </td>
+
+            <td>
+                ${row.upper !== null ? row.upper : "—"}
+            </td>
+
+            <td>
+                <span class="result-badge ng-badge">
+                    🔴 NG
+                </span>
+            </td>
+
+        `;
+
+        tbody.appendChild(tr);
+
+    });
+
 }
 
 
-function previousNG() {
+/* =========================================================
+   FILTER
+========================================================= */
 
-    if(!appData.units.length) return;
+function setFilter(filter, button) {
 
-    for(
-        let step = 1;
-        step <= appData.units.length;
-        step++
-    ) {
+    currentFilter = filter;
 
-        let index =
-            selectedIndex - step;
+    document
+        .querySelectorAll(".filter-btn")
+        .forEach(btn => btn.classList.remove("active"));
 
-        if(index < 0) {
-            index += appData.units.length;
-        }
+    button.classList.add("active");
 
-        if(appData.units[index].result === "NG") {
+    updateMainTable();
 
-            selectSN(index);
-            return;
-        }
+}
+
+
+/* =========================================================
+   GRAPH
+========================================================= */
+
+function drawGraph() {
+
+    const svg =
+        document.getElementById("graph");
+
+    svg.innerHTML = "";
+
+    if (parsedData.length === 0) {
+        return;
     }
 
-    alert("No NG units found.");
-}
+    const width = 1200;
+    const height = 500;
 
-
-// ============================================================
-// RESET / CLEAR
-// ============================================================
-
-function resetApp() {
-
-    appData = {
-        units: [],
-        parameters: [],
-        specs: {}
+    const margin = {
+        top: 35,
+        right: 35,
+        bottom: 120,
+        left: 70
     };
 
-    selectedIndex = -1;
-    snFilter = "ALL";
-    paramMode = "ALL";
-}
+    const chartWidth =
+        width - margin.left - margin.right;
+
+    const chartHeight =
+        height - margin.top - margin.bottom;
 
 
-function clearData() {
+    /*
+       Find graph maximum
+    */
 
-    document.getElementById("inputData").value = "";
+    let maxValue = 0;
 
-    document.getElementById("results")
-        .classList.add("hidden");
+    parsedData.forEach(row => {
 
-    document.getElementById("dataStatus")
-        .textContent = "";
+        maxValue =
+            Math.max(
+                maxValue,
+                row.value,
+                row.upper !== null ? row.upper : 0,
+                row.lower !== null ? row.lower : 0
+            );
 
-    resetApp();
-}
+    });
 
+    maxValue =
+        Math.ceil(maxValue / 10) * 10 + 10;
 
-// ============================================================
-// FORMATTING
-// ============================================================
-
-function formatNumber(value) {
-
-    if(value === undefined || value === null) {
-        return "—";
+    if (maxValue <= 0) {
+        maxValue = 100;
     }
 
-    if(
-        Math.abs(value) >= 100 ||
-        Number.isInteger(value)
-    ) {
-        return value.toFixed(2);
+
+    /*
+       Y scale
+    */
+
+    function y(value) {
+
+        return (
+            margin.top +
+            chartHeight -
+            (value / maxValue) * chartHeight
+        );
+
     }
 
-    return value.toFixed(3);
+
+    /*
+       Background
+    */
+
+    const bg =
+        createSvg("rect", {
+            x: 0,
+            y: 0,
+            width: width,
+            height: height,
+            fill: "#020617"
+        });
+
+    svg.appendChild(bg);
+
+
+    /*
+       Grid lines
+    */
+
+    for (let i = 0; i <= 5; i++) {
+
+        const value =
+            (maxValue / 5) * i;
+
+        const yy = y(value);
+
+        const line =
+            createSvg("line", {
+                x1: margin.left,
+                y1: yy,
+                x2: width - margin.right,
+                y2: yy,
+                stroke: "#334155",
+                "stroke-width": 1
+            });
+
+        svg.appendChild(line);
+
+
+        const label =
+            createSvg("text", {
+                x: margin.left - 10,
+                y: yy + 4,
+                fill: "#94a3b8",
+                "font-size": 12,
+                "text-anchor": "end"
+            });
+
+        label.textContent =
+            value.toFixed(0);
+
+        svg.appendChild(label);
+
+    }
+
+
+    /*
+       X axis
+    */
+
+    const axis =
+        createSvg("line", {
+            x1: margin.left,
+            y1: margin.top + chartHeight,
+            x2: width - margin.right,
+            y2: margin.top + chartHeight,
+            stroke: "#64748b",
+            "stroke-width": 1
+        });
+
+    svg.appendChild(axis);
+
+
+    /*
+       Lower Limit line
+       We draw an LL line per item.
+       Because different MTF points can have
+       different LL specifications, the line
+       follows each item's actual LL.
+    */
+
+    let points = [];
+
+    const count = parsedData.length;
+
+    const step =
+        count > 1
+        ? chartWidth / (count - 1)
+        : chartWidth;
+
+
+    parsedData.forEach((row, index) => {
+
+        const x =
+            margin.left +
+            index * step;
+
+        points.push({
+            x: x,
+            y: y(row.value)
+        });
+
+
+        /*
+           Lower limit
+        */
+
+        if (row.lower !== null) {
+
+            const llLine =
+                createSvg("line", {
+                    x1: x,
+                    y1: y(row.lower),
+                    x2: x,
+                    y2: margin.top + chartHeight,
+                    stroke: "#f59e0b",
+                    "stroke-width": 1,
+                    "stroke-dasharray": "4 4",
+                    opacity: 0.5
+                });
+
+            svg.appendChild(llLine);
+
+        }
+
+    });
+
+
+    /*
+       Connect measurement values
+    */
+
+    if (points.length > 1) {
+
+        const pathData =
+            points
+                .map((p, i) =>
+                    `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`
+                )
+                .join(" ");
+
+        const path =
+            createSvg("path", {
+                d: pathData,
+                fill: "none",
+                stroke: "#38bdf8",
+                "stroke-width": 2
+            });
+
+        svg.appendChild(path);
+
+    }
+
+
+    /*
+       Measurement points
+    */
+
+    parsedData.forEach((row, index) => {
+
+        const x =
+            margin.left +
+            index * step;
+
+        const yy =
+            y(row.value);
+
+        const circle =
+            createSvg("circle", {
+                cx: x,
+                cy: yy,
+                r: row.result === "NG" ? 7 : 5,
+                fill:
+                    row.result === "NG"
+                    ? "#ef4444"
+                    : "#22c55e",
+                stroke: "#020617",
+                "stroke-width": 2
+            });
+
+        svg.appendChild(circle);
+
+
+        /*
+           Value label
+        */
+
+        const valueText =
+            createSvg("text", {
+                x: x,
+                y: yy - 11,
+                fill:
+                    row.result === "NG"
+                    ? "#f87171"
+                    : "#86efac",
+                "font-size": 11,
+                "font-weight": "bold",
+                "text-anchor": "middle"
+            });
+
+        valueText.textContent =
+            row.value;
+
+        svg.appendChild(valueText);
+
+
+        /*
+           Item label
+        */
+
+        const itemText =
+            createSvg("text", {
+                x: x,
+                y: margin.top + chartHeight + 18,
+                fill: "#cbd5e1",
+                "font-size": 9,
+                "text-anchor": "end",
+                transform:
+                    `rotate(-60 ${x} ${margin.top + chartHeight + 18})`
+            });
+
+        itemText.textContent =
+            row.item;
+
+        svg.appendChild(itemText);
+
+    });
+
+
+    /*
+       Y axis label
+    */
+
+    const yTitle =
+        createSvg("text", {
+            x: 18,
+            y: margin.top + chartHeight / 2,
+            fill: "#94a3b8",
+            "font-size": 13,
+            transform:
+                `rotate(-90 18 ${margin.top + chartHeight / 2})`,
+            "text-anchor": "middle"
+        });
+
+    yTitle.textContent = "MTF Value";
+
+    svg.appendChild(yTitle);
+
 }
 
 
-function escapeHTML(value) {
+/* =========================================================
+   SVG HELPER
+========================================================= */
 
-    return String(value || "")
-        .replace(/&/g,"&amp;")
-        .replace(/</g,"&lt;")
-        .replace(/>/g,"&gt;")
-        .replace(/"/g,"&quot;")
-        .replace(/'/g,"&#039;");
+function createSvg(tag, attributes) {
+
+    const element =
+        document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            tag
+        );
+
+    for (const key in attributes) {
+
+        element.setAttribute(
+            key,
+            attributes[key]
+        );
+
+    }
+
+    return element;
+}
+
+
+/* =========================================================
+   CLEAR
+========================================================= */
+
+function clearLog() {
+
+    document.getElementById("logInput").value = "";
+
+    document.getElementById("fileInput").value = "";
+
+    document.getElementById("fileName").textContent =
+        "No file selected";
+
+    parsedData = [];
+
+    document.getElementById("snValue").textContent =
+        "—";
+
+    document.getElementById("overallValue").textContent =
+        "—";
+
+    document.getElementById("overallValue").className =
+        "summary-value";
+
+    document.getElementById("totalItems").textContent =
+        "0";
+
+    document.getElementById("passItems").textContent =
+        "0";
+
+    document.getElementById("ngItems").textContent =
+        "0";
+
+    document.getElementById("dataTable").innerHTML =
+        `<tr>
+            <td colspan="7">No data loaded.</td>
+        </tr>`;
+
+    document.getElementById("failedTable").innerHTML =
+        `<tr>
+            <td colspan="5">No data loaded.</td>
+        </tr>`;
+
+    document.getElementById("graph").innerHTML = "";
+
+    showStatus("", "");
+
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+function showStatus(message, type) {
+
+    const status =
+        document.getElementById("status");
+
+    status.textContent = message;
+
+    status.className =
+        "status-message";
+
+    if (!message) {
+        return;
+    }
+
+    status.classList.add("show");
+
+    if (type === "success") {
+
+        status.classList.add("status-success");
+
+    } else {
+
+        status.classList.add("status-error");
+
+    }
+
+}
+
+
+/* =========================================================
+   HTML ESCAPE
+========================================================= */
+
+function escapeHtml(value) {
+
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
 }
 
 </script>
