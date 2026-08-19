@@ -1084,396 +1084,245 @@ function analyzeLog() {
 
 
 /* ============================================================
-   FORMAT DETECTION
+   FORMAT DETECTION + ROBUST CSV PARSER
 ============================================================ */
 
 function detectFormat(text) {
+    const sample = String(text || "").replace(/^\uFEFF/, "");
+    const lower = sample.toLowerCase();
 
-    const lower =
-        text.toLowerCase();
-
-
-    if (
-        lower.includes("pcba,") &&
-        (
-            lower.includes("stamptime") ||
-            lower.includes("workno")
-        )
-    ) {
-
-        return "CSV";
-    }
-
-
+    // Strong LOG indicators first.
     if (
         lower.includes("item_mtf") ||
-        lower.includes("spec: lower")
+        lower.includes("spec: lower") ||
+        lower.includes("load snfile:") ||
+        lower.includes("item:") && lower.includes("value:")
     ) {
-
         return "LOG";
     }
 
-
-    if (
-        lower.includes(",") &&
-        lower.includes("lower")
-    ) {
-
-        return "CSV";
+    // A CSV is normally identified by a header row containing an MTF field
+    // plus a serial/PCBA field. We intentionally do not require PCBA/WorkNo.
+    const lines = sample.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
+    for (let i = 0; i < Math.min(lines.length, 100); i++) {
+        const line = lines[i].toLowerCase();
+        if (
+            line.includes("mtf") &&
+            (line.includes(",") || line.includes("\t") || line.includes(";"))
+        ) {
+            return "CSV";
+        }
     }
 
+    // Preserve the previous detection for older CSV exports.
+    if (
+        (lower.includes("pcba,") || lower.includes("pcba;")) &&
+        (lower.includes("stamptime") || lower.includes("workno"))
+    ) {
+        return "CSV";
+    }
 
     return "LOG";
 }
 
+function detectCSVDelimiter(line) {
+    const candidates = [",", "\t", ";"];
+    let best = ",";
+    let bestCount = -1;
 
-/* ============================================================
-   CSV LINE PARSER
-============================================================ */
-
-function parseCSVLine(line) {
-
-    const values = [];
-
-    let current = "";
-
-    let inQuotes = false;
-
-
-    for (
-        let i = 0;
-        i < line.length;
-        i++
-    ) {
-
-        const char =
-            line[i];
-
-
-        if (char === '"') {
-
-            if (
-                inQuotes &&
-                line[i + 1] === '"'
-            ) {
-
-                current += '"';
-
-                i++;
-
-            } else {
-
-                inQuotes =
-                    !inQuotes;
-
+    for (const delimiter of candidates) {
+        let count = 0;
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+            const c = line[i];
+            if (c === '"') {
+                if (inQuotes && line[i + 1] === '"') i++;
+                else inQuotes = !inQuotes;
+            } else if (c === delimiter && !inQuotes) {
+                count++;
             }
-
-        } else if (
-            char === "," &&
-            !inQuotes
-        ) {
-
-            values.push(
-                current.trim()
-            );
-
-            current = "";
-
-        } else {
-
-            current += char;
-
         }
-
+        if (count > bestCount) {
+            bestCount = count;
+            best = delimiter;
+        }
     }
-
-
-    values.push(
-        current.trim()
-    );
-
-
-    return values;
+    return best;
 }
 
-
-/* ============================================================
-   CSV PARSER
-============================================================ */
-
-function parseCSVData(text) {
-
-    const records = [];
-
-    if (!text || !text.trim()) {
-        return records;
-    }
-
-    /*
-     * Normalize BOM / line endings.
-     */
-    text = text
-        .replace(/^\uFEFF/, "")
-        .replace(/\r\n/g, "\n")
-        .replace(/\r/g, "\n");
-
-    const lines = text.split("\n");
-
-    /*
-     * Detect delimiter from the first useful line.
-     * Supports comma, semicolon and tab-delimited CSV exports.
-     */
-    let delimiter = ",";
-    const candidates = [",", ";", "\t"];
-    let bestScore = -1;
-
-    for (const candidate of candidates) {
-        let score = 0;
-        for (const line of lines.slice(0, 20)) {
-            if (!line.trim()) continue;
-            score += parseDelimitedLine(line, candidate).length;
-        }
-        if (score > bestScore) {
-            bestScore = score;
-            delimiter = candidate;
-        }
-    }
-
-    /*
-     * Find a header row. We no longer require the exact PCBA/WorkNo/
-     * StampTime combination; real CSV exports can have different names.
-     */
-    let headerIndex = -1;
-
-    for (let i = 0; i < lines.length; i++) {
-        const row = parseDelimitedLine(lines[i], delimiter);
-        const normalized = row.map(v =>
-            String(v || "")
-                .trim()
-                .toLowerCase()
-                .replace(/\s+/g, "")
-        );
-
-        const hasMTF = normalized.some(v => v.includes("mtf"));
-        const hasIdentity = normalized.some(v =>
-            v.includes("pcba") ||
-            v.includes("workno") ||
-            v === "sn" ||
-            v.includes("serial") ||
-            v.includes("stationip") ||
-            v.includes("station")
-        );
-
-        if (hasMTF && (hasIdentity || normalized.length >= 3)) {
-            headerIndex = i;
-            break;
-        }
-    }
-
-    if (headerIndex === -1) {
-        return records;
-    }
-
-    const headers = parseDelimitedLine(
-        lines[headerIndex],
-        delimiter
-    );
-
-    /* Find MTF measurement columns. */
-    const measurementColumns = [];
-
-    for (let i = 0; i < headers.length; i++) {
-        const header = String(headers[i] || "").trim();
-
-        if (
-            header.toUpperCase().includes("MTF") &&
-            !isExcludedMTFItem(header)
-        ) {
-            measurementColumns.push(i);
-        }
-    }
-
-    if (measurementColumns.length === 0) {
-        return records;
-    }
-
-    /* Locate common identity/result/fixture columns. */
-    const findColumn = (tests) => {
-        for (let i = 0; i < headers.length; i++) {
-            const h = String(headers[i] || "")
-                .trim()
-                .toLowerCase()
-                .replace(/[ _-]/g, "");
-            if (tests.some(t => h.includes(t))) return i;
-        }
-        return -1;
-    };
-
-    const snIndex = findColumn([
-        "sn", "serialnumber", "serialno", "serial"
-    ]);
-
-    const workNoIndex = findColumn([
-        "workno", "worknumber", "work"
-    ]);
-
-    const stationIPIndex = findColumn([
-        "stationip", "station", "fixtureip", "fixture"
-    ]);
-
-    const resultIndex = findColumn([
-        "result", "judgement", "judge", "status", "ngok"
-    ]);
-
-    const modeIndex = findColumn([
-        "mode", "testmode", "daynight", "daymode", "nightmode"
-    ]);
-
-    /* Spec rows can still be present in the CSV. */
-    const specRows = {};
-
-    for (let i = headerIndex + 1; i < lines.length; i++) {
-        const row = parseDelimitedLine(lines[i], delimiter);
-        const first = String(row[0] || "")
-            .trim()
-            .toLowerCase();
-
-        if ([
-            "lower", "upper", "min", "max", "mean", "sigma",
-            "cpl", "cpu", "cplu"
-        ].includes(first)) {
-            specRows[first] = row;
-        }
-    }
-
-    /*
-     * Read every data row. One CSV row can contain many MTF columns,
-     * so create one record per actual MTF measurement.
-     */
-    for (let rowIndex = headerIndex + 1; rowIndex < lines.length; rowIndex++) {
-
-        if (!lines[rowIndex].trim()) continue;
-
-        const row = parseDelimitedLine(
-            lines[rowIndex],
-            delimiter
-        );
-
-        if (!row.length) continue;
-
-        const first = String(row[0] || "")
-            .trim()
-            .toLowerCase();
-
-        /* Ignore specification/statistics rows. */
-        if ([
-            "lower", "upper", "min", "max", "mean", "sigma",
-            "cpl", "cpu", "cplu"
-        ].includes(first)) {
-            continue;
-        }
-
-        const sn =
-            snIndex >= 0 && row[snIndex]
-                ? String(row[snIndex]).trim()
-                : (workNoIndex >= 0 && row[workNoIndex]
-                    ? String(row[workNoIndex]).trim()
-                    : "UNKNOWN");
-
-        const stationIP =
-            stationIPIndex >= 0 && row[stationIPIndex]
-                ? String(row[stationIPIndex]).trim()
-                : "UNKNOWN";
-
-        const result =
-            resultIndex >= 0 && row[resultIndex]
-                ? String(row[resultIndex]).trim().toUpperCase()
-                : "GOOD";
-
-        const mode =
-            modeIndex >= 0 && row[modeIndex]
-                ? String(row[modeIndex]).trim()
-                : "";
-
-        for (const colIndex of measurementColumns) {
-
-            const rawValue = String(row[colIndex] || "")
-                .trim()
-                .replace(/,/g, "");
-
-            if (!rawValue) continue;
-
-            const value = Number(rawValue);
-
-            if (!Number.isFinite(value)) continue;
-
-            const item = String(headers[colIndex] || "")
-                .trim();
-
-            let lower = NaN;
-            let upper = NaN;
-
-            /* If the spec rows have matching columns, use them. */
-            if (specRows.lower && specRows.lower[colIndex] !== undefined) {
-                lower = Number(String(specRows.lower[colIndex]).replace(/,/g, ""));
-            }
-
-            if (specRows.upper && specRows.upper[colIndex] !== undefined) {
-                upper = Number(String(specRows.upper[colIndex]).replace(/,/g, ""));
-            }
-
-            records.push({
-                sn: sn,
-                workNo: workNoIndex >= 0 ? String(row[workNoIndex] || "").trim() : "",
-                stationIP: stationIP,
-                item: item,
-                value: value,
-                result: result,
-                mode: mode,
-                lower: Number.isFinite(lower) ? lower : null,
-                upper: Number.isFinite(upper) ? upper : null,
-                source: "CSV"
-            });
-        }
-    }
-
-    return records;
-}
-
-
-/* Generic quoted CSV / delimited-line parser. */
-function parseDelimitedLine(line, delimiter) {
-
+function parseCSVLine(line, delimiter) {
     const values = [];
     let current = "";
     let inQuotes = false;
+    delimiter = delimiter || detectCSVDelimiter(line);
 
     for (let i = 0; i < line.length; i++) {
-
         const char = line[i];
-
         if (char === '"') {
-
             if (inQuotes && line[i + 1] === '"') {
                 current += '"';
                 i++;
             } else {
                 inQuotes = !inQuotes;
             }
-
         } else if (char === delimiter && !inQuotes) {
-
             values.push(current.trim());
             current = "";
-
         } else {
-
             current += char;
         }
     }
-
     values.push(current.trim());
     return values;
+}
+
+function normalizeHeaderName(value) {
+    return String(value || "")
+        .replace(/^\uFEFF/, "")
+        .trim()
+        .toLowerCase()
+        .replace(/[\s_.\-()/\\]+/g, "");
+}
+
+function findFlexibleHeader(headers, patterns) {
+    for (let i = 0; i < headers.length; i++) {
+        const h = normalizeHeaderName(headers[i]);
+        for (const pattern of patterns) {
+            const p = normalizeHeaderName(pattern);
+            if (h === p || h.includes(p)) return i;
+        }
+    }
+    return -1;
+}
+
+function parseCSVData(text) {
+    const records = [];
+    const lines = String(text || "")
+        .replace(/^\uFEFF/, "")
+        .replace(/\r\n/g, "\n")
+        .replace(/\r/g, "\n")
+        .split("\n");
+
+    // Find the real header instead of requiring exact PCBA/WorkNo/StampTime names.
+    let headerIndex = -1;
+    let delimiter = ",";
+    let headers = [];
+
+    for (let i = 0; i < Math.min(lines.length, 200); i++) {
+        if (!lines[i].trim()) continue;
+        const d = detectCSVDelimiter(lines[i]);
+        const h = parseCSVLine(lines[i], d);
+        const normalized = h.map(normalizeHeaderName);
+        const hasMTF = normalized.some(x => x.includes("mtf"));
+        const hasIdentity = normalized.some(x =>
+            x === "pcba" || x.includes("serial") || x === "sn" ||
+            x.includes("serialnumber") || x.includes("partnumber")
+        );
+
+        if (hasMTF && (hasIdentity || h.length >= 3)) {
+            headerIndex = i;
+            delimiter = d;
+            headers = h;
+            break;
+        }
+    }
+
+    if (headerIndex < 0) return records;
+
+    // Locate all MTF measurement columns.
+    const measurementColumns = [];
+    for (let i = 0; i < headers.length; i++) {
+        const h = String(headers[i] || "").trim();
+        if (h && h.toUpperCase().includes("MTF") && !isExcludedMTFItem(h)) {
+            measurementColumns.push(i);
+        }
+    }
+    if (!measurementColumns.length) return records;
+
+    const snIndex = findFlexibleHeader(headers, [
+        "SN", "Serial", "Serial Number", "SerialNumber", "PCBA", "PCB SN"
+    ]);
+    const workNoIndex = findFlexibleHeader(headers, [
+        "WorkNo", "Work No", "Work Number", "WorkNo."
+    ]);
+    const timeIndex = findFlexibleHeader(headers, [
+        "StampTime", "Date_Time", "Date Time", "DateTime", "Timestamp", "Time"
+    ]);
+    const stationIndex = findStationIPHeader(headers);
+    const resultIndex = findFlexibleHeader(headers, [
+        "Result", "Status", "Test Result", "Judgement", "Judge"
+    ]);
+    const modeIndex = findFlexibleHeader(headers, [
+        "Mode", "Test Mode", "Light Mode", "Illumination"
+    ]);
+
+    // Some exports have separate LOWER/UPPER rows below the header.
+    const specRows = {};
+    const specNames = ["lower", "upper", "min", "max", "mean", "sigma", "cpl", "cpu", "cplu"];
+
+    for (let i = headerIndex + 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        const row = parseCSVLine(lines[i], delimiter);
+        const first = String(row[0] || "").trim().toLowerCase();
+        if (specNames.includes(first)) specRows[first] = row;
+    }
+
+    for (let rowIndex = headerIndex + 1; rowIndex < lines.length; rowIndex++) {
+        if (!lines[rowIndex].trim()) continue;
+        const row = parseCSVLine(lines[rowIndex], delimiter);
+        if (!row.length || row.every(x => String(x).trim() === "")) continue;
+
+        const first = String(row[0] || "").trim().toLowerCase();
+        if (specNames.includes(first)) continue;
+
+        const sn = snIndex >= 0 ? String(row[snIndex] || "").trim() : "";
+        const workNo = workNoIndex >= 0 ? String(row[workNoIndex] || "").trim() : "";
+        const stampTime = timeIndex >= 0 ? String(row[timeIndex] || "").trim() : "";
+        const stationIP = stationIndex >= 0 ? String(row[stationIndex] || "").trim() : "";
+        const csvResult = resultIndex >= 0 ? String(row[resultIndex] || "").trim().toUpperCase() : "";
+        const csvMode = modeIndex >= 0 ? String(row[modeIndex] || "").trim().toUpperCase() : "";
+
+        const measurements = [];
+
+        for (const columnIndex of measurementColumns) {
+            const itemName = String(headers[columnIndex] || "").trim();
+            const rawValue = row[columnIndex];
+            if (rawValue === undefined || rawValue === null || String(rawValue).trim() === "") continue;
+
+            const value = toNumber(rawValue);
+            if (value === null) continue;
+
+            const lower = getSpecValue(specRows.lower, columnIndex);
+            const upper = getSpecValue(specRows.upper, columnIndex);
+            let result = evaluateResult(value, lower, upper);
+
+            // If the CSV has an explicit result, preserve it when it is usable.
+            if (csvResult === "NG" || csvResult === "NOK" || csvResult === "FAIL") result = "NG";
+            else if (csvResult === "GOOD" || csvResult === "OK" || csvResult === "PASS") result = "GOOD";
+
+            measurements.push({
+                name: itemName,
+                value: value,
+                lower: lower,
+                upper: upper,
+                result: result,
+                type: csvMode.includes("NIGHT") ? "NIGHT" : getMTFType(itemName)
+            });
+        }
+
+        if (measurements.length > 0) {
+            records.push({
+                sn: cleanSN(sn || "UNKNOWN_SN_" + (rowIndex + 1)),
+                workNo: workNo,
+                time: stampTime,
+                stationIP: stationIP,
+                source: "CSV",
+                measurements: measurements
+            });
+        }
+    }
+
+    return records;
 }
 
 
