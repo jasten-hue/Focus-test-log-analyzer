@@ -401,7 +401,7 @@ canvas {
 
 
 /* ============================================================
-   NEW SUMMARY GRAPH
+   SUMMARY GRAPH
 ============================================================ */
 
 .summary-graph-container {
@@ -498,7 +498,6 @@ canvas {
 </head>
 
 <body>
-
 
 <div class="header">
 
@@ -662,7 +661,7 @@ canvas {
 
 
 <!-- ============================================================
-     NEW STATION IP GRAPH
+     STATION IP GRAPH
 ============================================================ -->
 
 <div
@@ -687,28 +686,12 @@ canvas {
 
 
 <!-- ============================================================
-     NEW COLLIMATOR GRAPH
+     COLLIMATOR NG GRAPHS
 ============================================================ -->
 
 <div
-    id="collimatorGraphCard"
-    class="card summary-graph-card"
-    style="display:none;"
->
-
-    <div class="input-title">
-        Collimator — MTF NG Quantity
-    </div>
-
-    <div class="graph-subtitle">
-        Accumulated quantity of NG results per MTF / Collimator
-    </div>
-
-    <div class="summary-graph-container">
-        <canvas id="collimatorNGChart"></canvas>
-    </div>
-
-</div>
+    id="collimatorGraphsContainer"
+></div>
 
 
 <!-- ============================================================
@@ -725,8 +708,6 @@ canvas {
         SN Results
     </div>
 
-
-    <!-- SEARCH + FILTER -->
 
     <div class="toolbar">
 
@@ -797,18 +778,13 @@ let currentFilter = "ALL";
 
 let originalRecords = [];
 
-
-/*
- * NEW SUMMARY GRAPH DATA
- */
-
 let stationNGData = {};
 
-let collimatorNGData = {};
+let collimatorNGDataByFixture = {};
 
 let stationChartInstance = null;
 
-let collimatorChartInstance = null;
+let collimatorChartInstances = new Map();
 
 
 /* ============================================================
@@ -894,7 +870,7 @@ function analyzeLog() {
 
     stationNGData = {};
 
-    collimatorNGData = {};
+    collimatorNGDataByFixture = {};
 
 
     const format =
@@ -949,7 +925,7 @@ function analyzeLog() {
 
 
     /*
-     * Preserve every record.
+     * Preserve every valid record.
      */
 
     originalRecords =
@@ -969,12 +945,6 @@ function analyzeLog() {
         originalRecords
     );
 
-
-    /*
-     * NEW:
-     *
-     * Build accumulated NG statistics.
-     */
 
     buildNGSummaryData(
         originalRecords
@@ -1226,15 +1196,20 @@ function parseCSVData(text) {
             ).trim();
 
 
+        /*
+         * NEVER collect a blank header.
+         */
+
+        if (!header) {
+            continue;
+        }
+
+
         if (
             header
                 .toUpperCase()
                 .includes("MTF")
         ) {
-
-            /*
-             * Remove excluded items.
-             */
 
             if (
                 isExcludedMTFItem(
@@ -1316,10 +1291,14 @@ function parseCSVData(text) {
         }
 
 
+        /*
+         * Ignore completely empty rows.
+         */
+
         if (
             row.every(
                 x =>
-                    String(x).trim() === ""
+                    String(x ?? "").trim() === ""
             )
         ) {
 
@@ -1399,15 +1378,17 @@ function parseCSVData(text) {
 
 
         /*
-         * NEW:
+         * Station IP.
          *
-         * Get Station IP from this exact CSV row.
+         * Blank remains blank here.
+         * UNKNOWN is assigned later only when
+         * building the graph.
          */
 
         const stationIP =
             stationIPIndex >= 0
                 ? String(
-                    row[stationIPIndex] || ""
+                    row[stationIPIndex] ?? ""
                   ).trim()
                 : "";
 
@@ -1422,21 +1403,69 @@ function parseCSVData(text) {
 
             const itemName =
                 String(
-                    headers[columnIndex] || ""
+                    headers[columnIndex] ?? ""
                 ).trim();
 
 
+            /*
+             * Do not create a measurement if
+             * the header itself is blank.
+             */
+
+            if (!itemName) {
+                continue;
+            }
+
+
+            const rawValue =
+                row[columnIndex];
+
+
+            /*
+             * ====================================================
+             * IMPORTANT:
+             *
+             * BLANK / EMPTY CELLS ARE COMPLETELY IGNORED.
+             * ====================================================
+             */
+
+            if (
+                rawValue === undefined ||
+                rawValue === null ||
+                String(rawValue).trim() === ""
+            ) {
+
+                continue;
+
+            }
+
+
+            /*
+             * Convert value to number.
+             */
+
             const value =
                 toNumber(
-                    row[columnIndex]
+                    rawValue
                 );
 
+
+            /*
+             * Invalid values are also ignored.
+             *
+             * Examples:
+             * -
+             * NA
+             * N/A
+             * abc
+             */
 
             if (
                 value === null
             ) {
 
                 continue;
+
             }
 
 
@@ -1488,6 +1517,13 @@ function parseCSVData(text) {
 
         }
 
+
+        /*
+         * IMPORTANT:
+         *
+         * If the row has no valid measurements,
+         * do NOT create a test record.
+         */
 
         if (
             measurements.length > 0
@@ -1621,15 +1657,26 @@ function parseOriginalLog(text) {
             currentRecord
         ) {
 
-            currentRecord.time =
-                dateMatch[1].trim();
+            const timeValue =
+                String(
+                    dateMatch[1] || ""
+                ).trim();
+
+
+            if (timeValue) {
+
+                currentRecord.time =
+                    timeValue;
+
+            }
+
 
             continue;
         }
 
 
         /*
-         * Optional Station IP in normal LOG files.
+         * Station IP.
          */
 
         const stationMatch =
@@ -1643,8 +1690,19 @@ function parseOriginalLog(text) {
             currentRecord
         ) {
 
-            currentRecord.stationIP =
-                stationMatch[1].trim();
+            const station =
+                String(
+                    stationMatch[1] || ""
+                ).trim();
+
+
+            if (station) {
+
+                currentRecord.stationIP =
+                    station;
+
+            }
+
 
             continue;
         }
@@ -1666,7 +1724,18 @@ function parseOriginalLog(text) {
         ) {
 
             const name =
-                itemMatch[1].trim();
+                String(
+                    itemMatch[1] || ""
+                ).trim();
+
+
+            /*
+             * Blank item name = ignore.
+             */
+
+            if (!name) {
+                continue;
+            }
 
 
             /*
@@ -1684,9 +1753,21 @@ function parseOriginalLog(text) {
 
 
             const value =
-                Number(
+                toNumber(
                     itemMatch[2]
                 );
+
+
+            /*
+             * Invalid value = ignore.
+             */
+
+            if (
+                value === null
+            ) {
+
+                continue;
+            }
 
 
             let lower = null;
@@ -1718,7 +1799,7 @@ function parseOriginalLog(text) {
                 ) {
 
                     lower =
-                        Number(
+                        toNumber(
                             lowerMatch[1]
                         );
 
@@ -1752,7 +1833,7 @@ function parseOriginalLog(text) {
                 ) {
 
                     upper =
-                        Number(
+                        toNumber(
                             upperMatch[1]
                         );
 
@@ -1844,7 +1925,14 @@ function parseOriginalLog(text) {
 
 
             const name =
-                match[1].trim();
+                String(
+                    match[1] || ""
+                ).trim();
+
+
+            if (!name) {
+                continue;
+            }
 
 
             if (
@@ -1858,9 +1946,17 @@ function parseOriginalLog(text) {
 
 
             const value =
-                Number(
+                toNumber(
                     match[2]
                 );
+
+
+            if (
+                value === null
+            ) {
+
+                continue;
+            }
 
 
             measurements.push({
@@ -1946,6 +2042,50 @@ function groupRecords(records) {
 
     records.forEach(
         function(record, index) {
+
+            /*
+             * Extra protection:
+             *
+             * Remove any empty measurements before
+             * grouping.
+             */
+
+            record.measurements =
+                Array.isArray(
+                    record.measurements
+                )
+                    ? record.measurements.filter(
+                        function(m) {
+
+                            return (
+                                m &&
+                                String(
+                                    m.name ?? ""
+                                ).trim() !== "" &&
+                                m.value !== null &&
+                                m.value !== undefined &&
+                                Number.isFinite(
+                                    Number(m.value)
+                                )
+                            );
+
+                        }
+                    )
+                    : [];
+
+
+            /*
+             * Do not keep records that contain
+             * zero valid measurements.
+             */
+
+            if (
+                record.measurements.length === 0
+            ) {
+
+                return;
+            }
+
 
             const sn =
                 record.sn &&
@@ -2095,7 +2235,6 @@ function groupRecords(records) {
 
 
 /* ============================================================
-   NEW:
    BUILD STATION + COLLIMATOR NG SUMMARY
 ============================================================ */
 
@@ -2103,34 +2242,60 @@ function buildNGSummaryData(records) {
 
     stationNGData = {};
 
-    collimatorNGData = {};
+    collimatorNGDataByFixture = {};
 
 
     records.forEach(
         function(record) {
 
             /*
-             * Station IP belongs to the whole test record.
+             * Ignore records without valid measurements.
              */
 
-            let station =
-                record.stationIP;
-
-
             if (
-                station === undefined ||
-                station === null ||
-                String(station).trim() === ""
+                !Array.isArray(
+                    record.measurements
+                ) ||
+                record.measurements.length === 0
             ) {
 
-                station =
-                    "UNKNOWN";
+                return;
             }
 
 
-            station =
-                String(station)
-                    .trim();
+            /*
+             * Station IP = FIXTURE
+             */
+
+            let station =
+                String(
+                    record.stationIP ?? ""
+                ).trim();
+
+
+            /*
+             * Never use a blank Station IP.
+             */
+
+            if (!station) {
+
+                station =
+                    "UNKNOWN";
+
+            }
+
+
+            /*
+             * Create fixture container.
+             */
+
+            if (
+                !collimatorNGDataByFixture[station]
+            ) {
+
+                collimatorNGDataByFixture[station] = {};
+
+            }
 
 
             record.measurements
@@ -2138,21 +2303,53 @@ function buildNGSummaryData(records) {
                     function(m) {
 
                         /*
+                         * Extra protection against
+                         * blank measurements.
+                         */
+
+                        const collimator =
+                            String(
+                                m?.name ?? ""
+                            ).trim();
+
+
+                        if (!collimator) {
+
+                            return;
+
+                        }
+
+
+                        if (
+                            m.value === null ||
+                            m.value === undefined ||
+                            !Number.isFinite(
+                                Number(m.value)
+                            )
+                        ) {
+
+                            return;
+
+                        }
+
+
+                        /*
                          * ONLY COUNT NG.
                          */
 
                         if (
                             String(
-                                m.result
+                                m.result ?? ""
                             ).toUpperCase() !== "NG"
                         ) {
 
                             return;
+
                         }
 
 
                         /*
-                         * Count NG per Station IP.
+                         * STATION / FIXTURE TOTAL
                          */
 
                         if (
@@ -2169,41 +2366,25 @@ function buildNGSummaryData(records) {
 
 
                         /*
-                         * Count NG per literal MTF /
-                         * Collimator item.
+                         * COLLIMATOR NG
                          */
 
-                        const collimator =
-                            String(
-                                m.name || ""
-                            ).trim();
-
-
                         if (
-                            !collimator
+                            !collimatorNGDataByFixture[
+                                station
+                            ][collimator]
                         ) {
 
-                            return;
-                        }
-
-
-                        if (
-                            !collimatorNGData[
-                                collimator
-                            ]
-                        ) {
-
-                            collimatorNGData[
-                                collimator
-                            ] =
-                                0;
+                            collimatorNGDataByFixture[
+                                station
+                            ][collimator] = 0;
 
                         }
 
 
-                        collimatorNGData[
-                            collimator
-                        ]++;
+                        collimatorNGDataByFixture[
+                            station
+                        ][collimator]++;
 
                     }
                 );
@@ -2289,7 +2470,6 @@ function renderSummary() {
 
 
 /* ============================================================
-   NEW:
    RENDER SUMMARY GRAPHS
 ============================================================ */
 
@@ -2297,7 +2477,7 @@ function renderSummaryGraphs() {
 
     renderStationNGGraph();
 
-    renderCollimatorNGGraph();
+    renderCollimatorGraphsByFixture();
 
 }
 
@@ -2343,6 +2523,18 @@ function renderStationNGGraph() {
     const entries =
         Object.entries(
             stationNGData
+        )
+        .filter(
+            function(entry) {
+
+                return (
+                    String(
+                        entry[0] ?? ""
+                    ).trim() !== "" &&
+                    Number(entry[1]) > 0
+                );
+
+            }
         )
         .sort(
             function(a, b) {
@@ -2515,240 +2707,403 @@ function renderStationNGGraph() {
 
 
 /* ============================================================
-   COLLIMATOR NG GRAPH
+   COLLIMATOR NG GRAPHS
 ============================================================ */
 
-function renderCollimatorNGGraph() {
+function renderCollimatorGraphsByFixture() {
 
-    const card =
+    const container =
         document.getElementById(
-            "collimatorGraphCard"
-        );
-
-
-    const canvas =
-        document.getElementById(
-            "collimatorNGChart"
+            "collimatorGraphsContainer"
         );
 
 
     /*
-     * Destroy previous chart.
+     * Destroy previous fixture charts.
      */
 
-    if (
-        collimatorChartInstance
-    ) {
+    collimatorChartInstances.forEach(
+        function(chart) {
 
-        try {
+            try {
 
-            collimatorChartInstance.destroy();
+                chart.destroy();
 
-        } catch(e) {}
+            } catch(e) {}
 
-        collimatorChartInstance =
-            null;
-
-    }
+        }
+    );
 
 
-    const entries =
-        Object.entries(
-            collimatorNGData
+    collimatorChartInstances.clear();
+
+
+    container.innerHTML = "";
+
+
+    const fixtures =
+        Object.keys(
+            collimatorNGDataByFixture
+        )
+        .filter(
+            function(stationIP) {
+
+                return String(
+                    stationIP ?? ""
+                ).trim() !== "";
+
+            }
         )
         .sort(
-            function(a, b) {
-
-                /*
-                 * Highest NG first.
-                 */
-
-                if (
-                    b[1] !== a[1]
-                ) {
-
-                    return b[1] - a[1];
-
-                }
-
-
-                return naturalCompare(
-                    a[0],
-                    b[0]
-                );
-
-            }
+            naturalCompare
         );
 
 
     if (
-        entries.length === 0
+        fixtures.length === 0
     ) {
 
-        card.style.display =
-            "none";
-
         return;
+
     }
 
 
-    card.style.display =
-        "block";
+    fixtures.forEach(
+        function(stationIP, fixtureIndex) {
+
+            const fixtureData =
+                collimatorNGDataByFixture[
+                    stationIP
+                ];
 
 
-    const labels =
-        entries.map(
-            function(entry) {
+            const entries =
+                Object.entries(
+                    fixtureData
+                )
+                .filter(
+                    function(entry) {
 
-                return entry[0];
+                        return (
+                            String(
+                                entry[0] ?? ""
+                            ).trim() !== "" &&
+                            Number(entry[1]) > 0
+                        );
 
-            }
-        );
+                    }
+                )
+                .sort(
+                    function(a, b) {
+
+                        const nameA =
+                            String(
+                                a[0] || ""
+                            ).toUpperCase();
 
 
-    const values =
-        entries.map(
-            function(entry) {
-
-                return entry[1];
-
-            }
-        );
+                        const nameB =
+                            String(
+                                b[0] || ""
+                            ).toUpperCase();
 
 
-    collimatorChartInstance =
-        new Chart(
-            canvas.getContext("2d"),
-            {
+                        /*
+                         * IR = NIGHT MODE.
+                         */
 
-                type:
-                    "bar",
+                        const nightA =
+                            nameA.includes("IR");
 
-                data: {
 
-                    labels:
-                        labels,
+                        const nightB =
+                            nameB.includes("IR");
 
-                    datasets: [
 
-                        {
+                        /*
+                         * DAY MODE FIRST.
+                         */
 
-                            label:
-                                "NG Quantity",
+                        if (
+                            nightA !== nightB
+                        ) {
 
-                            data:
-                                values,
-
-                            borderWidth:
-                                1
+                            return nightA
+                                ? 1
+                                : -1;
 
                         }
 
-                    ]
 
-                },
+                        return naturalCompare(
+                            nameA,
+                            nameB
+                        );
 
-
-                options: {
-
-                    responsive:
-                        true,
-
-                    maintainAspectRatio:
-                        false,
+                    }
+                );
 
 
-                    plugins: {
+            if (
+                entries.length === 0
+            ) {
 
-                        legend: {
+                return;
 
-                            display:
-                                true
+            }
+
+
+            /*
+             * CREATE GRAPH CARD
+             */
+
+            const card =
+                document.createElement(
+                    "div"
+                );
+
+
+            card.className =
+                "card summary-graph-card";
+
+
+            const title =
+                document.createElement(
+                    "div"
+                );
+
+
+            title.className =
+                "input-title";
+
+
+            title.textContent =
+                "Fixture " +
+                (fixtureIndex + 1) +
+                " — Station IP: " +
+                stationIP;
+
+
+            const subtitle =
+                document.createElement(
+                    "div"
+                );
+
+
+            subtitle.className =
+                "graph-subtitle";
+
+
+            subtitle.textContent =
+                "Accumulated quantity of NG results per MTF / Collimator";
+
+
+            const graphContainer =
+                document.createElement(
+                    "div"
+                );
+
+
+            graphContainer.className =
+                "summary-graph-container";
+
+
+            const canvas =
+                document.createElement(
+                    "canvas"
+                );
+
+
+            graphContainer.appendChild(
+                canvas
+            );
+
+
+            card.appendChild(
+                title
+            );
+
+
+            card.appendChild(
+                subtitle
+            );
+
+
+            card.appendChild(
+                graphContainer
+            );
+
+
+            container.appendChild(
+                card
+            );
+
+
+            const labels =
+                entries.map(
+                    function(entry) {
+
+                        return entry[0];
+
+                    }
+                );
+
+
+            const values =
+                entries.map(
+                    function(entry) {
+
+                        return entry[1];
+
+                    }
+                );
+
+
+            const chart =
+                new Chart(
+                    canvas.getContext("2d"),
+                    {
+
+                        type:
+                            "bar",
+
+
+                        data: {
+
+                            labels:
+                                labels,
+
+                            datasets: [
+
+                                {
+
+                                    label:
+                                        "NG Quantity",
+
+                                    data:
+                                        values,
+
+                                    borderWidth:
+                                        1
+
+                                }
+
+                            ]
 
                         },
 
 
-                        tooltip: {
+                        options: {
 
-                            callbacks: {
+                            responsive:
+                                true,
 
-                                label:
-                                    function(context) {
+                            maintainAspectRatio:
+                                false,
 
-                                        return (
-                                            "NG Quantity: " +
-                                            context.raw
-                                        );
+
+                            plugins: {
+
+                                legend: {
+
+                                    display:
+                                        true
+
+                                },
+
+
+                                tooltip: {
+
+                                    callbacks: {
+
+                                        label:
+                                            function(context) {
+
+                                                return (
+                                                    "NG Quantity: " +
+                                                    context.raw
+                                                );
+
+                                            }
 
                                     }
 
-                            }
-
-                        }
-
-                    },
-
-
-                    scales: {
-
-                        x: {
-
-                            title: {
-
-                                display:
-                                    true,
-
-                                text:
-                                    "Collimator / MTF Item"
+                                }
 
                             },
 
-                            ticks: {
 
-                                autoSkip:
-                                    false,
+                            scales: {
 
-                                maxRotation:
-                                    75,
+                                x: {
 
-                                minRotation:
-                                    45
+                                    title: {
 
-                            }
+                                        display:
+                                            true,
 
-                        },
+                                        text:
+                                            "Collimator / MTF Item"
+
+                                    },
 
 
-                        y: {
+                                    ticks: {
 
-                            beginAtZero:
-                                true,
+                                        autoSkip:
+                                            false,
 
-                            ticks: {
+                                        maxRotation:
+                                            75,
 
-                                precision:
-                                    0
+                                        minRotation:
+                                            45
 
-                            },
+                                    }
 
-                            title: {
+                                },
 
-                                display:
-                                    true,
 
-                                text:
-                                    "NG Quantity"
+                                y: {
+
+                                    beginAtZero:
+                                        true,
+
+                                    ticks: {
+
+                                        precision:
+                                            0
+
+                                    },
+
+
+                                    title: {
+
+                                        display:
+                                            true,
+
+                                        text:
+                                            "NG Quantity"
+
+                                    }
+
+                                }
 
                             }
 
                         }
 
                     }
+                );
 
-                }
 
-            }
-        );
+            collimatorChartInstances.set(
+                stationIP,
+                chart
+            );
+
+        }
+    );
 
 }
 
@@ -2878,7 +3233,8 @@ function applyFilters() {
 
 
     if (
-        visible === 0
+        visible === 0 &&
+        cards.length > 0
     ) {
 
         const container =
@@ -2935,10 +3291,6 @@ function renderResults() {
             groupedData
         );
 
-
-    /*
-     * Sequential SN order.
-     */
 
     snList.sort(
         function(a, b) {
@@ -3046,9 +3398,7 @@ function renderResults() {
 
 
             /*
-             * NG description.
-             *
-             * DAY NG ALWAYS HAS PRIORITY.
+             * DAY NG HAS PRIORITY.
              */
 
             const description =
@@ -3140,10 +3490,6 @@ function renderResults() {
             content.className =
                 "sn-content";
 
-
-            /*
-             * Every test log remains separated.
-             */
 
             snData.tests.forEach(
                 function(test) {
@@ -3302,13 +3648,25 @@ function createTestLog(
         "test-body";
 
 
-    /*
-     * Sort measurements:
-     * DAY MODE -> NIGHT MODE.
-     */
-
     const measurements =
         [...test.measurements]
+            .filter(
+                function(m) {
+
+                    return (
+                        m &&
+                        String(
+                            m.name ?? ""
+                        ).trim() !== "" &&
+                        m.value !== null &&
+                        m.value !== undefined &&
+                        Number.isFinite(
+                            Number(m.value)
+                        );
+
+                    }
+                }
+            )
             .sort(
                 naturalMeasurementCompare
             );
@@ -3368,8 +3726,6 @@ function createTestLog(
 
     /*
      * GRAPH
-     *
-     * Combined DAY -> NIGHT sequence.
      */
 
     if (
@@ -3538,6 +3894,24 @@ function createModeSection(
     measurements.forEach(
         function(m) {
 
+            /*
+             * Final safety check.
+             */
+
+            if (
+                !m ||
+                String(
+                    m.name ?? ""
+                ).trim() === "" ||
+                m.value === null ||
+                m.value === undefined
+            ) {
+
+                return;
+
+            }
+
+
             const row =
                 document.createElement(
                     "tr"
@@ -3683,10 +4057,6 @@ function drawChart(canvas) {
     }
 
 
-    /*
-     * Destroy old chart.
-     */
-
     if (
         chartInstances.has(canvas)
     ) {
@@ -3703,7 +4073,24 @@ function drawChart(canvas) {
 
 
     const measurements =
-        canvas.chartData;
+        canvas.chartData
+            .filter(
+                function(m) {
+
+                    return (
+                        m &&
+                        String(
+                            m.name ?? ""
+                        ).trim() !== "" &&
+                        m.value !== null &&
+                        m.value !== undefined &&
+                        Number.isFinite(
+                            Number(m.value)
+                        )
+                    );
+
+                }
+            );
 
 
     const labels =
@@ -4099,10 +4486,6 @@ function getMTFType(name) {
 
 function findStationIPHeader(headers) {
 
-    /*
-     * First look for exact / normalized names.
-     */
-
     const possibleNames = [
 
         "STATIONIP",
@@ -4142,10 +4525,6 @@ function findStationIPHeader(headers) {
 
     }
 
-
-    /*
-     * More flexible fallback.
-     */
 
     for (
         let i = 0;
@@ -4251,6 +4630,7 @@ function getFirstExistingValue(
             index !== null &&
             index >= 0 &&
             row[index] !== undefined &&
+            row[index] !== null &&
             String(
                 row[index]
             ).trim() !== ""
@@ -4290,6 +4670,10 @@ function getSpecValue(
 }
 
 
+/* ============================================================
+   NUMBER CONVERTER
+============================================================ */
+
 function toNumber(value) {
 
     if (
@@ -4306,11 +4690,32 @@ function toNumber(value) {
             .trim();
 
 
+    /*
+     * EMPTY = NO DATA.
+     */
+
     if (
-        text === "" ||
+        text === ""
+    ) {
+
+        return null;
+    }
+
+
+    /*
+     * Explicit non-data values.
+     */
+
+    const lowerText =
+        text.toLowerCase();
+
+
+    if (
         text === "-" ||
-        text.toLowerCase() === "na" ||
-        text.toLowerCase() === "n/a"
+        lowerText === "na" ||
+        lowerText === "n/a" ||
+        lowerText === "null" ||
+        lowerText === "none"
     ) {
 
         return null;
@@ -4357,7 +4762,7 @@ function evaluateResult(
         value === undefined
     ) {
 
-        return "GOOD";
+        return null;
     }
 
 
@@ -4519,73 +4924,40 @@ function hideError() {
 function clearAll() {
 
     document
-        .getElementById(
-            "logInput"
-        )
+        .getElementById("logInput")
         .value = "";
 
-
     document
-        .getElementById(
-            "fileInput"
-        )
+        .getElementById("fileInput")
         .value = "";
 
-
     document
-        .getElementById(
-            "fileInfo"
-        )
+        .getElementById("fileInfo")
         .textContent = "";
 
+    document
+        .getElementById("summaryCard")
+        .style.display = "none";
 
     document
-        .getElementById(
-            "summaryCard"
-        )
-        .style.display =
-            "none";
-
+        .getElementById("stationGraphCard")
+        .style.display = "none";
 
     document
-        .getElementById(
-            "stationGraphCard"
-        )
-        .style.display =
-            "none";
-
+        .getElementById("collimatorGraphsContainer")
+        .innerHTML = "";
 
     document
-        .getElementById(
-            "collimatorGraphCard"
-        )
-        .style.display =
-            "none";
-
+        .getElementById("resultsCard")
+        .style.display = "none";
 
     document
-        .getElementById(
-            "resultsCard"
-        )
-        .style.display =
-            "none";
-
+        .getElementById("resultList")
+        .innerHTML = "";
 
     document
-        .getElementById(
-            "resultList"
-        )
-        .innerHTML =
-            "";
-
-
-    document
-        .getElementById(
-            "snSearch"
-        )
-        .value =
-            "";
-
+        .getElementById("snSearch")
+        .value = "";
 
     groupedData = {};
 
@@ -4593,8 +4965,12 @@ function clearAll() {
 
     stationNGData = {};
 
-    collimatorNGData = {};
+    collimatorNGDataByFixture = {};
 
+
+    /*
+     * Destroy individual SN charts.
+     */
 
     chartInstances.forEach(
         function(chart) {
@@ -4603,60 +4979,64 @@ function clearAll() {
 
                 chart.destroy();
 
-            } catch(e) {}
+            } catch (e) {}
 
         }
     );
 
-
     chartInstances.clear();
 
 
-    if (
-        stationChartInstance
-    ) {
+    /*
+     * Destroy Station graph.
+     */
+
+    if (stationChartInstance) {
 
         try {
 
             stationChartInstance.destroy();
 
-        } catch(e) {}
+        } catch (e) {}
 
-        stationChartInstance =
-            null;
-
-    }
-
-
-    if (
-        collimatorChartInstance
-    ) {
-
-        try {
-
-            collimatorChartInstance.destroy();
-
-        } catch(e) {}
-
-        collimatorChartInstance =
-            null;
+        stationChartInstance = null;
 
     }
 
 
-    currentFilter =
-        "ALL";
+    /*
+     * Destroy Collimator graphs.
+     */
+
+    collimatorChartInstances.forEach(
+        function(chart) {
+
+            try {
+
+                chart.destroy();
+
+            } catch (e) {}
+
+        }
+    );
+
+    collimatorChartInstances.clear();
+
+
+    /*
+     * Reset filter.
+     */
+
+    currentFilter = "ALL";
 
 
     document
         .getElementById("filterAll")
         .classList.add("active");
 
-
     document
         .getElementById("filterNG")
         .classList.remove("active");
-
 
     document
         .getElementById("filterGOOD")
