@@ -421,60 +421,6 @@ canvas {
     margin-bottom: 10px;
 }
 
-/* ============================================================
-   FIXTURE DOT / CORRELATION GRAPHS
-============================================================ */
-
-.fixture-dot-graph-container {
-    width: 100%;
-    height: 520px;
-    margin-top: 10px;
-}
-
-
-
-/* ============================================================
-   COLLAPSIBLE GRAPHS
-   Keep all graphs collapsed until the user expands them.
-============================================================ */
-.graph-toggle-btn {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin-top: 10px;
-    padding: 10px 13px;
-    border: 1px solid #d1d5db;
-    border-radius: 7px;
-    background: #f8fafc;
-    color: #374151;
-    font-size: 13px;
-    font-weight: bold;
-    text-align: left;
-    cursor: pointer;
-}
-
-.graph-toggle-btn:hover {
-    background: #f1f5f9;
-}
-
-.graph-toggle-btn .graph-toggle-icon {
-    font-size: 15px;
-    transition: transform 0.15s ease;
-}
-
-.graph-toggle-btn.expanded .graph-toggle-icon {
-    transform: rotate(90deg);
-}
-
-.graph-collapsed {
-    display: none !important;
-}
-
-.graph-toggle-spacer {
-    margin-top: 10px;
-}
 
 /* ============================================================
    OTHER
@@ -585,20 +531,17 @@ canvas {
 
     <div class="buttons">
 
-        <button
-            type="button"
-            class="file-label"
-            id="browseFileButton"
-        >
-            Browse Data
-        </button>
+        <label class="file-label">
 
-        <input
-            type="file"
-            id="fileInput"
-            accept=".csv,.CSV,.log,.LOG,.txt,.TXT,.text,.TEXT"
-            style="display:none;"
-        >
+            Browse Data
+
+            <input
+                type="file"
+                id="fileInput"
+                accept=".log,.txt,.csv"
+            >
+
+        </label>
 
         <button
             class="analyze-btn"
@@ -751,14 +694,6 @@ canvas {
     id="collimatorGraphsContainer"
 ></div>
 
-<!-- ============================================================
-     FIXTURE DOT / CORRELATION GRAPHS
-============================================================ -->
-
-<div
-    id="fixtureDotGraphsContainer"
-></div>
-
 
 <!-- ============================================================
      RESULTS
@@ -876,37 +811,10 @@ let stationChartInstance = null;
 
 let collimatorChartInstances = new Map();
 
-/*
- * Dot/scatter graphs:
- * one graph per fixture / Station IP.
- * Every measurement from every SN is plotted.
- */
-let fixtureDotChartInstances = new Map();
-
 
 /* ============================================================
    FILE BROWSER
 ============================================================ */
-
-/*
- * Use a real button to open the hidden file input.
- * This is more reliable on GitHub Pages and local browsers
- * than relying on a label/input combination.
- */
-document
-    .getElementById("browseFileButton")
-    .addEventListener(
-        "click",
-        function() {
-            const input =
-                document.getElementById("fileInput");
-
-            /* Allow selecting the exact same file again. */
-            input.value = "";
-
-            input.click();
-        }
-    );
 
 document
     .getElementById("fileInput")
@@ -1084,243 +992,546 @@ function analyzeLog() {
 
 
 /* ============================================================
-   FORMAT DETECTION + ROBUST CSV PARSER
+   FORMAT DETECTION
 ============================================================ */
 
 function detectFormat(text) {
-    const sample = String(text || "").replace(/^\uFEFF/, "");
-    const lower = sample.toLowerCase();
 
-    // Strong LOG indicators first.
+    const lower =
+        text.toLowerCase();
+
+
+    if (
+        lower.includes("pcba,") &&
+        (
+            lower.includes("stamptime") ||
+            lower.includes("workno")
+        )
+    ) {
+
+        return "CSV";
+    }
+
+
     if (
         lower.includes("item_mtf") ||
-        lower.includes("spec: lower") ||
-        lower.includes("load snfile:") ||
-        lower.includes("item:") && lower.includes("value:")
+        lower.includes("spec: lower")
     ) {
+
         return "LOG";
     }
 
-    // A CSV is normally identified by a header row containing an MTF field
-    // plus a serial/PCBA field. We intentionally do not require PCBA/WorkNo.
-    const lines = sample.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
-    for (let i = 0; i < Math.min(lines.length, 100); i++) {
-        const line = lines[i].toLowerCase();
-        if (
-            line.includes("mtf") &&
-            (line.includes(",") || line.includes("\t") || line.includes(";"))
-        ) {
-            return "CSV";
-        }
-    }
 
-    // Preserve the previous detection for older CSV exports.
     if (
-        (lower.includes("pcba,") || lower.includes("pcba;")) &&
-        (lower.includes("stamptime") || lower.includes("workno"))
+        lower.includes(",") &&
+        lower.includes("lower")
     ) {
+
         return "CSV";
     }
+
 
     return "LOG";
 }
 
-function detectCSVDelimiter(line) {
-    const candidates = [",", "\t", ";"];
-    let best = ",";
-    let bestCount = -1;
 
-    for (const delimiter of candidates) {
-        let count = 0;
-        let inQuotes = false;
-        for (let i = 0; i < line.length; i++) {
-            const c = line[i];
-            if (c === '"') {
-                if (inQuotes && line[i + 1] === '"') i++;
-                else inQuotes = !inQuotes;
-            } else if (c === delimiter && !inQuotes) {
-                count++;
-            }
-        }
-        if (count > bestCount) {
-            bestCount = count;
-            best = delimiter;
-        }
-    }
-    return best;
-}
+/* ============================================================
+   CSV LINE PARSER
+============================================================ */
 
-function parseCSVLine(line, delimiter) {
+function parseCSVLine(line) {
+
     const values = [];
-    let current = "";
-    let inQuotes = false;
-    delimiter = delimiter || detectCSVDelimiter(line);
 
-    for (let i = 0; i < line.length; i++) {
-        const char = line[i];
+    let current = "";
+
+    let inQuotes = false;
+
+
+    for (
+        let i = 0;
+        i < line.length;
+        i++
+    ) {
+
+        const char =
+            line[i];
+
+
         if (char === '"') {
-            if (inQuotes && line[i + 1] === '"') {
+
+            if (
+                inQuotes &&
+                line[i + 1] === '"'
+            ) {
+
                 current += '"';
+
                 i++;
+
             } else {
-                inQuotes = !inQuotes;
+
+                inQuotes =
+                    !inQuotes;
+
             }
-        } else if (char === delimiter && !inQuotes) {
-            values.push(current.trim());
+
+        } else if (
+            char === "," &&
+            !inQuotes
+        ) {
+
+            values.push(
+                current.trim()
+            );
+
             current = "";
+
         } else {
+
             current += char;
+
         }
+
     }
-    values.push(current.trim());
+
+
+    values.push(
+        current.trim()
+    );
+
+
     return values;
 }
 
-function normalizeHeaderName(value) {
-    return String(value || "")
-        .replace(/^\uFEFF/, "")
-        .trim()
-        .toLowerCase()
-        .replace(/[\s_.\-()/\\]+/g, "");
-}
 
-function findFlexibleHeader(headers, patterns) {
-    for (let i = 0; i < headers.length; i++) {
-        const h = normalizeHeaderName(headers[i]);
-        for (const pattern of patterns) {
-            const p = normalizeHeaderName(pattern);
-            if (h === p || h.includes(p)) return i;
-        }
-    }
-    return -1;
-}
+/* ============================================================
+   CSV PARSER
+============================================================ */
 
 function parseCSVData(text) {
+
     const records = [];
-    const lines = String(text || "")
-        .replace(/^\uFEFF/, "")
-        .replace(/\r\n/g, "\n")
-        .replace(/\r/g, "\n")
-        .split("\n");
 
-    // Find the real header instead of requiring exact PCBA/WorkNo/StampTime names.
+
+    const lines =
+        text
+            .replace(/\r\n/g, "\n")
+            .replace(/\r/g, "\n")
+            .split("\n");
+
+
     let headerIndex = -1;
-    let delimiter = ",";
-    let headers = [];
 
-    for (let i = 0; i < Math.min(lines.length, 200); i++) {
-        if (!lines[i].trim()) continue;
-        const d = detectCSVDelimiter(lines[i]);
-        const h = parseCSVLine(lines[i], d);
-        const normalized = h.map(normalizeHeaderName);
-        const hasMTF = normalized.some(x => x.includes("mtf"));
-        const hasIdentity = normalized.some(x =>
-            x === "pcba" || x.includes("serial") || x === "sn" ||
-            x.includes("serialnumber") || x.includes("partnumber")
-        );
 
-        if (hasMTF && (hasIdentity || h.length >= 3)) {
+    for (
+        let i = 0;
+        i < lines.length;
+        i++
+    ) {
+
+        const lower =
+            lines[i].toLowerCase();
+
+
+        if (
+            lower.includes("pcba") &&
+            lower.includes("workno") &&
+            lower.includes("stamptime")
+        ) {
+
             headerIndex = i;
-            delimiter = d;
-            headers = h;
+
             break;
         }
+
     }
 
-    if (headerIndex < 0) return records;
 
-    // Locate all MTF measurement columns.
-    const measurementColumns = [];
-    for (let i = 0; i < headers.length; i++) {
-        const h = String(headers[i] || "").trim();
-        if (h && h.toUpperCase().includes("MTF") && !isExcludedMTFItem(h)) {
-            measurementColumns.push(i);
-        }
+    if (headerIndex === -1) {
+
+        return records;
     }
-    if (!measurementColumns.length) return records;
 
-    const snIndex = findFlexibleHeader(headers, [
-        "SN", "Serial", "Serial Number", "SerialNumber", "PCBA", "PCB SN"
-    ]);
-    const workNoIndex = findFlexibleHeader(headers, [
-        "WorkNo", "Work No", "Work Number", "WorkNo."
-    ]);
-    const timeIndex = findFlexibleHeader(headers, [
-        "StampTime", "Date_Time", "Date Time", "DateTime", "Timestamp", "Time"
-    ]);
-    const stationIndex = findStationIPHeader(headers);
-    const resultIndex = findFlexibleHeader(headers, [
-        "Result", "Status", "Test Result", "Judgement", "Judge"
-    ]);
-    const modeIndex = findFlexibleHeader(headers, [
-        "Mode", "Test Mode", "Light Mode", "Illumination"
-    ]);
 
-    // Some exports have separate LOWER/UPPER rows below the header.
+    const headers =
+        parseCSVLine(
+            lines[headerIndex]
+        );
+
+
     const specRows = {};
-    const specNames = ["lower", "upper", "min", "max", "mean", "sigma", "cpl", "cpu", "cplu"];
 
-    for (let i = headerIndex + 1; i < lines.length; i++) {
-        if (!lines[i].trim()) continue;
-        const row = parseCSVLine(lines[i], delimiter);
-        const first = String(row[0] || "").trim().toLowerCase();
-        if (specNames.includes(first)) specRows[first] = row;
+
+    for (
+        let i = headerIndex + 1;
+        i < lines.length;
+        i++
+    ) {
+
+        const row =
+            parseCSVLine(
+                lines[i]
+            );
+
+
+        if (!row.length) {
+            continue;
+        }
+
+
+        const first =
+            String(row[0] || "")
+                .trim()
+                .toLowerCase();
+
+
+        if (
+            [
+                "lower",
+                "upper",
+                "min",
+                "max",
+                "mean",
+                "sigma",
+                "cpl",
+                "cpu",
+                "cplu"
+            ].includes(first)
+        ) {
+
+            specRows[first] =
+                row;
+
+        }
+
     }
 
-    for (let rowIndex = headerIndex + 1; rowIndex < lines.length; rowIndex++) {
-        if (!lines[rowIndex].trim()) continue;
-        const row = parseCSVLine(lines[rowIndex], delimiter);
-        if (!row.length || row.every(x => String(x).trim() === "")) continue;
 
-        const first = String(row[0] || "").trim().toLowerCase();
-        if (specNames.includes(first)) continue;
+    /*
+     * Find all MTF columns.
+     */
 
-        const sn = snIndex >= 0 ? String(row[snIndex] || "").trim() : "";
-        const workNo = workNoIndex >= 0 ? String(row[workNoIndex] || "").trim() : "";
-        const stampTime = timeIndex >= 0 ? String(row[timeIndex] || "").trim() : "";
-        const stationIP = stationIndex >= 0 ? String(row[stationIndex] || "").trim() : "";
-        const csvResult = resultIndex >= 0 ? String(row[resultIndex] || "").trim().toUpperCase() : "";
-        const csvMode = modeIndex >= 0 ? String(row[modeIndex] || "").trim().toUpperCase() : "";
+    const measurementColumns = [];
+
+
+    for (
+        let i = 0;
+        i < headers.length;
+        i++
+    ) {
+
+        const header =
+            String(
+                headers[i] || ""
+            ).trim();
+
+
+        if (
+            header
+                .toUpperCase()
+                .includes("MTF")
+        ) {
+
+            /*
+             * Remove excluded items.
+             */
+
+            if (
+                isExcludedMTFItem(
+                    header
+                )
+            ) {
+
+                continue;
+            }
+
+
+            measurementColumns.push(i);
+
+        }
+
+    }
+
+
+    if (
+        measurementColumns.length === 0
+    ) {
+
+        return records;
+    }
+
+
+    /*
+     * Find Station IP header.
+     */
+
+    const stationIPIndex =
+        findStationIPHeader(
+            headers
+        );
+
+
+    /*
+     * Read every actual data row.
+     */
+
+    for (
+        let rowIndex = headerIndex + 1;
+        rowIndex < lines.length;
+        rowIndex++
+    ) {
+
+        const row =
+            parseCSVLine(
+                lines[rowIndex]
+            );
+
+
+        if (!row.length) {
+            continue;
+        }
+
+
+        const first =
+            String(row[0] || "")
+                .trim()
+                .toLowerCase();
+
+
+        if (
+            [
+                "lower",
+                "upper",
+                "min",
+                "max",
+                "mean",
+                "sigma",
+                "cpl",
+                "cpu",
+                "cplu"
+            ].includes(first)
+        ) {
+
+            continue;
+        }
+
+
+        if (
+            row.every(
+                x =>
+                    String(x).trim() === ""
+            )
+        ) {
+
+            continue;
+        }
+
+
+        const sn =
+            getFirstExistingValue(
+                row,
+                [
+                    findHeader(
+                        headers,
+                        "SN"
+                    ),
+
+                    findHeader(
+                        headers,
+                        "SERIAL"
+                    ),
+
+                    findHeader(
+                        headers,
+                        "SERIALNUMBER"
+                    ),
+
+                    findHeader(
+                        headers,
+                        "PCBA"
+                    )
+                ]
+            );
+
+
+        const workNo =
+            getFirstExistingValue(
+                row,
+                [
+                    findHeader(
+                        headers,
+                        "WORKNO"
+                    ),
+
+                    findHeader(
+                        headers,
+                        "WORKNO."
+                    ),
+
+                    findHeader(
+                        headers,
+                        "WORK NO"
+                    )
+                ]
+            );
+
+
+        const stampTime =
+            getFirstExistingValue(
+                row,
+                [
+                    findHeader(
+                        headers,
+                        "STAMPTIME"
+                    ),
+
+                    findHeader(
+                        headers,
+                        "DATE_TIME"
+                    ),
+
+                    findHeader(
+                        headers,
+                        "DATETIME"
+                    )
+                ]
+            );
+
+
+        /*
+         * NEW:
+         *
+         * Get Station IP from this exact CSV row.
+         */
+
+        const stationIP =
+            stationIPIndex >= 0
+                ? String(
+                    row[stationIPIndex] || ""
+                  ).trim()
+                : "";
+
 
         const measurements = [];
 
-        for (const columnIndex of measurementColumns) {
-            const itemName = String(headers[columnIndex] || "").trim();
-            const rawValue = row[columnIndex];
-            if (rawValue === undefined || rawValue === null || String(rawValue).trim() === "") continue;
 
-            const value = toNumber(rawValue);
-            if (value === null) continue;
+        for (
+            const columnIndex
+            of measurementColumns
+        ) {
 
-            const lower = getSpecValue(specRows.lower, columnIndex);
-            const upper = getSpecValue(specRows.upper, columnIndex);
-            let result = evaluateResult(value, lower, upper);
+            const itemName =
+                String(
+                    headers[columnIndex] || ""
+                ).trim();
 
-            // If the CSV has an explicit result, preserve it when it is usable.
-            if (csvResult === "NG" || csvResult === "NOK" || csvResult === "FAIL") result = "NG";
-            else if (csvResult === "GOOD" || csvResult === "OK" || csvResult === "PASS") result = "GOOD";
+
+            const rawValue =
+    row[columnIndex];
+
+
+// Ignore blank / empty cells completely
+if (
+    rawValue === undefined ||
+    rawValue === null ||
+    String(rawValue).trim() === ""
+) {
+    continue;
+}
+
+
+const value =
+    toNumber(rawValue);
+
+
+// Ignore cells that do not contain a valid number
+if (
+    value === null
+) {
+    continue;
+}
+
+
+            const lower =
+                getSpecValue(
+                    specRows.lower,
+                    columnIndex
+                );
+
+
+            const upper =
+                getSpecValue(
+                    specRows.upper,
+                    columnIndex
+                );
+
+
+            const result =
+                evaluateResult(
+                    value,
+                    lower,
+                    upper
+                );
+
 
             measurements.push({
-                name: itemName,
-                value: value,
-                lower: lower,
-                upper: upper,
-                result: result,
-                type: csvMode.includes("NIGHT") ? "NIGHT" : getMTFType(itemName)
+
+                name:
+                    itemName,
+
+                value:
+                    value,
+
+                lower:
+                    lower,
+
+                upper:
+                    upper,
+
+                result:
+                    result,
+
+                type:
+                    getMTFType(
+                        itemName
+                    )
+
             });
+
         }
 
-        if (measurements.length > 0) {
+
+        if (
+            measurements.length > 0
+        ) {
+
             records.push({
-                sn: cleanSN(sn || "UNKNOWN_SN_" + (rowIndex + 1)),
-                workNo: workNo,
-                time: stampTime,
-                stationIP: stationIP,
-                source: "CSV",
-                measurements: measurements
+
+                sn:
+                    cleanSN(sn),
+
+                workNo:
+                    workNo || "",
+
+                time:
+                    stampTime || "",
+
+                stationIP:
+                    stationIP,
+
+                source:
+                    "CSV",
+
+                measurements:
+                    measurements
+
             });
+
         }
+
     }
+
 
     return records;
 }
@@ -2119,8 +2330,6 @@ function renderSummaryGraphs() {
 
     renderCollimatorGraphsByFixture();
 
-    renderFixtureDotGraphs();
-
 }
 /* ============================================================
    STATION IP NG GRAPH
@@ -2779,495 +2988,9 @@ function renderCollimatorGraphsByFixture() {
 
 }
 
-
-/* ============================================================
-   FIXTURE DOT / CORRELATION GRAPHS
-   ONE SCATTER GRAPH PER FIXTURE / STATION IP
-
-   X = SN
-   Y = every individual MTF value
-   Includes GOOD + NG and all test logs.
-
-   The graph is intentionally NOT averaged. Every measurement
-   remains a separate dot so fixture-to-fixture behavior can
-   be visually compared.
-============================================================ */
-
-function renderFixtureDotGraphs() {
-
-    const container =
-        document.getElementById(
-            "fixtureDotGraphsContainer"
-        );
-
-    if (!container) {
-        return;
-    }
-
-    /*
-     * Destroy previous charts.
-     */
-
-    fixtureDotChartInstances.forEach(
-        function(chart) {
-
-            try {
-                chart.destroy();
-            } catch (e) {}
-
-        }
-    );
-
-    fixtureDotChartInstances.clear();
-
-    container.innerHTML = "";
-
-    /*
-     * Build:
-     *
-     * {
-     *   fixture: [
-     *      { sn, value, item, mode, result, lower, upper }
-     *   ]
-     * }
-     */
-
-    const fixtureData = {};
-
-    originalRecords.forEach(
-        function(record) {
-
-            let fixture =
-                record.stationIP;
-
-            if (
-                fixture === undefined ||
-                fixture === null ||
-                String(fixture).trim() === ""
-            ) {
-                fixture = "UNKNOWN";
-            }
-
-            fixture =
-                String(fixture).trim();
-
-            if (!fixtureData[fixture]) {
-                fixtureData[fixture] = [];
-            }
-
-            const sn =
-                record.sn &&
-                String(record.sn).trim()
-                    ? String(record.sn).trim()
-                    : "NO SN";
-
-            record.measurements.forEach(
-                function(m, measurementIndex) {
-
-                    const value =
-                        Number(m.value);
-
-                    if (!Number.isFinite(value)) {
-                        return;
-                    }
-
-                    fixtureData[fixture].push({
-
-                        sn: sn,
-
-                        value: value,
-
-                        item:
-                            String(m.name || ""),
-
-                        mode:
-                            m.type === "NIGHT"
-                                ? "NIGHT MODE"
-                                : "DAY MODE",
-
-                        result:
-                            String(m.result || "")
-                                .toUpperCase(),
-
-                        lower:
-                            m.lower,
-
-                        upper:
-                            m.upper,
-
-                        /*
-                         * Small deterministic horizontal offset.
-                         * It prevents several values belonging to the
-                         * same SN from sitting exactly on top of each
-                         * other while keeping them visually attached
-                         * to that SN.
-                         */
-                        jitter:
-                            ((measurementIndex % 7) - 3) * 0.055
-
-                    });
-
-                }
-            );
-
-        }
-    );
-
-    const fixtures =
-        Object.keys(fixtureData)
-            .sort(naturalCompare);
-
-    if (fixtures.length === 0) {
-        return;
-    }
-
-    /*
-     * Create one graph for every fixture.
-     */
-
-    fixtures.forEach(
-        function(fixture, fixtureIndex) {
-
-            const points =
-                fixtureData[fixture];
-
-            if (!points.length) {
-                return;
-            }
-
-            /*
-             * Keep SN order stable.
-             */
-
-            const snList =
-                [...new Set(
-                    points.map(
-                        p => p.sn
-                    )
-                )].sort(
-                    naturalCompare
-                );
-
-            const snIndex = {};
-
-            snList.forEach(
-                function(sn, index) {
-                    snIndex[sn] = index;
-                }
-            );
-
-            /*
-             * Create card.
-             */
-
-            const card =
-                document.createElement("div");
-
-            card.className =
-                "card summary-graph-card";
-
-            const title =
-                document.createElement("div");
-
-            title.className =
-                "input-title";
-
-            title.textContent =
-                "Fixture " +
-                (fixtureIndex + 1) +
-                " — Station IP: " +
-                fixture;
-
-            const subtitle =
-                document.createElement("div");
-
-            subtitle.className =
-                "graph-subtitle";
-
-            subtitle.textContent =
-                "Dot graph of every MTF value from every SN. " +
-                "No averaging — GOOD and NG measurements are included.";
-
-            /*
-             * Create graph container.
-             */
-
-            const graphContainer =
-                document.createElement("div");
-
-            graphContainer.className =
-                "fixture-dot-graph-container";
-
-            const canvas =
-                document.createElement("canvas");
-
-            graphContainer.appendChild(canvas);
-
-            card.appendChild(title);
-            card.appendChild(subtitle);
-            card.appendChild(graphContainer);
-
-            container.appendChild(card);
-
-            /*
-             * LL / UL:
-             *
-             * Do not draw one global LL/UL line here because a fixture
-             * can contain multiple MTF items with different limits.
-             * The exact LL/UL is available in the tooltip for every dot.
-             */
-
-            const scatterData =
-                points.map(
-                    function(point) {
-
-                        return {
-
-                            x:
-                                snIndex[point.sn] +
-                                point.jitter,
-
-                            y:
-                                point.value,
-
-                            sn:
-                                point.sn,
-
-                            item:
-                                point.item,
-
-                            mode:
-                                point.mode,
-
-                            result:
-                                point.result,
-
-                            lower:
-                                point.lower,
-
-                            upper:
-                                point.upper
-
-                        };
-
-                    }
-                );
-
-            /*
-             * Use one dataset so every measurement remains an
-             * independent dot. The tooltip identifies the exact
-             * MTF item / SN / mode / result.
-             */
-
-            const chart =
-                new Chart(
-                    canvas.getContext("2d"),
-                    {
-
-                        type: "scatter",
-
-                        data: {
-
-                            datasets: [
-
-                                {
-
-                                    label:
-                                        "MTF Values",
-
-                                    data:
-                                        scatterData,
-
-                                    pointRadius: 4,
-
-                                    pointHoverRadius: 7,
-
-                                    borderWidth: 0,
-
-                                    showLine: false
-
-                                }
-
-                            ]
-
-                        },
-
-                        options: {
-
-                            responsive: true,
-
-                            maintainAspectRatio: false,
-
-                            interaction: {
-
-                                mode: "nearest",
-
-                                intersect: true
-
-                            },
-
-                            plugins: {
-
-                                legend: {
-
-                                    display: true
-
-                                },
-
-                                tooltip: {
-
-                                    callbacks: {
-
-                                        title:
-                                            function(context) {
-
-                                                if (
-                                                    !context ||
-                                                    !context.length
-                                                ) {
-                                                    return "";
-                                                }
-
-                                                const p =
-                                                    context[0]
-                                                        .raw;
-
-                                                return (
-                                                    "SN: " +
-                                                    p.sn
-                                                );
-
-                                            },
-
-                                        label:
-                                            function(context) {
-
-                                                const p =
-                                                    context.raw;
-
-                                                return [
-
-                                                    "MTF: " +
-                                                    p.item,
-
-                                                    "Value: " +
-                                                    formatNumber(
-                                                        p.y
-                                                    ),
-
-                                                    "Mode: " +
-                                                    p.mode,
-
-                                                    "Result: " +
-                                                    p.result,
-
-                                                    "LL: " +
-                                                    formatNumber(
-                                                        p.lower
-                                                    ),
-
-                                                    "UL: " +
-                                                    formatNumber(
-                                                        p.upper
-                                                    )
-
-                                                ];
-
-                                            }
-
-                                    }
-
-                                }
-
-                            },
-
-                            scales: {
-
-                                x: {
-
-                                    type: "linear",
-
-                                    min:
-                                        -0.5,
-
-                                    max:
-                                        Math.max(
-                                            0.5,
-                                            snList.length - 0.5
-                                        ),
-
-                                    ticks: {
-
-                                        stepSize: 1,
-
-                                        autoSkip: false,
-
-                                        maxRotation: 75,
-
-                                        minRotation: 45,
-
-                                        callback:
-                                            function(value) {
-
-                                                const index =
-                                                    Math.round(
-                                                        Number(value)
-                                                    );
-
-                                                return snList[index] || "";
-
-                                            }
-
-                                    },
-
-                                    title: {
-
-                                        display: true,
-
-                                        text:
-                                            "Serial Number (SN)"
-
-                                    }
-
-                                },
-
-                                y: {
-
-                                    beginAtZero: false,
-
-                                    title: {
-
-                                        display: true,
-
-                                        text:
-                                            "MTF Value"
-
-                                    }
-
-                                }
-
-                            }
-
-                        }
-
-                    }
-                );
-
-            fixtureDotChartInstances.set(
-                fixture,
-                chart
-            );
-
-        }
-    );
-
-}
-
-
 /* ============================================================
    FILTER
 ============================================================ */
-
 
 function setFilter(filter) {
 
@@ -5054,15 +4777,6 @@ function clearAll() {
         .getElementById("collimatorGraphsContainer")
         .innerHTML = "";
 
-    const fixtureDotContainer =
-        document.getElementById(
-            "fixtureDotGraphsContainer"
-        );
-
-    if (fixtureDotContainer) {
-        fixtureDotContainer.innerHTML = "";
-    }
-
     document
         .getElementById("resultsCard")
         .style.display = "none";
@@ -5140,23 +4854,6 @@ function clearAll() {
 
 
     /* ========================================================
-       DESTROY FIXTURE DOT GRAPHS
-    ======================================================== */
-
-    fixtureDotChartInstances.forEach(
-        function(chart) {
-
-            try {
-                chart.destroy();
-            } catch (e) {}
-
-        }
-    );
-
-    fixtureDotChartInstances.clear();
-
-
-    /* ========================================================
        RESET FILTER
     ======================================================== */
 
@@ -5179,111 +4876,6 @@ function clearAll() {
     hideError();
 
 }
-
-
-/* ============================================================
-   COLLAPSIBLE GRAPH UI
-   All chart areas start collapsed to keep the frontend compact.
-============================================================ */
-(function setupCollapsibleGraphs() {
-
-    const GRAPH_SELECTORS = [
-        ".graph-container",
-        ".summary-graph-container",
-        ".fixture-dot-graph-container"
-    ];
-
-    function addToggle(graph) {
-        if (!graph || graph.dataset.collapsibleReady === "1") {
-            return;
-        }
-
-        graph.dataset.collapsibleReady = "1";
-        graph.classList.add("graph-collapsed");
-
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "graph-toggle-btn";
-        button.setAttribute("aria-expanded", "false");
-
-        const label = document.createElement("span");
-        label.textContent = "Expand graph";
-
-        const icon = document.createElement("span");
-        icon.className = "graph-toggle-icon";
-        icon.textContent = "▶";
-
-        button.appendChild(label);
-        button.appendChild(icon);
-
-        graph.parentNode.insertBefore(button, graph);
-
-        button.addEventListener("click", function() {
-            const expanded = !graph.classList.contains("graph-collapsed");
-
-            if (expanded) {
-                graph.classList.add("graph-collapsed");
-                button.classList.remove("expanded");
-                button.setAttribute("aria-expanded", "false");
-                label.textContent = "Expand graph";
-            } else {
-                graph.classList.remove("graph-collapsed");
-                button.classList.add("expanded");
-                button.setAttribute("aria-expanded", "true");
-                label.textContent = "Collapse graph";
-
-                // Chart.js needs a resize pass after becoming visible.
-                setTimeout(function() {
-                    window.dispatchEvent(new Event("resize"));
-                }, 50);
-            }
-        });
-    }
-
-    function scan(root) {
-        if (!root || !root.querySelectorAll) {
-            return;
-        }
-
-        GRAPH_SELECTORS.forEach(function(selector) {
-            root.querySelectorAll(selector).forEach(addToggle);
-        });
-
-        // The root itself may be a graph container.
-        GRAPH_SELECTORS.forEach(function(selector) {
-            if (root.matches && root.matches(selector)) {
-                addToggle(root);
-            }
-        });
-    }
-
-    function start() {
-        scan(document);
-
-        const observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                mutation.addedNodes.forEach(function(node) {
-                    if (node.nodeType === 1) {
-                        scan(node);
-                    }
-                });
-            });
-        });
-
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
-    }
-
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", start);
-    } else {
-        start();
-    }
-
-})();
-
 </script>
 
 </body>
